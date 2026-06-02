@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppExtractoRouteImport } from './routes/_app.extracto'
+import { Route as AppCurvasRouteImport } from './routes/_app.curvas'
 import { Route as AppAgendaRouteImport } from './routes/_app.agenda'
 
 const AppRoute = AppRouteImport.update({
@@ -28,6 +29,11 @@ const AppExtractoRoute = AppExtractoRouteImport.update({
   path: '/extracto',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCurvasRoute = AppCurvasRouteImport.update({
+  id: '/curvas',
+  path: '/curvas',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAgendaRoute = AppAgendaRouteImport.update({
   id: '/agenda',
   path: '/agenda',
@@ -37,10 +43,12 @@ const AppAgendaRoute = AppAgendaRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/agenda': typeof AppAgendaRoute
+  '/curvas': typeof AppCurvasRoute
   '/extracto': typeof AppExtractoRoute
 }
 export interface FileRoutesByTo {
   '/agenda': typeof AppAgendaRoute
+  '/curvas': typeof AppCurvasRoute
   '/extracto': typeof AppExtractoRoute
   '/': typeof AppIndexRoute
 }
@@ -48,15 +56,22 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/_app/agenda': typeof AppAgendaRoute
+  '/_app/curvas': typeof AppCurvasRoute
   '/_app/extracto': typeof AppExtractoRoute
   '/_app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/agenda' | '/extracto'
+  fullPaths: '/' | '/agenda' | '/curvas' | '/extracto'
   fileRoutesByTo: FileRoutesByTo
-  to: '/agenda' | '/extracto' | '/'
-  id: '__root__' | '/_app' | '/_app/agenda' | '/_app/extracto' | '/_app/'
+  to: '/agenda' | '/curvas' | '/extracto' | '/'
+  id:
+    | '__root__'
+    | '/_app'
+    | '/_app/agenda'
+    | '/_app/curvas'
+    | '/_app/extracto'
+    | '/_app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -86,6 +101,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppExtractoRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/curvas': {
+      id: '/_app/curvas'
+      path: '/curvas'
+      fullPath: '/curvas'
+      preLoaderRoute: typeof AppCurvasRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/agenda': {
       id: '/_app/agenda'
       path: '/agenda'
@@ -98,12 +120,14 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAgendaRoute: typeof AppAgendaRoute
+  AppCurvasRoute: typeof AppCurvasRoute
   AppExtractoRoute: typeof AppExtractoRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppAgendaRoute: AppAgendaRoute,
+  AppCurvasRoute: AppCurvasRoute,
   AppExtractoRoute: AppExtractoRoute,
   AppIndexRoute: AppIndexRoute,
 }
