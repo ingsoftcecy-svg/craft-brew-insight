@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { Plus, Circle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -124,10 +124,10 @@ function PurgasPage() {
                 </TableRow>
                 <TableRow>
                   {Array.from({ length: 10 }, (_, i) => (
-                    <>
-                      <TableHead key={`h-${i}`} className="text-xs whitespace-nowrap border-l">Hora</TableHead>
-                      <TableHead key={`a-${i}`} className="text-xs whitespace-nowrap border-r">Análisis</TableHead>
-                    </>
+                    <Fragment key={i}>
+                      <TableHead className="text-xs whitespace-nowrap border-l">Hora</TableHead>
+                      <TableHead className="text-xs whitespace-nowrap border-r">Análisis</TableHead>
+                    </Fragment>
                   ))}
                 </TableRow>
               </TableHeader>
@@ -141,10 +141,10 @@ function PurgasPage() {
                       <TableCell className="text-muted-foreground border-r whitespace-nowrap">{r.fechaLlenado}</TableCell>
                       <TableCell className="border-r text-right tabular-nums">{r.horasReposo}h</TableCell>
                       {r.purgas.map((p, i) => (
-                        <>
-                          <TableCell key={`h-${i}`} className="text-xs whitespace-nowrap border-l">{p.hora ?? "—"}</TableCell>
-                          <TableCell key={`a-${i}`} className="border-r"><VisualDot a={p.analisis} /></TableCell>
-                        </>
+                        <Fragment key={i}>
+                          <TableCell className="text-xs whitespace-nowrap border-l">{p.hora ?? "—"}</TableCell>
+                          <TableCell className="border-r"><VisualDot a={p.analisis} /></TableCell>
+                        </Fragment>
                       ))}
                       <TableCell className="text-center font-semibold">{total}</TableCell>
                     </TableRow>
