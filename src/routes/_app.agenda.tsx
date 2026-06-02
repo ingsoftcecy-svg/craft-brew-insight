@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
-import { agendaInitial, type AgendaEvent, type EventType } from "@/data/agenda";
 import { AgendaDialog } from "@/components/agenda_dialog";
 import { AgendaCalendar } from "@/components/agenda_calendar";
+import { useOperacionesStore } from "@/store/useOperacionesStore";
+import type { AgendaFormValues } from "@/lib/schemas/operaciones";
 
 export const Route = createFileRoute("/_app/agenda")({
   head: () => ({
@@ -16,16 +17,9 @@ export const Route = createFileRoute("/_app/agenda")({
 });
 
 function AgendaPage() {
+  const { eventosAgenda, addEventoAgenda } = useOperacionesStore();
   const [cursor, set_cursor] = useState(new Date());
-  const [events, set_events] = useState<AgendaEvent[]>(agendaInitial);
   const [open, set_open] = useState(false);
-  const [form, set_form] = useState<{ titulo: string; inicio: string; fin: string; tipo: EventType; descripcion: string }>({
-    titulo: "",
-    inicio: "",
-    fin: "",
-    tipo: "Turno",
-    descripcion: "",
-  });
 
   const days = useMemo(() => {
     const start = startOfWeek(startOfMonth(cursor), { weekStartsOn: 1 });
@@ -33,21 +27,16 @@ function AgendaPage() {
     return eachDayOfInterval({ start, end });
   }, [cursor]);
 
-  function submit() {
-    if (!form.titulo || !form.inicio) return;
-    set_events((prev) => [
-      ...prev,
-      {
-        id: `ev-${Date.now()}`,
-        titulo: form.titulo,
-        inicio: new Date(form.inicio).toISOString(),
-        fin: new Date(form.fin || form.inicio).toISOString(),
-        tipo: form.tipo,
-        descripcion: form.descripcion,
-      },
-    ]);
+  function submit(data: AgendaFormValues) {
+    addEventoAgenda({
+      id: `ev-${Date.now()}`,
+      titulo: data.titulo,
+      inicio: new Date(data.inicio).toISOString(),
+      fin: new Date(data.fin || data.inicio).toISOString(),
+      tipo: data.tipo,
+      descripcion: data.descripcion,
+    });
     set_open(false);
-    set_form({ titulo: "", inicio: "", fin: "", tipo: "Turno", descripcion: "" });
   }
 
   return (
@@ -60,8 +49,6 @@ function AgendaPage() {
         <AgendaDialog 
           open={open} 
           set_open={set_open} 
-          form={form} 
-          set_form={set_form} 
           submit={submit} 
         />
       </div>
@@ -70,7 +57,7 @@ function AgendaPage() {
         cursor={cursor} 
         set_cursor={set_cursor} 
         days={days} 
-        events={events} 
+        events={eventosAgenda} 
       />
     </div>
   );

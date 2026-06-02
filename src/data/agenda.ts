@@ -1,13 +1,4 @@
-export type EventType = "Turno" | "Mantenimiento" | "CIP";
-
-export interface AgendaEvent {
-  id: string;
-  titulo: string;
-  inicio: string; // ISO date
-  fin: string;
-  tipo: EventType;
-  descripcion?: string;
-}
+import { AgendaEvent, EventType } from "../types/proceso";
 
 const today = new Date();
 const y = today.getFullYear();

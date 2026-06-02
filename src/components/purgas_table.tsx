@@ -1,68 +1,59 @@
-import { Fragment } from "react";
+import { Fragment, memo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Circle } from "lucide-react";
-import { type PurgaRow, type AnalisisVisual } from "@/data/purgas";
-import { cn } from "@/lib/utils";
+import { type PurgaRow as PurgaRowType } from "@/types/proceso";
 
-const dot_color: Record<Exclude<AnalisisVisual, null>, string> = {
-  Mala: "fill-status-bad text-status-bad",
-  Regular: "fill-status-warn text-status-warn",
-  Buena: "fill-status-ok text-status-ok",
-};
-
-function VisualDot({ a }: { a: AnalisisVisual }) {
-  if (!a) return <span className="text-muted-foreground">—</span>;
+const PurgaRow = memo(({ r }: { r: PurgaRowType }) => {
   return (
-    <div className="flex items-center gap-1.5">
-      <Circle className={cn("h-3 w-3", dot_color[a])} />
-      <span className="text-xs">{a}</span>
-    </div>
+    <TableRow>
+      <TableCell className="font-medium border-r bg-muted/20">{r.tanque}</TableCell>
+      <TableCell className="border-r whitespace-nowrap bg-muted/20">{r.fecha}</TableCell>
+      <TableCell className="border-r whitespace-nowrap bg-muted/20">{r.marca}</TableCell>
+      <TableCell className="text-muted-foreground border-r whitespace-nowrap bg-muted/20">{r.fechaLlenado}</TableCell>
+      <TableCell className="border-r text-right tabular-nums bg-muted/20">{r.horas}</TableCell>
+      <TableCell className="border-r whitespace-nowrap text-xs bg-muted/20">{r.historicas}</TableCell>
+      {r.purgas.map((p, i) => (
+        <Fragment key={i}>
+          <TableCell className="text-[10px] whitespace-nowrap border-l">{p.fechaHora ?? "—"}</TableCell>
+          <TableCell className="text-center text-xs">{p.tiempo ?? "—"}</TableCell>
+          <TableCell className="border-r text-center text-xs font-medium">{p.realiza ?? "—"}</TableCell>
+        </Fragment>
+      ))}
+    </TableRow>
   );
-}
+});
 
-export function PurgasTable({ rows }: { rows: PurgaRow[] }) {
+PurgaRow.displayName = "PurgaRow";
+
+export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
   return (
-    <div className="overflow-x-auto rounded-md border">
+    <div className="overflow-x-auto rounded-md border pb-4">
       <Table>
-        <TableHeader className="bg-secondary">
+        <TableHeader className="bg-secondary/50">
           <TableRow>
-            <TableHead rowSpan={2} className="border-r align-middle">Tanque</TableHead>
-            <TableHead rowSpan={2} className="border-r align-middle">Marca</TableHead>
-            <TableHead rowSpan={2} className="border-r align-middle whitespace-nowrap">Fecha Llenado</TableHead>
-            <TableHead rowSpan={2} className="border-r align-middle whitespace-nowrap">Hrs Reposo</TableHead>
-            {Array.from({ length: 10 }, (_, i) => (
-              <TableHead key={i} colSpan={2} className="text-center border-r border-l">Purga {i + 1}</TableHead>
+            <TableHead rowSpan={2} className="border-r align-middle text-xs font-bold text-foreground">TANQUE</TableHead>
+            <TableHead rowSpan={2} className="border-r align-middle text-xs font-bold text-foreground">FECHA C.</TableHead>
+            <TableHead rowSpan={2} className="border-r align-middle text-xs font-bold text-foreground">MARCA</TableHead>
+            <TableHead rowSpan={2} className="border-r align-middle whitespace-nowrap text-xs font-bold text-foreground">FECHA DE LLENADO</TableHead>
+            <TableHead rowSpan={2} className="border-r align-middle text-xs font-bold text-foreground">HORAS</TableHead>
+            <TableHead rowSpan={2} className="border-r align-middle text-xs font-bold text-foreground">HISTORICAS</TableHead>
+            {Array.from({ length: 8 }, (_, i) => (
+              <TableHead key={i} colSpan={3} className="text-center border-r border-l font-bold bg-primary text-primary-foreground text-xs uppercase">
+                PURGA {i + 1}
+              </TableHead>
             ))}
-            <TableHead rowSpan={2} className="align-middle text-center">Total</TableHead>
           </TableRow>
           <TableRow>
-            {Array.from({ length: 10 }, (_, i) => (
+            {Array.from({ length: 8 }, (_, i) => (
               <Fragment key={i}>
-                <TableHead className="text-xs whitespace-nowrap border-l">Hora</TableHead>
-                <TableHead className="text-xs whitespace-nowrap border-r">Análisis</TableHead>
+                <TableHead className="text-[10px] whitespace-nowrap border-l bg-muted text-center">FECHA/HORA</TableHead>
+                <TableHead className="text-[10px] whitespace-nowrap bg-muted text-center">TIEMPO</TableHead>
+                <TableHead className="text-[10px] whitespace-nowrap border-r bg-muted text-center">REALIZA</TableHead>
               </Fragment>
             ))}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((r) => {
-            const total = r.purgas.filter((p) => p.analisis).length;
-            return (
-              <TableRow key={r.id}>
-                <TableCell className="font-medium border-r">{r.tanque}</TableCell>
-                <TableCell className="border-r whitespace-nowrap">{r.marca}</TableCell>
-                <TableCell className="text-muted-foreground border-r whitespace-nowrap">{r.fechaLlenado}</TableCell>
-                <TableCell className="border-r text-right tabular-nums">{r.horasReposo}h</TableCell>
-                {r.purgas.map((p, i) => (
-                  <Fragment key={i}>
-                    <TableCell className="text-xs whitespace-nowrap border-l">{p.hora ?? "—"}</TableCell>
-                    <TableCell className="border-r"><VisualDot a={p.analisis} /></TableCell>
-                  </Fragment>
-                ))}
-                <TableCell className="text-center font-semibold">{total}</TableCell>
-              </TableRow>
-            );
-          })}
+          {rows.map((r) => <PurgaRow key={r.id} r={r} />)}
         </TableBody>
       </Table>
     </div>

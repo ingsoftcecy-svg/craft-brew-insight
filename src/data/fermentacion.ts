@@ -1,9 +1,4 @@
-export interface FermentPoint {
-  dia: number;
-  extracto: number;
-  temperatura: number;
-  fase: "Fermentación" | "Diacetilo" | "Maduración";
-}
+import { FermentPoint } from "../types/proceso";
 
 export function getCurva(tanque: string): FermentPoint[] {
   const seed = tanque.charCodeAt(tanque.length - 1) + tanque.charCodeAt(tanque.length - 2);

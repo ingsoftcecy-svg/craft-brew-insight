@@ -1,11 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Circle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PurgasDialog } from "@/components/purgas_dialog";
 import { PurgasTable } from "@/components/purgas_table";
-import { purgasInitial, type PurgaRow, type AnalisisVisual } from "@/data/purgas";
-import { TANKS } from "@/data/brands";
+import { useOperacionesStore } from "@/store/useOperacionesStore";
+import type { PurgaFormValues } from "@/lib/schemas/operaciones";
 
 export const Route = createFileRoute("/_app/purgas")({
   head: () => ({
@@ -18,19 +17,11 @@ export const Route = createFileRoute("/_app/purgas")({
 });
 
 function PurgasPage() {
-  const [rows, set_rows] = useState<PurgaRow[]>(purgasInitial);
+  const { purgas, updatePurgaRow } = useOperacionesStore();
   const [open, set_open] = useState(false);
-  const [form, set_form] = useState({ tanque: TANKS[0], numero: "1", hora: "", analisis: "Buena" as Exclude<AnalisisVisual, null> });
 
-  function submit() {
-    const n = parseInt(form.numero) - 1;
-    if (n < 0 || n > 9) return;
-    set_rows((prev) => prev.map((r) => {
-      if (r.tanque !== form.tanque) return r;
-      const purgas = [...r.purgas];
-      purgas[n] = { hora: form.hora, analisis: form.analisis };
-      return { ...r, purgas };
-    }));
+  function submit(data: PurgaFormValues) {
+    updatePurgaRow(data.tanque, data.numero, data.fechaHora, data.tiempo, data.realiza);
     set_open(false);
   }
 
@@ -44,9 +35,7 @@ function PurgasPage() {
         <PurgasDialog 
           open={open} 
           set_open={set_open} 
-          form={form} 
-          set_form={set_form} 
-          rows={rows} 
+          rows={purgas} 
           submit={submit} 
         />
       </div>
@@ -54,12 +43,7 @@ function PurgasPage() {
       <Card className="shadow-sm">
         <CardHeader><CardTitle className="text-base">Registro de purgas</CardTitle></CardHeader>
         <CardContent>
-          <PurgasTable rows={rows} />
-          <div className="mt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1.5"><Circle className="h-3 w-3 fill-status-bad text-status-bad" /> Mala</div>
-            <div className="flex items-center gap-1.5"><Circle className="h-3 w-3 fill-status-warn text-status-warn" /> Regular</div>
-            <div className="flex items-center gap-1.5"><Circle className="h-3 w-3 fill-status-ok text-status-ok" /> Buena</div>
-          </div>
+          <PurgasTable rows={purgas} />
         </CardContent>
       </Card>
     </div>

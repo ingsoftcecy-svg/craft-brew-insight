@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { KpiCard } from "@/components/kpi_card";
 import { StatusBadge } from "@/components/status_badge";
-import { kpis, alertasRecientes, produccionSemanal } from "@/data/dashboard";
+import { alertasRecientes, produccionSemanal } from "@/data/dashboard";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { useOperacionesStore } from "@/store/useOperacionesStore";
 
 export const Route = createFileRoute("/_app/")({
   head: () => ({
@@ -18,6 +19,13 @@ export const Route = createFileRoute("/_app/")({
 });
 
 function Dashboard() {
+  const { extractos, purgas, eventosAgenda, isLoading } = useOperacionesStore();
+
+  const fermentando = extractos.length;
+  const fueraRango = extractos.filter(e => e.estado === "Desviado").length;
+  const purgasHoy = purgas.length;
+  const mantenimientos = eventosAgenda.filter(e => e.tipo === "Mantenimiento").length;
+
   return (
     <div className="space-y-6">
       <div>
@@ -26,10 +34,16 @@ function Dashboard() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard label="Tanques en Fermentación" value={kpis.fermentando} icon={FlaskConical} tone="default" hint="de 60 totales" />
-        <KpiCard label="Extractos fuera de rango" value={kpis.fueraRango} icon={AlertTriangle} tone="bad" hint="requieren acción" />
-        <KpiCard label="Purgas pendientes hoy" value={kpis.purgasHoy} icon={Droplets} tone="warn" hint="próximas 24 hrs" />
-        <KpiCard label="Mantenimientos programados" value={kpis.mantenimientos} icon={Wrench} tone="ok" hint="esta semana" />
+        {isLoading ? (
+          <div className="col-span-full p-4 text-center">Cargando datos...</div>
+        ) : (
+          <>
+            <KpiCard label="Tanques en Fermentación" value={fermentando} icon={FlaskConical} tone="default" hint="de 60 totales" />
+            <KpiCard label="Extractos fuera de rango" value={fueraRango} icon={AlertTriangle} tone="bad" hint="requieren acción" />
+            <KpiCard label="Purgas pendientes hoy" value={purgasHoy} icon={Droplets} tone="warn" hint="próximas 24 hrs" />
+            <KpiCard label="Mantenimientos programados" value={mantenimientos} icon={Wrench} tone="ok" hint="esta semana" />
+          </>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-5">

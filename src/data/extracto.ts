@@ -1,18 +1,5 @@
 import { BRANDS, TANKS } from "./brands";
-
-export type ExtractoEstado = "En Rango" | "En Observación" | "Desviado";
-
-export interface ExtractoRow {
-  id: string;
-  marca: string;
-  tanque: string;
-  fechaLlenado: string;
-  og: number;
-  h24: number;
-  h48: number;
-  h72: number;
-  estado: ExtractoEstado;
-}
+import { ExtractoEstado, ExtractoRow, MarcaCerveza } from "../types/proceso";
 
 function calcEstado(og: number, h72: number): ExtractoEstado {
   const atenuacion = (og - h72) / og;

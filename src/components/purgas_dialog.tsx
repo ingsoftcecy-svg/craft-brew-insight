@@ -4,19 +4,47 @@ import { Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { type PurgaRow, type AnalisisVisual } from "@/data/purgas";
-import { Dispatch, SetStateAction } from "react";
+import { type PurgaRow } from "@/types/proceso";
+import { Dispatch, SetStateAction, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { purgaSchema, type PurgaFormValues } from "@/lib/schemas/operaciones";
 
 interface PurgasDialogProps {
   open: boolean;
   set_open: Dispatch<SetStateAction<boolean>>;
-  form: { tanque: string; numero: string; hora: string; analisis: Exclude<AnalisisVisual, null> };
-  set_form: Dispatch<SetStateAction<{ tanque: string; numero: string; hora: string; analisis: Exclude<AnalisisVisual, null> }>>;
   rows: PurgaRow[];
-  submit: () => void;
+  submit: (data: PurgaFormValues) => void;
 }
 
-export function PurgasDialog({ open, set_open, form, set_form, rows, submit }: PurgasDialogProps) {
+export function PurgasDialog({ open, set_open, rows, submit }: PurgasDialogProps) {
+  const form = useForm<PurgaFormValues>({
+    resolver: zodResolver(purgaSchema),
+    defaultValues: {
+      tanque: rows[0]?.tanque || "",
+      numero: 1,
+      fechaHora: "",
+      tiempo: 1,
+      realiza: "",
+    },
+  });
+
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        tanque: rows[0]?.tanque || "",
+        numero: 1,
+        fechaHora: "",
+        tiempo: 1,
+        realiza: "",
+      });
+    }
+  }, [open, rows, form]);
+
+  const onSubmit = form.handleSubmit((data) => {
+    submit(data);
+  });
+
   return (
     <Dialog open={open} onOpenChange={set_open}>
       <DialogTrigger asChild>
@@ -24,40 +52,44 @@ export function PurgasDialog({ open, set_open, form, set_form, rows, submit }: P
       </DialogTrigger>
       <DialogContent>
         <DialogHeader><DialogTitle>Registrar purga</DialogTitle></DialogHeader>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label>Tanque</Label>
-            <Select value={form.tanque} onValueChange={(v) => set_form({ ...form, tanque: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent className="max-h-64">
-                {rows.map((r) => <SelectItem key={r.tanque} value={r.tanque}>{r.tanque}</SelectItem>)}
-              </SelectContent>
-            </Select>
+        <form onSubmit={onSubmit}>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Tanque</Label>
+              <Select value={form.watch("tanque")} onValueChange={(v) => form.setValue("tanque", v, { shouldValidate: true })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent className="max-h-64">
+                  {rows.map((r) => <SelectItem key={r.tanque} value={r.tanque}>{r.tanque}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              {form.formState.errors.tanque && <p className="text-red-500 text-xs mt-1">{form.formState.errors.tanque.message}</p>}
+            </div>
+            <div>
+              <Label>Nº de purga (1-8)</Label>
+              <Input type="number" min={1} max={8} {...form.register("numero")} />
+              {form.formState.errors.numero && <p className="text-red-500 text-xs mt-1">{form.formState.errors.numero.message}</p>}
+            </div>
+            <div>
+              <Label>Fecha y Hora</Label>
+              <Input type="datetime-local" {...form.register("fechaHora")} />
+              {form.formState.errors.fechaHora && <p className="text-red-500 text-xs mt-1">{form.formState.errors.fechaHora.message}</p>}
+            </div>
+            <div>
+              <Label>Tiempo (minutos)</Label>
+              <Input type="number" min={1} {...form.register("tiempo")} />
+              {form.formState.errors.tiempo && <p className="text-red-500 text-xs mt-1">{form.formState.errors.tiempo.message}</p>}
+            </div>
+            <div className="col-span-2">
+              <Label>Realiza (Iniciales)</Label>
+              <Input placeholder="Ej: VHN" {...form.register("realiza")} />
+              {form.formState.errors.realiza && <p className="text-red-500 text-xs mt-1">{form.formState.errors.realiza.message}</p>}
+            </div>
           </div>
-          <div>
-            <Label>Nº de purga (1-10)</Label>
-            <Input type="number" min={1} max={10} value={form.numero} onChange={(e) => set_form({ ...form, numero: e.target.value })} />
-          </div>
-          <div>
-            <Label>Hora</Label>
-            <Input type="time" value={form.hora} onChange={(e) => set_form({ ...form, hora: e.target.value })} />
-          </div>
-          <div>
-            <Label>Análisis visual</Label>
-            <Select value={form.analisis} onValueChange={(v) => set_form({ ...form, analisis: v as Exclude<AnalisisVisual, null> })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Mala">Mala</SelectItem>
-                <SelectItem value="Regular">Regular</SelectItem>
-                <SelectItem value="Buena">Buena</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => set_open(false)}>Cancelar</Button>
-          <Button onClick={submit}>Guardar</Button>
-        </DialogFooter>
+          <DialogFooter className="mt-6">
+            <Button type="button" variant="outline" onClick={() => set_open(false)}>Cancelar</Button>
+            <Button type="submit">Guardar</Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
