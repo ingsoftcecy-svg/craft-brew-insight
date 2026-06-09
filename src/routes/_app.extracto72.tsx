@@ -5,25 +5,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ExtractoTable } from "@/components/extracto_table";
-import { UploadExtractos } from "@/components/subir_archivos_extracto";
+import { Checar72Table } from "@/components/chequeo72hr_table";
 import { BRANDS } from "@/data/brands";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
 import { obtenerTurnoPorHora } from "@/data/turno";
 
-export const Route = createFileRoute("/_app/extracto")({
+export const Route = createFileRoute("/_app/extracto72")({
   head: () => ({
     meta: [
-      { title: "Extracto 144 Hrs — Elaboración" },
-      { name: "description", content: "Monitoreo de atenuación del mosto hasta 144 horas." },
+      { title: "Chequeo a las 72 Hrs" },
+      { name: "description", content: "Vista de los chequeos de Plato a las 72 horas." },
     ],
   }),
-  component: ExtractoPage,
+  component: Checar72Page,
 });
 
 const page_size = 50;
 
-function ExtractoPage() {
+function Checar72Page() {
   const { extractos, fetchData } = useOperacionesStore();
   const [query, set_query] = useState("");
   const [marca, set_marca] = useState<string>("all");
@@ -36,10 +35,14 @@ function ExtractoPage() {
 
   const filtered = useMemo(() => {
     return extractos.filter((r) => {
+      // Solo mostrar los que tienen fecha de 72h
+      if (!r.h72) return false;
+
       const match_q = !query || r.tanque.toLowerCase().includes(query.toLowerCase());
       const match_m = marca === "all" || r.marca === marca;
-      const turnoCalculado = r.h72 ? obtenerTurnoPorHora(r.h72) : null;
+      const turnoCalculado = obtenerTurnoPorHora(r.h72);
       const match_t = turno === "all" || turnoCalculado === turno;
+      
       return match_q && match_m && match_t;
     });
   }, [extractos, query, marca, turno]);
@@ -51,18 +54,16 @@ function ExtractoPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Extracto 144 Hrs</h1>
-          <p className="text-sm text-muted-foreground">Monitoreo de atenuación del mosto</p>
+          <h1 className="text-2xl font-bold tracking-tight">Chequeo a las 72 Hrs</h1>
+          <p className="text-sm text-muted-foreground">Vista filtrada de Extractos</p>
         </div>
 
       </div>
       
-      <UploadExtractos />
-
       <Card className="shadow-xl border-t-4 border-t-emerald-500 bg-gradient-to-b from-card to-emerald-50/10 dark:to-emerald-950/10 mt-4 overflow-hidden rounded-2xl">
         <CardHeader className="bg-muted/20 border-b pb-6">
           <CardTitle className="text-xl font-extrabold flex items-center gap-2 tracking-tight">
-            <span>Lecturas de Extracto</span>
+            <span>Extracto de 72 Hrs</span>
           </CardTitle>
           <div className="mt-4 flex flex-wrap gap-3">
             <div className="relative w-full max-w-xs">
@@ -82,7 +83,7 @@ function ExtractoPage() {
               </SelectContent>
             </Select>
             <Select value={turno} onValueChange={(v) => { set_turno(v); set_page(0); }}>
-              <SelectTrigger className="w-48"><SelectValue placeholder="Turno (72 Hrs)" /></SelectTrigger>
+              <SelectTrigger className="w-48"><SelectValue placeholder="Turno" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los turnos</SelectItem>
                 <SelectItem value="Turno 1">Turno 1 (23:00-05:59)</SelectItem>
@@ -93,14 +94,16 @@ function ExtractoPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <ExtractoTable rows={rows} />
-          <div className="mt-4 flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">
-              {filtered.length} registros · Página {page + 1} de {pages}
-            </span>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" disabled={page === 0} onClick={() => set_page((p) => p - 1)}>Anterior</Button>
-              <Button variant="outline" size="sm" disabled={page >= pages - 1} onClick={() => set_page((p) => p + 1)}>Siguiente</Button>
+          <div className="pt-4">
+            <Checar72Table rows={rows} />
+            <div className="mt-4 flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">
+                {filtered.length} registros · Página {page + 1} de {pages}
+              </span>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" disabled={page === 0} onClick={() => set_page((p) => p - 1)}>Anterior</Button>
+                <Button variant="outline" size="sm" disabled={page >= pages - 1} onClick={() => set_page((p) => p + 1)}>Siguiente</Button>
+              </div>
             </div>
           </div>
         </CardContent>

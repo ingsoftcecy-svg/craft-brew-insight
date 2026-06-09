@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { format, isSameMonth, isSameDay, addMonths, subMonths } from "date-fns";
@@ -27,7 +28,12 @@ interface AgendaCalendarProps {
 }
 
 export function AgendaCalendar({ cursor, set_cursor, days, events }: AgendaCalendarProps) {
-  const events_by_day = (d: Date) => events.filter((e) => isSameDay(new Date(e.inicio), d));
+  const events_by_day = (d: Date) => events.filter((e) => {
+    if (!isSameDay(new Date(e.inicio), d)) return false;
+    // Filtrar eventos de Plato que NO sean de 72h
+    if (e.titulo.includes("Medir Plato") && !e.titulo.includes("72h")) return false;
+    return true;
+  });
 
   return (
     <Card className="shadow-sm">
@@ -70,12 +76,41 @@ export function AgendaCalendar({ cursor, set_cursor, days, events }: AgendaCalen
                 </div>
                 <div className="space-y-1">
                   {day_events.slice(0, 3).map((e) => (
-                    <div key={e.id} className={cn("truncate rounded px-1.5 py-0.5 text-[11px]", type_colors[e.tipo])}>
-                      {format(new Date(e.inicio), "HH:mm")} {e.titulo}
+                    <div key={e.id} className={cn("whitespace-normal break-words leading-tight rounded px-1.5 py-1 text-[11px]", type_colors[e.tipo])}>
+                      <span className="font-semibold">{format(new Date(e.inicio), "HH:mm")}</span> - {e.titulo}
                     </div>
                   ))}
                   {day_events.length > 3 && (
-                    <div className="text-[10px] text-muted-foreground">+{day_events.length - 3} más</div>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <button className="text-[10px] font-medium text-muted-foreground hover:text-primary hover:underline transition-colors w-full text-left pt-1">
+                          +{day_events.length - 3} más
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Agenda del {format(day, "d 'de' MMMM", { locale: es })}</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-3 mt-2">
+                          {day_events.map(e => (
+                            <div key={e.id} className={cn("rounded-lg p-3 border", type_colors[e.tipo])}>
+                              <div className="font-bold flex items-center gap-2">
+                                <span className={cn("h-2.5 w-2.5 rounded-full", dot_colors[e.tipo])} />
+                                {format(new Date(e.inicio), "HH:mm")} - {e.titulo}
+                              </div>
+                              {e.descripcion && (
+                                <p className="mt-1 text-sm opacity-90">{e.descripcion}</p>
+                              )}
+                              {e.turno && (
+                                <div className="mt-1 text-xs font-semibold opacity-75">
+                                  {e.turno}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   )}
                 </div>
               </div>

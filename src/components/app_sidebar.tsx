@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Calendar, Beaker, LineChart, ClipboardList, Beer } from "lucide-react";
+import { Home, Calendar, Beaker, LineChart, ClipboardList, Beer, Clock } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -16,7 +16,8 @@ import {
 const items = [
   { title: "Dashboard", url: "/", icon: Home },
   { title: "Agenda", url: "/agenda", icon: Calendar },
-  { title: "Extracto 72 Hrs", url: "/extracto", icon: Beaker },
+  { title: "Chequeo Plato (72 Hrs)", url: "/extracto72", icon: Clock },
+  { title: "Extractos (144 Hrs)", url: "/extracto", icon: Beaker },
   { title: "Curvas de Fermentación", url: "/curvas", icon: LineChart },
   { title: "Purgas de Trub", url: "/purgas", icon: ClipboardList },
 ];
