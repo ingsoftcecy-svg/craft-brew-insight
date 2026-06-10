@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { ExtractoRow, PurgaRow, AgendaEvent, PurgaEntry, MarcaCerveza } from "../types/proceso";
-import { procesoService } from "../lib/api/procesoService";
+
 import { addHours } from "date-fns";
 import { obtenerTurnoPorHora } from "@/data/turno";
 
@@ -50,9 +50,9 @@ export const useOperacionesStore = create<OperacionesState>((set) => ({
         obtenerEventosAgenda().catch(() => []),
       ]);
   
-      const extractos = extractosFb.length > 0 ? extractosFb : await procesoService.getExtractos();
-      const purgas = purgasFb.length > 0 ? purgasFb : await procesoService.getPurgas();
-      const eventosAgenda = eventosAgendaFb.length > 0 ? eventosAgendaFb : await procesoService.getEventosAgenda();
+      const extractos = extractosFb;
+      const purgas = purgasFb;
+      const eventosAgenda = eventosAgendaFb;
 
       set({ extractos, purgas, eventosAgenda, periodoActual: periodoMasReciente, isLoading: false });
     } catch (error) {

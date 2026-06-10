@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { format, isSameMonth, isSameDay, addMonths, subMonths } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { type AgendaEvent, type EventType } from "@/data/agenda";
+import { type AgendaEvent } from "@/types/proceso";
 import { Dispatch, SetStateAction } from "react";
 
 const getEventColorClass = (e: any, isDot = false) => {
