@@ -1,5 +1,6 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
+import { Circle } from "lucide-react";
 
 interface ExtractoTableProps {
   rows: any[];
@@ -57,7 +58,7 @@ export function ExtractoTable({ rows }: ExtractoTableProps) {
             <TableRow>
               <TableCell colSpan={9} className="text-center text-muted-foreground py-12">
                 <div className="flex flex-col items-center gap-2">
-                  <span className="text-4xl opacity-50">📂</span>
+                  <Circle className="h-8 w-8 opacity-50" />
                   <p>Sin resultados</p>
                 </div>
               </TableCell>

@@ -21,19 +21,39 @@ export const Route = createFileRoute("/_app/purgas")({
 });
 
 function PurgasPage() {
-  const { purgas } = useOperacionesStore();
+  const { extractos } = useOperacionesStore();
   const [query, set_query] = useState("");
   const [marca, set_marca] = useState<string>("all");
   const [turno, set_turno] = useState<string>("all");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
 
   const filtered = useMemo(() => {
+    const purgas = extractos.map((e) => {
+      const fechaBase = e.fechaLlenado ? new Date(e.fechaLlenado) : null;
+      const purgas8 = Array.from({ length: 8 }, (_, i) => ({
+        fechaHora: fechaBase
+          ? new Date(fechaBase.getTime() + (i + 1) * 8 * 60 * 60 * 1000).toISOString()
+          : null,
+        tiempo: null,
+        realiza: null,
+      }));
+      return {
+        id: e.id,
+        tanque: e.tanque,
+        fecha: e.fechaLlenado,
+        marca: e.marca,
+        fechaLlenado: e.fechaLlenado,
+        horas: "0",
+        historicas: "0",
+        purgas: purgas8,
+      };
+    });
+
     const results = purgas.filter((r) => {
       const match_q = !query || r.tanque.toLowerCase().includes(query.toLowerCase());
       const match_m = marca === "all" || r.marca === marca;
       const turnoCalculado = obtenerTurnoPorHora(r.fechaLlenado);
       const match_t = turno === "all" || turnoCalculado === turno;
-      
       return match_q && match_m && match_t;
     });
 
@@ -42,7 +62,7 @@ function PurgasPage() {
       const dateB = new Date(b.fechaLlenado).getTime();
       return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
     });
-  }, [purgas, query, marca, turno, sortOrder]);
+  }, [extractos, query, marca, turno, sortOrder]);
 
   return (
     <div className="space-y-6">
