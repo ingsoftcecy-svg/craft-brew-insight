@@ -18,6 +18,7 @@ interface OperacionesState {
   toggleEstado72h: (id: string) => Promise<void>;
   addEventoAgenda: (evento: AgendaEvent) => void;
   updatePurgaRow: (tanque: string, numeroPurga: number, fechaHora: string, tiempo: number, realiza: string) => void;
+  updatePurgaField: (id: string, numeroPurga: number, campo: "tiempo" | "realiza", valor: string | number) => Promise<void>;
   cargarPurgasDesdeArchivo: (filas: any[]) => void;
   cargarExtractosDesdeArchivo: (filas: any[]) => void;
 }
@@ -36,19 +37,21 @@ export const useOperacionesStore = create<OperacionesState>((set) => ({
       // Importamos las funciones dinámicamente para evitar dependencias circulares si las hubiera
       const { obtenerExtractosPorPeriodo, listarPeriodosExtractos } = await import("@/lib/api/extractosFirebaseService");
       const { obtenerEventosAgenda } = await import("@/lib/api/agendaFirebaseService");
+      const { obtenerPurgasPorPeriodo } = await import("@/lib/api/purgasFirebaseService");
       
       const periodosDisponibles = await listarPeriodosExtractos().catch(() => []);
       
-      // AL REVES (Ascendente) -> Agarrar el último en lugar del primero
-      const periodoMasReciente = periodosDisponibles.length > 0 ? periodosDisponibles[periodosDisponibles.length - 1].periodo : "2026-06";
+      // Por defecto agarramos el periodo más reciente (índice 0, ya que Firebase nos los devuelve ordenados descendentes)
+      const periodoMasReciente = periodosDisponibles.length > 0 ? periodosDisponibles[0].periodo : "2026-06";
       
-      const [extractosFb, purgas, eventosAgendaFb] = await Promise.all([
+      const [extractosFb, purgasFb, eventosAgendaFb] = await Promise.all([
         obtenerExtractosPorPeriodo(periodoMasReciente).catch(() => []),
-        procesoService.getPurgas(),
+        obtenerPurgasPorPeriodo(periodoMasReciente).catch(() => []),
         obtenerEventosAgenda().catch(() => []),
       ]);
   
       const extractos = extractosFb.length > 0 ? extractosFb : await procesoService.getExtractos();
+      const purgas = purgasFb.length > 0 ? purgasFb : await procesoService.getPurgas();
       const eventosAgenda = eventosAgendaFb.length > 0 ? eventosAgendaFb : await procesoService.getEventosAgenda();
 
       set({ extractos, purgas, eventosAgenda, periodoActual: periodoMasReciente, isLoading: false });
@@ -73,6 +76,23 @@ export const useOperacionesStore = create<OperacionesState>((set) => ({
       return { ...r, purgas: newPurgas };
     })
   })),
+
+  updatePurgaField: async (id, numeroPurga, campo, valor) => {
+    // 1. Optimistic update
+    set((state) => ({
+      purgas: state.purgas.map((r) => {
+        if (r.id !== id) return r;
+        const newPurgas = [...r.purgas];
+        if (!newPurgas[numeroPurga - 1]) newPurgas[numeroPurga - 1] = { fechaHora: null, tiempo: null, realiza: null };
+        if (campo === "tiempo") {
+          newPurgas[numeroPurga - 1].tiempo = Number(valor);
+        } else {
+          newPurgas[numeroPurga - 1].realiza = String(valor);
+        }
+        return { ...r, purgas: newPurgas };
+      })
+    }));
+  },
 
   cargarPurgasDesdeArchivo: (filas) => set((state) => {
     const nuevosEventosAgenda: AgendaEvent[] = [];

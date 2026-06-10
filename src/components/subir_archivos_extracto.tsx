@@ -49,11 +49,18 @@ function parsearFechaExcel(valor: any): Date | null {
   const str = String(valor).trim();
 
   if (!isNaN(Number(str)) && Number(str) > 30000) {
-    return new Date((Number(str) - 25569) * 86400 * 1000);
+    const utcDate = new Date((Number(str) - 25569) * 86400 * 1000);
+    return new Date(utcDate.getTime() + Math.abs(utcDate.getTimezoneOffset()) * 60000);
   }
 
   if (str.includes("/")) {
-    const [fechaPart, horaPart] = str.split(" ");
+    const parts = str.split(" ");
+    const fechaPart = parts[0];
+    const horaPart = parts[1];
+    
+    const isPM = str.toLowerCase().includes("pm");
+    const isAM = str.toLowerCase().includes("am");
+
     const partes = fechaPart.split("/");
     const d = Number(partes[0]);
     const m = Number(partes[1]) - 1;
@@ -63,7 +70,10 @@ function parsearFechaExcel(valor: any): Date | null {
     const fecha = new Date(y, m, d);
 
     if (horaPart) {
-      const [hh, mm] = horaPart.split(":").map(Number);
+      let [hh, mm] = horaPart.split(":").map(Number);
+      if (isPM && hh < 12) hh += 12;
+      if (isAM && hh === 12) hh = 0;
+      
       if (!isNaN(hh)) fecha.setHours(hh);
       if (!isNaN(mm)) fecha.setMinutes(mm);
     }

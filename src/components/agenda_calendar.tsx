@@ -8,16 +8,14 @@ import { cn } from "@/lib/utils";
 import { type AgendaEvent, type EventType } from "@/data/agenda";
 import { Dispatch, SetStateAction } from "react";
 
-const type_colors: Record<EventType, string> = {
-  Turno: "bg-blue-500/15 text-blue-700 border-l-2 border-blue-500",
-  Mantenimiento: "bg-orange-500/15 text-orange-700 border-l-2 border-orange-500",
-  CIP: "bg-emerald-500/15 text-emerald-700 border-l-2 border-emerald-500",
-};
-
-const dot_colors: Record<EventType, string> = {
-  Turno: "bg-blue-500",
-  Mantenimiento: "bg-orange-500",
-  CIP: "bg-emerald-500",
+const getEventColorClass = (e: any, isDot = false) => {
+  if (e.titulo && e.titulo.includes("Purga")) {
+    return isDot ? "bg-red-500" : "bg-red-500/15 text-red-700 border-l-2 border-red-500";
+  }
+  if (e.titulo && e.titulo.includes("Chequeo Plato")) {
+    return isDot ? "bg-blue-500" : "bg-blue-500/15 text-blue-700 border-l-2 border-blue-500";
+  }
+  return isDot ? "bg-gray-500" : "bg-gray-500/15 text-gray-700 border-l-2 border-gray-500";
 };
 
 interface AgendaCalendarProps {
@@ -76,7 +74,7 @@ export function AgendaCalendar({ cursor, set_cursor, days, events }: AgendaCalen
                 </div>
                 <div className="space-y-1">
                   {day_events.slice(0, 3).map((e) => (
-                    <div key={e.id} className={cn("whitespace-normal break-words leading-tight rounded px-1.5 py-1 text-[11px]", type_colors[e.tipo])}>
+                    <div key={e.id} className={cn("whitespace-normal break-words leading-tight rounded px-1.5 py-1 text-[11px]", getEventColorClass(e))}>
                       <span className="font-semibold">{format(new Date(e.inicio), "HH:mm")}</span> - {e.titulo}
                     </div>
                   ))}
@@ -93,9 +91,9 @@ export function AgendaCalendar({ cursor, set_cursor, days, events }: AgendaCalen
                         </DialogHeader>
                         <div className="space-y-3 mt-2">
                           {day_events.map(e => (
-                            <div key={e.id} className={cn("rounded-lg p-3 border", type_colors[e.tipo])}>
+                            <div key={e.id} className={cn("rounded-lg p-3 border", getEventColorClass(e))}>
                               <div className="font-bold flex items-center gap-2">
-                                <span className={cn("h-2.5 w-2.5 rounded-full", dot_colors[e.tipo])} />
+                                <span className={cn("h-2.5 w-2.5 rounded-full", getEventColorClass(e, true))} />
                                 {format(new Date(e.inicio), "HH:mm")} - {e.titulo}
                               </div>
                               {e.descripcion && (
@@ -118,10 +116,13 @@ export function AgendaCalendar({ cursor, set_cursor, days, events }: AgendaCalen
           })}
         </div>
         <div className="mt-4 flex flex-wrap gap-4 text-xs">
-          {(["Turno", "Mantenimiento", "CIP"] as EventType[]).map((t) => (
-            <div key={t} className="flex items-center gap-2">
-              <span className={cn("h-3 w-3 rounded-full", dot_colors[t])} />
-              <span className="text-muted-foreground">{t === "CIP" ? "Limpieza CIP" : t}</span>
+          {[
+            { label: "Chequeo Plato", tipo: "Turno", titulo: "Chequeo Plato" },
+            { label: "Purga de Trub", tipo: "Purga", titulo: "Purga" }
+          ].map((item) => (
+            <div key={item.label} className="flex items-center gap-2">
+              <span className={cn("h-3 w-3 rounded-full", getEventColorClass(item, true))} />
+              <span className="text-muted-foreground">{item.label}</span>
             </div>
           ))}
         </div>

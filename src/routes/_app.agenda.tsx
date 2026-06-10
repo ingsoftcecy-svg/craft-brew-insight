@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_app/agenda")({
 });
 
 function AgendaPage() {
-  const { eventosAgenda, extractos, addEventoAgenda } = useOperacionesStore();
+  const { eventosAgenda, extractos, purgas, addEventoAgenda } = useOperacionesStore();
   const [cursor, set_cursor] = useState(new Date());
   const [open, set_open] = useState(false);
  
@@ -32,9 +32,50 @@ function AgendaPage() {
   }, [cursor]);
 
   const eventosFiltrados = useMemo(() => {
-    if (turnoSeleccionado === "TODOS") return eventosAgenda;
-    return eventosAgenda.filter((evento: any) => evento.turno === turnoSeleccionado);
-  }, [eventosAgenda, turnoSeleccionado]);
+    // Generar eventos de purgas al vuelo
+    const purgasEventos = purgas.flatMap((r) => 
+      r.purgas.map((p, i) => {
+        // Solo mostrar la Purga 8 (índice 7) en la agenda
+        if (i !== 7) return null;
+        if (!p.fechaHora) return null;
+        return {
+          id: `purga-${r.id}-${i}`,
+          titulo: `Purga ${i + 1} - Tanque ${r.tanque}`,
+          inicio: p.fechaHora,
+          fin: p.fechaHora,
+          tipo: "Purga" as const,
+          descripcion: `Marca: ${r.marca} | Empleado: ${p.realiza || 'Pendiente'} | Tiempo: ${p.tiempo ? p.tiempo + ' min' : 'Pendiente'}`,
+          turno: obtenerTurnoPorHora(p.fechaHora),
+          completado: !!(p.realiza && p.tiempo)
+        };
+      }).filter(Boolean)
+    );
+
+    // Calcular "completado" para eventosAgenda (Chequeo Plato)
+    const eventosMapeados = eventosAgenda.map((evento: any) => {
+      let completado = false;
+      let extractoId: string | undefined = undefined;
+      if (evento.titulo?.includes("Chequeo Plato 72h")) {
+        const match = evento.titulo.match(/Tanque\s+([\w-]+)/i);
+        if (match) {
+          const tanque = match[1];
+          const extracto = extractos.find((e) => e.tanque === tanque);
+          if (extracto) {
+            extractoId = extracto.id;
+            if (extracto.estado72h === "Completado") {
+              completado = true;
+            }
+          }
+        }
+      }
+      return { ...evento, completado, extractoId };
+    });
+
+    const todosLosEventos = [...eventosMapeados, ...purgasEventos];
+
+    if (turnoSeleccionado === "TODOS") return todosLosEventos;
+    return todosLosEventos.filter((evento: any) => evento.turno === turnoSeleccionado);
+  }, [eventosAgenda, purgas, turnoSeleccionado]);
 
 
   function submit(data: AgendaFormValues) {
@@ -101,7 +142,7 @@ function AgendaPage() {
         cursor={cursor} 
         set_cursor={set_cursor} 
         days={days} 
-        events={eventosFiltrados} // 👈 Le pasamos los eventos pasados por el filtro
+        events={eventosFiltrados}
       />
     </div>
   );

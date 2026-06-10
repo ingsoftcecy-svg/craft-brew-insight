@@ -22,7 +22,7 @@ export type MarcaCerveza =
   | "Victoria";
 
 
-export type EventType = "Turno" | "Mantenimiento" | "CIP";
+export type EventType = "Turno1" | "Turno2" | "Turno3";
 
 export interface AgendaEvent {
   id: string;
@@ -31,6 +31,9 @@ export interface AgendaEvent {
   fin: string;
   tipo: EventType;
   descripcion?: string;
+  turno?: string;
+  completado?: boolean;
+  extractoId?: string;
 }
 
 export type ExtractoEstado = "En Rango" | "En Observación" | "Desviado";

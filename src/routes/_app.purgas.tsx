@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { Search, ArrowDownAZ, ArrowUpZA } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PurgasDialog } from "@/components/purgas_dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { PurgasTable } from "@/components/purgas_table";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
-import type { PurgaFormValues } from "@/lib/schemas/operaciones";
-import { UploadPurgas } from "@/components/subir_archivos";
+import { BRANDS } from "@/data/brands";
+import { obtenerTurnoPorHora } from "@/data/turno";
 
 export const Route = createFileRoute("/_app/purgas")({
   head: () => ({
@@ -18,34 +21,93 @@ export const Route = createFileRoute("/_app/purgas")({
 });
 
 function PurgasPage() {
-  const { purgas, updatePurgaRow } = useOperacionesStore();
-  const [open, set_open] = useState(false);
+  const { purgas } = useOperacionesStore();
+  const [query, set_query] = useState("");
+  const [marca, set_marca] = useState<string>("all");
+  const [turno, set_turno] = useState<string>("all");
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
 
-  function submit(data: PurgaFormValues) {
-    updatePurgaRow(data.tanque, data.numero, data.fechaHora, data.tiempo, data.realiza);
-    set_open(false);
-  }
+  const filtered = useMemo(() => {
+    const results = purgas.filter((r) => {
+      const match_q = !query || r.tanque.toLowerCase().includes(query.toLowerCase());
+      const match_m = marca === "all" || r.marca === marca;
+      const turnoCalculado = obtenerTurnoPorHora(r.fechaLlenado);
+      const match_t = turno === "all" || turnoCalculado === turno;
+      
+      return match_q && match_m && match_t;
+    });
+
+    return results.sort((a, b) => {
+      const dateA = new Date(a.fechaLlenado).getTime();
+      const dateB = new Date(b.fechaLlenado).getTime();
+      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+    });
+  }, [purgas, query, marca, turno, sortOrder]);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Control de Purgas de Trub en Frío</h1>
-          <p className="text-sm text-muted-foreground">Registro de descargas de sedimentos por tanque</p>
+          <p className="text-sm text-muted-foreground">Registro automatizado de descargas (Generado desde Extractos)</p>
         </div>
-        <UploadPurgas/>
-        <PurgasDialog 
-          open={open} 
-          set_open={set_open} 
-          rows={purgas} 
-          submit={submit} 
-        />
       </div>
 
-      <Card className="shadow-sm">
-        <CardHeader><CardTitle className="text-base">Registro de purgas</CardTitle></CardHeader>
-        <CardContent>
-          <PurgasTable rows={purgas} />
+      <Card className="shadow-xl border-t-4 border-t-emerald-500 bg-gradient-to-b from-card to-emerald-50/10 dark:to-emerald-950/10 mt-4 overflow-hidden rounded-2xl">
+        <CardHeader className="bg-muted/20 border-b pb-6">
+          <CardTitle className="text-xl font-extrabold flex items-center gap-2 tracking-tight">
+            <span>Registro de Purgas</span>
+          </CardTitle>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <div className="relative w-full max-w-xs">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={query}
+                onChange={(e) => set_query(e.target.value)}
+                placeholder="Buscar por tanque..."
+                className="pl-9"
+              />
+            </div>
+            <Select value={marca} onValueChange={set_marca}>
+              <SelectTrigger className="w-48"><SelectValue placeholder="Marca" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las marcas</SelectItem>
+                {BRANDS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={turno} onValueChange={set_turno}>
+              <SelectTrigger className="w-48"><SelectValue placeholder="Turno de llenado" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los turnos</SelectItem>
+                <SelectItem value="Turno 1">Turno 1 (23:00-05:59)</SelectItem>
+                <SelectItem value="Turno 2">Turno 2 (06:00-15:29)</SelectItem>
+                <SelectItem value="Turno 3">Turno 3 (15:30-22:59)</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex items-center gap-2 ml-auto">
+              <Button
+                variant={sortOrder === "desc" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSortOrder("desc")}
+                className="h-10 px-3"
+              >
+                <ArrowDownAZ className="mr-2 h-4 w-4" />
+                Más recientes
+              </Button>
+              <Button
+                variant={sortOrder === "asc" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSortOrder("asc")}
+                className="h-10 px-3"
+              >
+                <ArrowUpZA className="mr-2 h-4 w-4" />
+                Más antiguos
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <PurgasTable rows={filtered} />
         </CardContent>
       </Card>
     </div>

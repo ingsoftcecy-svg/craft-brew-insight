@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TANKS } from "@/data/brands";
-import { getCurva, type FermentPoint } from "@/data/fermentacion";
+import { type FermentPoint } from "@/types/proceso";
 import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceArea } from "recharts";
 
 export const Route = createFileRoute("/_app/curvas")({
@@ -29,8 +29,11 @@ function CustomTooltip({ active, payload }: any) {
 }
 
 function CurvasPage() {
+  // Ya no usamos datos falsos de getCurva. Solo usaremos datos de la BD.
+  // Como actualmente la BD no guarda los valores numéricos del Plato (solo fechas),
+  // el arreglo de datos inicia vacío.
   const [tanque, setTanque] = useState(TANKS[0]);
-  const data = useMemo(() => getCurva(tanque), [tanque]);
+  const data: any[] = [];
 
   return (
     <div className="space-y-6">

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
-import { Search } from "lucide-react";
+import { Search, ArrowDownAZ, ArrowUpZA } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -28,6 +28,7 @@ function ExtractoPage() {
   const [query, set_query] = useState("");
   const [marca, set_marca] = useState<string>("all");
   const [turno, set_turno] = useState<string>("all");
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const [page, set_page] = useState(0);
 
   useEffect(() => {
@@ -35,14 +36,20 @@ function ExtractoPage() {
   }, [fetchData]);
 
   const filtered = useMemo(() => {
-    return extractos.filter((r) => {
+    const results = extractos.filter((r) => {
       const match_q = !query || r.tanque.toLowerCase().includes(query.toLowerCase());
       const match_m = marca === "all" || r.marca === marca;
       const turnoCalculado = r.h72 ? obtenerTurnoPorHora(r.h72) : null;
       const match_t = turno === "all" || turnoCalculado === turno;
       return match_q && match_m && match_t;
     });
-  }, [extractos, query, marca, turno]);
+
+    return results.sort((a, b) => {
+      const dateA = new Date(a.fechaLlenado).getTime();
+      const dateB = new Date(b.fechaLlenado).getTime();
+      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+    });
+  }, [extractos, query, marca, turno, sortOrder]);
 
   const pages = Math.max(1, Math.ceil(filtered.length / page_size));
   const rows = filtered.slice(page * page_size, (page + 1) * page_size);
@@ -90,6 +97,20 @@ function ExtractoPage() {
                 <SelectItem value="Turno 3">Turno 3 (15:30-22:59)</SelectItem>
               </SelectContent>
             </Select>
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={() => {
+                setSortOrder(sortOrder === "desc" ? "asc" : "desc");
+                set_page(0);
+              }}
+            >
+              {sortOrder === "desc" ? (
+                <><ArrowDownAZ className="h-4 w-4" /> Orden por fecha mas reciente</>
+              ) : (
+                <><ArrowUpZA className="h-4 w-4" /> Orden por fecha mas antigua</>
+              )}
+            </Button>
           </div>
         </CardHeader>
         <CardContent>

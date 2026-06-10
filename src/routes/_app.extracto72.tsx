@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
-import { Search } from "lucide-react";
+import { Search, ArrowDownAZ, ArrowUpZA } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -27,6 +27,7 @@ function Checar72Page() {
   const [query, set_query] = useState("");
   const [marca, set_marca] = useState<string>("all");
   const [turno, set_turno] = useState<string>("all");
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const [page, set_page] = useState(0);
 
   useEffect(() => {
@@ -34,7 +35,7 @@ function Checar72Page() {
   }, [fetchData]);
 
   const filtered = useMemo(() => {
-    return extractos.filter((r) => {
+    const results = extractos.filter((r) => {
       // Solo mostrar los que tienen fecha de 72h
       if (!r.h72) return false;
 
@@ -45,7 +46,14 @@ function Checar72Page() {
       
       return match_q && match_m && match_t;
     });
-  }, [extractos, query, marca, turno]);
+
+    return results.sort((a, b) => {
+      // Usamos h72 para ordenar, ya que esta tabla es de 72 hrs
+      const dateA = new Date(a.h72!).getTime();
+      const dateB = new Date(b.h72!).getTime();
+      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+    });
+  }, [extractos, query, marca, turno, sortOrder]);
 
   const pages = Math.max(1, Math.ceil(filtered.length / page_size));
   const rows = filtered.slice(page * page_size, (page + 1) * page_size);
@@ -83,7 +91,7 @@ function Checar72Page() {
               </SelectContent>
             </Select>
             <Select value={turno} onValueChange={(v) => { set_turno(v); set_page(0); }}>
-              <SelectTrigger className="w-48"><SelectValue placeholder="Turno" /></SelectTrigger>
+              <SelectTrigger className="w-48"><SelectValue placeholder="Turno (72 Hrs)" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los turnos</SelectItem>
                 <SelectItem value="Turno 1">Turno 1 (23:00-05:59)</SelectItem>
@@ -91,6 +99,20 @@ function Checar72Page() {
                 <SelectItem value="Turno 3">Turno 3 (15:30-22:59)</SelectItem>
               </SelectContent>
             </Select>
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={() => {
+                setSortOrder(sortOrder === "desc" ? "asc" : "desc");
+                set_page(0);
+              }}
+            >
+              {sortOrder === "desc" ? (
+                <><ArrowDownAZ className="h-4 w-4" />Orden por fecha mas reciente</>
+              ) : (
+                <><ArrowUpZA className="h-4 w-4" />Orden por fecha mas antigua</>
+              )}
+            </Button>
           </div>
         </CardHeader>
         <CardContent>

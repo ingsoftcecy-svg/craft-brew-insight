@@ -14,7 +14,7 @@ export const agendaSchema = z.object({
   titulo: z.string().min(1, "El título es requerido"),
   inicio: z.string().min(1, "La fecha de inicio es requerida"),
   fin: z.string().min(1, "La fecha de fin es requerida"),
-  tipo: z.enum(["Turno", "Mantenimiento", "CIP"], { required_error: "Selecciona un tipo" }),
+  tipo: z.enum(["Turno1", "Turno2", "Turno3"], { required_error: "Selecciona un tipo" }),
   descripcion: z.string().optional(),
 });
 

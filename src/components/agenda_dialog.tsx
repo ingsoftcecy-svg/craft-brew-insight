@@ -24,7 +24,7 @@ export function AgendaDialog({ open, set_open, submit }: AgendaDialogProps) {
       titulo: "",
       inicio: "",
       fin: "",
-      tipo: "Turno",
+      tipo: "Turno1",
       descripcion: "",
     },
   });
@@ -35,7 +35,7 @@ export function AgendaDialog({ open, set_open, submit }: AgendaDialogProps) {
         titulo: "",
         inicio: "",
         fin: "",
-        tipo: "Turno",
+        tipo: "Turno1",
         descripcion: "",
       });
     }
@@ -80,9 +80,9 @@ export function AgendaDialog({ open, set_open, submit }: AgendaDialogProps) {
               <Select value={form.watch("tipo")} onValueChange={(v) => form.setValue("tipo", v as EventType, { shouldValidate: true })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Turno">Turno</SelectItem>
-                  <SelectItem value="Mantenimiento">Mantenimiento</SelectItem>
-                  <SelectItem value="CIP">Limpieza CIP</SelectItem>
+                  <SelectItem value="Turno1">Turno 1</SelectItem>
+                  <SelectItem value="Turno2">Turno 2</SelectItem>
+                  <SelectItem value="Turno3">Turno 3</SelectItem>
                 </SelectContent>
               </Select>
               {form.formState.errors.tipo && <p className="text-red-500 text-xs mt-1">{form.formState.errors.tipo.message}</p>}

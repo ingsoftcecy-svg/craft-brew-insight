@@ -24,10 +24,8 @@ import type { PurgaRow, PurgaEntry, MarcaCerveza } from "@/types/proceso";
 // ─────────────────────────────────────────────────────────────
 const COLUMNAS_REQUERIDAS = new Set([
   "TANQUE",
-  "FECHADOR",
+  "FECHA_LLENADO",
   "MARCA",
-  "HORAS",
-  "PROMEDIO_DE_PURGADO",
 ]);
 
 /** Genera las llaves dinámicas PURGA1..8, TIEMPO1..8, REALIZA1..8 */
@@ -85,12 +83,19 @@ function parsearFechaExcel(valor: any): Date | null {
 
   // Número de serie de Excel (e.g. 46180)
   if (!isNaN(Number(str)) && Number(str) > 30000) {
-    return new Date((Number(str) - 25569) * 86400 * 1000);
+    const utcDate = new Date((Number(str) - 25569) * 86400 * 1000);
+    return new Date(utcDate.getTime() + Math.abs(utcDate.getTimezoneOffset()) * 60000);
   }
 
   // Formato con diagonales: dd/mm/yyyy o dd/mm/yy HH:MM
   if (str.includes("/")) {
-    const [fechaPart, horaPart] = str.split(" ");
+    const parts = str.split(" ");
+    const fechaPart = parts[0];
+    const horaPart = parts[1];
+    
+    const isPM = str.toLowerCase().includes("pm");
+    const isAM = str.toLowerCase().includes("am");
+
     const partes = fechaPart.split("/");
     const d = Number(partes[0]);
     const m = Number(partes[1]) - 1;
@@ -101,7 +106,10 @@ function parsearFechaExcel(valor: any): Date | null {
 
     // Si hay parte de hora, la agregamos
     if (horaPart) {
-      const [hh, mm] = horaPart.split(":").map(Number);
+      let [hh, mm] = horaPart.split(":").map(Number);
+      if (isPM && hh < 12) hh += 12;
+      if (isAM && hh === 12) hh = 0;
+      
       if (!isNaN(hh)) fecha.setHours(hh);
       if (!isNaN(mm)) fecha.setMinutes(mm);
     }
@@ -174,19 +182,20 @@ function limpiarYMapear(filasJson: any[]): ResultadoLimpieza {
     const fila: Record<string, any> = {};
     Object.keys(filaOriginal).forEach((llave) => {
       const normalizada = normalizarLlave(llave);
-      if (TODAS_LAS_COLUMNAS.has(normalizada)) {
+      if (TODAS_LAS_COLUMNAS.has(normalizada) || normalizada === "FERMENTADOR") {
         fila[normalizada] = filaOriginal[llave];
       }
     });
 
+    const tanqueOriginal = fila.TANQUE || fila.FERMENTADOR;
     // 2️⃣ Descartar filas sin tanque (filas vacías)
-    if (!fila.TANQUE || String(fila.TANQUE).trim() === "") {
+    if (!tanqueOriginal || String(tanqueOriginal).trim() === "") {
       descartadas++;
       continue;
     }
 
     // 3️⃣ Parsear fecha de llenado
-    const fechaParsed = parsearFechaExcel(fila.FECHADOR);
+    const fechaParsed = parsearFechaExcel(fila.FECHA_FIN_DE_LLENADO || fila.FECHA_DE_LLENADO || fila.FECHA_LLENADO || fila.FECHADOR);
     const fechaLlenado = fechaParsed ? fechaParsed.toISOString() : "";
 
     // Detectar el periodo del primer registro válido
@@ -212,6 +221,11 @@ function limpiarYMapear(filasJson: any[]): ResultadoLimpieza {
       if (fechaHoraRaw != null && String(fechaHoraRaw).trim() !== "") {
         const fechaPurga = parsearFechaExcel(fechaHoraRaw);
         fechaHora = fechaPurga ? fechaPurga.toISOString() : String(fechaHoraRaw);
+      } else if (fechaParsed) {
+        // Calcular sumando (i * 8) horas a la fecha de llenado
+        const horasSumar = i * 8;
+        const fechaCalculada = new Date(fechaParsed.getTime() + horasSumar * 60 * 60 * 1000);
+        fechaHora = fechaCalculada.toISOString();
       }
 
       listaPurgas.push({
@@ -223,7 +237,7 @@ function limpiarYMapear(filasJson: any[]): ResultadoLimpieza {
 
     filasLimpias.push({
       id: `pr-${Date.now()}-${idx}`,
-      tanque: String(fila.TANQUE).trim(),
+      tanque: String(tanqueOriginal).trim(),
       fecha: fechaLlenado,
       marca,
       fechaLlenado,
@@ -283,10 +297,31 @@ export function UploadPurgas() {
 
           setStatus({ tipo: "leyendo", mensaje: "Procesando y limpiando datos..." });
 
-          const filasJson = XLSX.utils.sheet_to_json(worksheet, { defval: "" }) as any[];
+          const aoa = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+          
+          let headerRowIndex = -1;
+          for (let i = 0; i < aoa.length; i++) {
+            const row = aoa[i];
+            if (row && row.some(cell => {
+              const str = String(cell).toUpperCase().trim();
+              return str === "FERMENTADOR" || str === "TANQUE";
+            })) {
+              headerRowIndex = i;
+              break;
+            }
+          }
+
+          if (headerRowIndex === -1) {
+            throw new Error("No se encontró la columna 'TANQUE' o 'FERMENTADOR' en el archivo.");
+          }
+
+          const filasJson = XLSX.utils.sheet_to_json(worksheet, { 
+            defval: "", 
+            range: headerRowIndex 
+          }) as any[];
 
           if (!filasJson || filasJson.length === 0) {
-            throw new Error("El archivo de Excel está vacío o corrupto.");
+            throw new Error("El archivo no tiene datos debajo de los encabezados.");
           }
 
           // ── Limpieza de datos ──

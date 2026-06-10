@@ -20,6 +20,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "Craft Brew Insight App" },
     ],
     links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" },
       {
         rel: "stylesheet",
         href: appCss,
@@ -34,11 +37,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="font-outfit">
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className="font-outfit antialiased selection:bg-yellow-500/30 selection:text-yellow-200">
         {children}
         <Scripts />
       </body>

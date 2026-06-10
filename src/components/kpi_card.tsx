@@ -19,7 +19,7 @@ const toneMap = {
 
 export function KpiCard({ label, value, icon: Icon, tone = "default", hint }: Props) {
   return (
-    <Card className="shadow-sm">
+    <Card className="hover:-translate-y-1 hover:shadow-primary/10 transition-transform duration-300">
       <CardContent className="flex items-center gap-4 p-5">
         <div className={cn("flex h-12 w-12 items-center justify-center rounded-lg", toneMap[tone])}>
           <Icon className="h-6 w-6" />
