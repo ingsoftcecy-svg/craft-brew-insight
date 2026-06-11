@@ -4,8 +4,7 @@ import { AppSidebar } from "@/components/app_sidebar";
 import { AppHeader } from "@/components/app_header";
 import { useEffect } from "react";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
-import { auth, storage, firestore } from "@/lib/firebase";
-import '../lib/firebase'; // Asegura que la configuración se ejecute al inicio
+import '../lib/firebase';
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,

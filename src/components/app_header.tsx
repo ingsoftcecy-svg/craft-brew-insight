@@ -1,47 +1,57 @@
 import { useEffect, useState } from "react";
-import { Search, Bell } from "lucide-react";
+import { Bell, Settings } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { obtenerTurnoPorHora } from "@/data/turno";
+
+const TURNO_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
+  "Turno 1": { label: "Turno 1 · 23:00–05:59", bg: "bg-violet-100", text: "text-violet-700" },
+  "Turno 2": { label: "Turno 2 · 06:00–15:29", bg: "bg-sky-100",    text: "text-sky-700"    },
+  "Turno 3": { label: "Turno 3 · 15:30–22:59", bg: "bg-amber-100",  text: "text-amber-700"  },
+};
 
 export function AppHeader() {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 60000);
+    const id = setInterval(() => setNow(new Date()), 30000);
     return () => clearInterval(id);
   }, []);
 
+  const turno = obtenerTurnoPorHora(now.toISOString());
+  const tc = TURNO_CONFIG[turno] ?? { label: turno, bg: "bg-gray-100", text: "text-gray-600" };
+
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b bg-card px-4 shadow-sm">
-      <SidebarTrigger className="text-foreground" />
-      <div className="hidden md:flex flex-col leading-tight">
-        <span className="text-sm font-medium capitalize">
-          {format(now, "EEEE d 'de' MMMM", { locale: es })}
+    <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-border bg-card px-5 shadow-sm">
+      <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors -ml-1" />
+
+      {/* Date */}
+      <div className="hidden md:flex flex-col leading-none">
+        <span className="text-sm font-semibold capitalize text-foreground">
+          {format(now, "EEEE d 'de' MMMM yyyy", { locale: es })}
         </span>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs text-muted-foreground font-mono mt-0.5">
           {format(now, "HH:mm")} hrs
         </span>
       </div>
-      <div className="ml-auto flex items-center gap-3">
-        <div className="relative hidden sm:block">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Buscar tanque, marca, evento..."
-            className="w-72 pl-9 bg-background"
-          />
-        </div>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />
+
+      {/* Turno badge */}
+      <div className="hidden lg:block">
+        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${tc.bg} ${tc.text}`}>
+          {tc.label}
+        </span>
+      </div>
+
+      {/* Right */}
+      <div className="ml-auto flex items-center gap-1.5">
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground relative">
+          <Bell className="h-4 w-4" />
+          <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-primary" />
         </Button>
-        <Avatar className="h-9 w-9 border-2 border-primary/30">
-          <AvatarFallback className="bg-sidebar text-sidebar-foreground text-xs font-semibold">
-            JM
-          </AvatarFallback>
-        </Avatar>
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+          <Settings className="h-4 w-4" />
+        </Button>
       </div>
     </header>
   );

@@ -5,7 +5,7 @@ import { type PurgaRow as PurgaRowType } from "@/types/proceso";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
 import { Circle } from "lucide-react";
 
-const EMPLEADOS = ["LAMD", "EMP 2", "EMP 3", "EMP 4", "EMP 5", "EMP 6"];
+const EMPLEADOS = ["LAMD", "MJFA", "VHAL", "OEVM", "ORC", "PLRG"];
 const TIEMPOS = ["1", "2", "3", "4", "5", "6", "7"];
 
 function formatDate(isoString?: string | null) {
