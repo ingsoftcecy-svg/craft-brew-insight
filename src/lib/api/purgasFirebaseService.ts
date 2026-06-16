@@ -13,33 +13,19 @@ import {
 import { firestore } from "../firebase";
 import type { PurgaRow } from "@/types/proceso";
 
-// ─────────────────────────────────────────────────────────────
-// Constantes
-// ─────────────────────────────────────────────────────────────
-
 /** Firestore tiene un límite de 500 operaciones por batch */
 const BATCH_SIZE = 500;
 
-/** Nombre de la colección raíz en Firestore */
+/* Nombre de la colección en Firestore */
 const COLECCION_PURGAS = "purgas_historico";
 
-// ─────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────
 
-/**
- * Genera un ID de periodo con formato "YYYY-MM" a partir de una fecha.
- * Ejemplo: "2026-06"
- */
 export function obtenerPeriodo(fecha: Date = new Date()): string {
   const y = fecha.getFullYear();
   const m = String(fecha.getMonth() + 1).padStart(2, "0");
   return `${y}-${m}`;
 }
 
-// ─────────────────────────────────────────────────────────────
-// Guardar purgas (batch write)
-// ─────────────────────────────────────────────────────────────
 
 export interface UploadProgress {
   total: number;
@@ -50,13 +36,6 @@ export interface UploadProgress {
 }
 
 /**
- * Sube un arreglo de PurgaRow a Firestore dentro de la sub-colección
- * del periodo mensual correspondiente.
- *
- * Estructura en Firestore:
- *   purgas_historico/{periodo}/registros/{docId}
- *
- * Donde {periodo} = "2026-06", etc.
  *
  * @param filas     - Arreglo de PurgaRow ya limpias
  * @param periodo   - Clave de periodo "YYYY-MM"
@@ -187,13 +166,6 @@ export async function guardarPurgasEnFirestore(
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Leer purgas de un periodo
-// ─────────────────────────────────────────────────────────────
-
-/**
- * Obtiene todas las purgas de un periodo mensual desde Firestore.
- */
 export async function obtenerPurgasPorPeriodo(
   periodo: string
 ): Promise<PurgaRow[]> {
@@ -218,6 +190,13 @@ export async function obtenerPurgasPorPeriodo(
       })),
     } as PurgaRow;
   });
+}
+
+export async function obtenerTodasLasPurgas(): Promise<PurgaRow[]> {
+  const periodos = await listarPeriodos();
+  const promesas = periodos.map(p => obtenerPurgasPorPeriodo(p.periodo));
+  const resultados = await Promise.all(promesas);
+  return resultados.flat();
 }
 
 // ─────────────────────────────────────────────────────────────

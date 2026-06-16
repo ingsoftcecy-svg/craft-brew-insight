@@ -1,10 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
-import { AgendaDialog } from "@/components/agenda_dialog";
 import { AgendaCalendar } from "@/components/agenda_calendar";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
-import type { AgendaFormValues } from "@/lib/schemas/operaciones";
 import { obtenerTurnoPorHora } from "@/data/turno"; 
 
 export const Route = createFileRoute("/_app/agenda")({
@@ -18,12 +16,11 @@ export const Route = createFileRoute("/_app/agenda")({
 });
 
 function AgendaPage() {
-  const { eventosAgenda, extractos, addEventoAgenda } = useOperacionesStore();
+  const { eventosAgenda, extractos } = useOperacionesStore();
   const [cursor, set_cursor] = useState(new Date());
-  const [open, set_open] = useState(false);
- 
 
-  const [turnoSeleccionado, set_turnoSeleccionado] = useState<string>("TODOS");
+  const [turnoSeleccionado, set_turnoSeleccionado] = useState<string>(() => obtenerTurnoPorHora(new Date().toISOString()) || "TODOS");
+  const [purgaSeleccionada, set_purgaSeleccionada] = useState<number>(8);
 
   const days = useMemo(() => {
     const start = startOfWeek(startOfMonth(cursor), { weekStartsOn: 1 });
@@ -36,16 +33,16 @@ function AgendaPage() {
     const purgasEventos = extractos.flatMap((e) => {
       const fechaBase = e.fechaLlenado ? new Date(e.fechaLlenado) : null;
       if (!fechaBase) return [];
-      // Solo la Purga 8 (8 * 8 = 64 horas después del llenado)
-      const fechaPurga8 = new Date(fechaBase.getTime() + 8 * 8 * 60 * 60 * 1000);
+      
+      const fechaPurga = new Date(fechaBase.getTime() + purgaSeleccionada * 8 * 60 * 60 * 1000);
       return [{
-        id: `purga-${e.id}-8`,
-        titulo: `Purga 8 - Tanque ${e.tanque}`,
-        inicio: fechaPurga8.toISOString(),
-        fin: fechaPurga8.toISOString(),
+        id: `purga-${e.id}-${purgaSeleccionada}`,
+        titulo: `Purga ${purgaSeleccionada} - Tanque ${e.tanque}`,
+        inicio: fechaPurga.toISOString(),
+        fin: fechaPurga.toISOString(),
         tipo: "Purga" as const,
         descripcion: `Marca: ${e.marca}`,
-        turno: obtenerTurnoPorHora(fechaPurga8.toISOString()),
+        turno: obtenerTurnoPorHora(fechaPurga.toISOString()),
         completado: false,
       }];
     });
@@ -70,27 +67,12 @@ function AgendaPage() {
       return { ...evento, completado, extractoId };
     });
 
-    const todosLosEventos = [...eventosMapeados, ...purgasEventos];
+    const todosLosEventos = [...eventosMapeados.filter(e => !e.titulo?.includes("Purga")), ...purgasEventos];
 
     if (turnoSeleccionado === "TODOS") return todosLosEventos;
     return todosLosEventos.filter((evento: any) => evento.turno === turnoSeleccionado);
-  }, [eventosAgenda, extractos, turnoSeleccionado]);
+  }, [eventosAgenda, extractos, turnoSeleccionado, purgaSeleccionada]);
 
-
-  function submit(data: AgendaFormValues) {
-    const turnoAsignado = obtenerTurnoPorHora(data.inicio);
-
-    addEventoAgenda({
-      id: `ev-${Date.now()}`,
-      titulo: data.titulo,
-      inicio: new Date(data.inicio).toISOString(),
-      fin: new Date(data.fin || data.inicio).toISOString(),
-      tipo: data.tipo,
-      descripcion: data.descripcion,
-      turno: turnoAsignado, 
-    } as any);
-    set_open(false);
-  }
 
   return (
     <div className="space-y-6">
@@ -100,38 +82,46 @@ function AgendaPage() {
           <h1 className="text-2xl font-bold tracking-tight">Agenda General</h1>
           <p className="text-sm text-muted-foreground">Planificación operativa por turnos</p>
         </div>
-        <div className="flex items-center gap-2">
-          <AgendaDialog 
-            open={open} 
-            set_open={set_open} 
-            submit={submit} 
-          />
-        </div>
       </div>
 
-      {/*SELECCIÓN DE TURNO */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
-        <div className="flex bg-muted p-1 rounded-lg gap-1 border text-sm">
-          {(["TODOS", "Turno 1", "Turno 2", "Turno 3"] as string[]).map((turno) => (
-            <button
-              key={turno}
-              type="button"
-              onClick={() => set_turnoSeleccionado(turno)}
-              className={`px-4 py-2 rounded-md font-medium transition-all ${
-                turnoSeleccionado === turno
-                  ? "bg-background text-foreground shadow-sm font-semibold"
-                  : "text-muted-foreground hover:bg-background/40 hover:text-foreground"
-              }`}
+      {/*SELECCIÓN DE TURNO Y PURGA */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex bg-muted p-1 rounded-lg gap-1 border text-sm">
+            {(["TODOS", "Turno 1", "Turno 2", "Turno 3"] as string[]).map((turno) => (
+              <button
+                key={turno}
+                type="button"
+                onClick={() => set_turnoSeleccionado(turno)}
+                className={`px-4 py-2 rounded-md font-medium transition-all ${
+                  turnoSeleccionado === turno
+                    ? "bg-background text-foreground shadow-sm font-semibold"
+                    : "text-muted-foreground hover:bg-background/40 hover:text-foreground"
+                }`}
+              >
+                {turno === "TODOS" ? "Ver Todo" : turno}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">Número de Purga:</span>
+            <select
+              value={purgaSeleccionada}
+              onChange={(e) => set_purgaSeleccionada(Number(e.target.value))}
+              className="bg-background border rounded-md px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              {turno === "TODOS" ? "Ver Todo" : turno}
-            </button>
-          ))}
+              {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
+                <option key={num} value={num}>Purga {num}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/**/}
         {turnoSeleccionado !== "TODOS" && (
           <span className="text-xs text-muted-foreground animate-fade-in bg-secondary px-3 py-1.5 rounded-full font-medium">
-            Mostrando solo purgas y actividades del <strong className="text-primary">{turnoSeleccionado}</strong>
+            Purgas y Chequeo de Platos del Turno:  <strong className="text-primary">{turnoSeleccionado}</strong>
           </span>
         )}
       </div>

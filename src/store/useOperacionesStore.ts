@@ -7,6 +7,7 @@ import { obtenerTurnoPorHora } from "@/data/turno";
 interface OperacionesState {
   periodoActual: string;
   periodosDisponibles: string[];
+  periodosStats: { periodo: string; totalRegistros: number }[];
   extractos: ExtractoRow[];
   purgas: PurgaRow[];
   eventosAgenda: AgendaEvent[];
@@ -27,6 +28,7 @@ interface OperacionesState {
 export const useOperacionesStore = create<OperacionesState>((set) => ({
   periodoActual: "2026-06",
   periodosDisponibles: [],
+  periodosStats: [],
   extractos: [],
   purgas: [],
   eventosAgenda: [],
@@ -37,12 +39,13 @@ export const useOperacionesStore = create<OperacionesState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       // Importamos las funciones dinámicamente para evitar dependencias circulares si las hubiera
-      const { obtenerExtractosPorPeriodo, listarPeriodosExtractos } = await import("@/lib/api/extractosFirebaseService");
+      const { obtenerExtractosPorPeriodo, listarPeriodosExtractos, obtenerTodosLosExtractos } = await import("@/lib/api/extractosFirebaseService");
       const { obtenerEventosAgenda } = await import("@/lib/api/agendaFirebaseService");
-      const { obtenerPurgasPorPeriodo } = await import("@/lib/api/purgasFirebaseService");
+      const { obtenerPurgasPorPeriodo, obtenerTodasLasPurgas } = await import("@/lib/api/purgasFirebaseService");
       
       const periodosResumen = await listarPeriodosExtractos().catch(() => []);
       const periodos = periodosResumen.map((p) => p.periodo);
+      const periodosStats = periodosResumen.map(p => ({ periodo: p.periodo, totalRegistros: p.totalRegistros }));
       
       // Si no se especifica periodo, cargamos el periodoActual (si es válido), o el más reciente, o fallback a "2026-06"
       const targetPeriodo = periodoSeleccionado || 
@@ -50,10 +53,11 @@ export const useOperacionesStore = create<OperacionesState>((set) => ({
                             (periodos.length > 0 ? periodos[0] : "2026-06");
       
       const [extractosFb, purgasFb, eventosAgendaFb] = await Promise.all([
-        obtenerExtractosPorPeriodo(targetPeriodo).catch(() => []),
-        obtenerPurgasPorPeriodo(targetPeriodo).catch(() => []),
+        targetPeriodo === "todos" ? obtenerTodosLosExtractos().catch(() => []) : obtenerExtractosPorPeriodo(targetPeriodo).catch(() => []),
+        targetPeriodo === "todos" ? obtenerTodasLasPurgas().catch(() => []) : obtenerPurgasPorPeriodo(targetPeriodo).catch(() => []),
         obtenerEventosAgenda().catch(() => []),
       ]);
+
   
       const extractos = extractosFb;
       const purgas = purgasFb;
@@ -63,8 +67,9 @@ export const useOperacionesStore = create<OperacionesState>((set) => ({
         extractos, 
         purgas, 
         eventosAgenda, 
-        periodoActual: targetPeriodo, 
+        periodoActual: targetPeriodo === "todos" ? (periodos.length > 0 ? periodos[0] : "2026-06") : targetPeriodo, 
         periodosDisponibles: periodos,
+        periodosStats,
         isLoading: false 
       });
     } catch (error) {

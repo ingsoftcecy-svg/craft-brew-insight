@@ -85,11 +85,18 @@ function Checar72Page() {
             </div>
             
             <Select value={periodoActual} onValueChange={(v) => { fetchData(v); set_page(0); }}>
-              <SelectTrigger className="w-40"><SelectValue placeholder="Periodo" /></SelectTrigger>
+              <SelectTrigger className="w-40"><SelectValue placeholder="Mes" /></SelectTrigger>
               <SelectContent>
-                {periodosDisponibles.map((p) => (
-                  <SelectItem key={p} value={p}>{p}</SelectItem>
-                ))}
+                {periodosDisponibles.map((p) => {
+                  const [y, m] = p.split("-");
+                  const date = new Date(parseInt(y), parseInt(m) - 1, 1);
+                  const mesStr = date.toLocaleString("es-MX", { month: "long", year: "numeric" });
+                  return (
+                    <SelectItem key={p} value={p}>
+                      {mesStr.charAt(0).toUpperCase() + mesStr.slice(1)}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
 

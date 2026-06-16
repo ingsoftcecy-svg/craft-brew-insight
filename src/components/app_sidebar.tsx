@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Calendar, Beaker, LineChart, ClipboardList, Beer, Clock } from "lucide-react";
+import { Home, Calendar, Beaker, LineChart, ClipboardList, CalendarDays, Clock } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -29,31 +29,36 @@ export function AppSidebar() {
   const path = useRouterState({ select: (r) => r.location.pathname });
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="border-r border-slate-700/40 shadow-xl overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 -z-10 pointer-events-none" />
+      
       {/* Brand */}
-      <SidebarHeader className="border-b border-sidebar-border/60 bg-sidebar">
-        <div className="flex items-center gap-3 px-3 py-4">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
-            <Beer className="h-4 w-4 text-primary-foreground" />
+      <SidebarHeader className="border-b border-white/10 bg-transparent pt-6 pb-5">
+        <div className="flex items-center justify-center md:justify-start gap-3 px-3">
+          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 shadow-lg shadow-amber-500/20 transition-transform duration-300 hover:scale-105 group">
+            <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <CalendarDays className="h-5 w-5 text-white drop-shadow-md" />
           </div>
           {!collapsed && (
-            <div className="flex flex-col leading-tight">
-              <span className="text-sm font-bold text-sidebar-foreground tracking-tight">Elaboración</span>
-              <span className="text-[11px] text-sidebar-foreground/50">Control Operativo</span>
+            <div className="flex flex-col leading-tight overflow-hidden animate-fade-in group-data-[collapsible=icon]:hidden">
+              <span className="text-[15px] font-black text-white tracking-tight whitespace-nowrap">
+                Elaboración
+              </span>
+              <span className="text-xs font-medium text-slate-400 mt-0.5 whitespace-nowrap">Control Operativo</span>
             </div>
           )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="bg-sidebar px-2 py-3">
+      <SidebarContent className="bg-transparent px-3 py-6">
         <SidebarGroup>
           {!collapsed && (
-            <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-sidebar-foreground/35 font-semibold px-2 pb-2">
-              Navegación
+            <SidebarGroupLabel className="text-[11px] uppercase tracking-[0.2em] text-slate-500 font-bold px-2 pb-3 group-data-[collapsible=icon]:hidden">
+              Navegación General
             </SidebarGroupLabel>
           )}
           <SidebarGroupContent>
-            <SidebarMenu className="gap-0.5">
+            <SidebarMenu className="gap-1.5">
               {items.map((item) => {
                 const active = path === item.url;
                 return (
@@ -63,16 +68,32 @@ export function AppSidebar() {
                       isActive={active}
                       tooltip={item.title}
                       className={`
-                        h-9 rounded-md transition-all duration-100
+                        group relative h-11 w-full rounded-lg transition-all duration-300 ease-out overflow-hidden
                         ${active
-                          ? "bg-primary/15 text-primary font-semibold"
-                          : "text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                          ? "bg-white/10 shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.05)] ring-1 ring-white/10"
+                          : "hover:bg-white/5 hover:shadow-sm"
                         }
                       `}
                     >
-                      <Link to={item.url} className="flex items-center gap-2.5 px-2.5">
-                        <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-primary" : ""}`} />
-                        <span className="text-[13px]">{item.title}</span>
+                      <Link to={item.url} className="flex items-center gap-3 px-3 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center z-10 w-full h-full">
+                        {/* Indicador de activo */}
+                        {active && (
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-amber-500 rounded-r-full shadow-[0_0_10px_rgba(245,158,11,0.8)] group-data-[collapsible=icon]:hidden" />
+                        )}
+                        
+                        <div className={`
+                          flex items-center justify-center transition-all duration-300 shrink-0
+                          ${active ? "text-amber-500 scale-110 drop-shadow-md" : "text-slate-400 group-hover:text-white group-hover:scale-110"}
+                        `}>
+                          <item.icon className="h-[18px] w-[18px]" strokeWidth={active ? 2.5 : 2} />
+                        </div>
+                        
+                        <span className={`
+                          text-sm transition-colors duration-300 font-medium whitespace-nowrap group-data-[collapsible=icon]:hidden
+                          ${active ? "text-white font-bold" : "text-slate-300 group-hover:text-white"}
+                        `}>
+                          {item.title}
+                        </span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -83,10 +104,14 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="bg-sidebar border-t border-sidebar-border/60 px-3 py-3">
+      <SidebarFooter className="bg-transparent border-t border-white/10 p-4 relative overflow-hidden group-data-[collapsible=icon]:hidden">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent -z-10 pointer-events-none" />
         {!collapsed && (
-          <div className="text-center">
-            <p className="text-[10px] text-sidebar-foreground/30 uppercase tracking-widest">Cervecería Zacatecas</p>
+          <div className="flex flex-col items-center justify-center gap-1">
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.25em] whitespace-nowrap">
+              Zacatecas
+            </p>
+            <div className="h-0.5 w-8 rounded-full bg-slate-700" />
           </div>
         )}
       </SidebarFooter>

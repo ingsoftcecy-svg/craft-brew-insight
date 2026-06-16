@@ -41,7 +41,7 @@ function RootShell({ children }: { children: ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="font-outfit antialiased selection:bg-yellow-500/30 selection:text-yellow-200">
+      <body className="font-outfit antialiased">
         {children}
         <Scripts />
       </body>

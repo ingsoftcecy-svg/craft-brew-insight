@@ -78,11 +78,18 @@ function PurgasPage() {
             </div>
             
             <Select value={periodoActual} onValueChange={(v) => { fetchData(v); }}>
-              <SelectTrigger className="w-40"><SelectValue placeholder="Periodo" /></SelectTrigger>
+              <SelectTrigger className="w-40"><SelectValue placeholder="Mes" /></SelectTrigger>
               <SelectContent>
-                {periodosDisponibles.map((p) => (
-                  <SelectItem key={p} value={p}>{p}</SelectItem>
-                ))}
+                {periodosDisponibles.map((p) => {
+                  const [y, m] = p.split("-");
+                  const date = new Date(parseInt(y), parseInt(m) - 1, 1);
+                  const mesStr = date.toLocaleString("es-MX", { month: "long", year: "numeric" });
+                  return (
+                    <SelectItem key={p} value={p}>
+                      {mesStr.charAt(0).toUpperCase() + mesStr.slice(1)}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
 
@@ -102,26 +109,17 @@ function PurgasPage() {
                 <SelectItem value="Turno 3">Turno 3 (15:30-22:59)</SelectItem>
               </SelectContent>
             </Select>
-            <div className="flex items-center gap-2 ml-auto">
-              <Button
-                variant={sortOrder === "desc" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSortOrder("desc")}
-                className="h-10 px-3"
-              >
-                <ArrowDownAZ className="mr-2 h-4 w-4" />
-                Más recientes
-              </Button>
-              <Button
-                variant={sortOrder === "asc" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSortOrder("asc")}
-                className="h-10 px-3"
-              >
-                <ArrowUpZA className="mr-2 h-4 w-4" />
-                Más antiguos
-              </Button>
-            </div>
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
+            >
+              {sortOrder === "desc" ? (
+                <><ArrowDownAZ className="h-4 w-4" /> Orden por fecha mas reciente</>
+              ) : (
+                <><ArrowUpZA className="h-4 w-4" /> Orden por fecha mas antigua</>
+              )}
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="pt-6">

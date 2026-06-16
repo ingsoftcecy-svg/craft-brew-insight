@@ -49,7 +49,7 @@ export interface ExtractoRow {
   h96: string | null;
   h120: string | null;
   h144: string | null;
-  estado72h?: "Pendiente" | "Completado"; // Nuevo campo para tracking
+  estado72h?: "Pendiente" | "Completado"; 
   estado: ExtractoEstado;
 }
 

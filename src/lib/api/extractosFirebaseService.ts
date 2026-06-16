@@ -138,6 +138,7 @@ export async function obtenerExtractosPorPeriodo(
 ): Promise<ExtractoRow[]> {
   const periodoDocRef = doc(firestore, COLECCION_EXTRACTOS, periodo);
   const registrosRef = collection(periodoDocRef, "registros");
+
   const snapshot = await getDocs(registrosRef);
 
   return snapshot.docs.map((d) => {
@@ -145,7 +146,7 @@ export async function obtenerExtractosPorPeriodo(
     return {
       id: d.id,
       tanque: data.tanque ?? "",
-      marca: data.marca ?? "Modelo Especial",
+      marca: data.marca ?? "",
       fechaLlenado: data.fechaLlenado ?? "",
       h24: data.h24 ?? null,
       h48: data.h48 ?? null,
@@ -154,8 +155,16 @@ export async function obtenerExtractosPorPeriodo(
       h120: data.h120 ?? null,
       h144: data.h144 ?? null,
       estado: data.estado ?? "En Rango",
+      estado72h: data.estado72h ?? "En Rango",
     } as ExtractoRow;
   });
+}
+
+export async function obtenerTodosLosExtractos(): Promise<ExtractoRow[]> {
+  const periodos = await listarPeriodosExtractos();
+  const promesas = periodos.map(p => obtenerExtractosPorPeriodo(p.periodo));
+  const resultados = await Promise.all(promesas);
+  return resultados.flat();
 }
 
 export interface PeriodoResumenExtracto {

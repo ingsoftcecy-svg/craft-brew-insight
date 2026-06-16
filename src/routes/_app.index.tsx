@@ -6,6 +6,8 @@ import { useOperacionesStore } from "@/store/useOperacionesStore";
 import { useEffect, useState, useMemo } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { obtenerTurnoPorHora } from "@/data/turno";
+import { parseMexicanDate } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/")({
   head: () => ({
@@ -28,7 +30,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return (
       <div className="rounded-lg border border-border bg-card px-3 py-2 shadow-lg text-sm">
         <p className="font-semibold text-foreground">{label}</p>
-        <p className="text-primary font-bold mt-0.5">{payload[0].value} tanques</p>
+        <p className="text-primary font-bold mt-0.5">{payload[0].value} registros</p>
       </div>
     );
   }
@@ -55,22 +57,32 @@ function KpiCard({ label, value, icon: Icon, sub, color, bg }: KpiProps) {
 }
 
 function Dashboard() {
-  const { extractos, isLoading, fetchData } = useOperacionesStore();
+  const { extractos, periodosStats, isLoading, fetchData } = useOperacionesStore();
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { fetchData("todos"); }, [fetchData]);
 
-  const fermentando   = extractos.length;
-  const completados72 = extractos.filter(e => e.h72 && e.estado72h === "Completado").length;
-  const pendientes72  = extractos.filter(e => e.h72 && e.estado72h !== "Completado").length;
+  const periodoActivo = useOperacionesStore.getState().periodoActual || "2026-06";
+  const extractosPeriodoActivo = extractos.filter(e => {
+    if (!e.fechaLlenado) return false;
+    const date = parseMexicanDate(e.fechaLlenado);
+    if (!date) return false;
+    return format(date, "yyyy-MM") === periodoActivo;
+  });
+
+  const fermentando   = extractosPeriodoActivo.length;
+  const completados72 = extractosPeriodoActivo.filter(e => e.h72 && e.estado72h === "Completado").length;
+  const pendientes72  = extractosPeriodoActivo.filter(e => e.h72 && e.estado72h !== "Completado").length;
 
   const [mesFiltro, setMesFiltro] = useState<string>("todos");
+  const [tipoGrafica, setTipoGrafica] = useState<"marca" | "mes">("marca");
 
   // Meses disponibles a partir de fechaLlenado
   const mesesDisponibles = useMemo(() => {
     const seen = new Map<string, string>();
     extractos.forEach(e => {
       if (!e.fechaLlenado) return;
-      const d = new Date(e.fechaLlenado);
+      const d = parseMexicanDate(e.fechaLlenado);
+      if (!d) return;
       const key = format(d, "yyyy-MM");
       const label = format(d, "MMMM yyyy", { locale: es });
       if (!seen.has(key)) seen.set(key, label);
@@ -80,12 +92,14 @@ function Dashboard() {
       .map(([key, label]) => ({ key, label }));
   }, [extractos]);
 
-  // Extractos filtrados por mes
+  // Extractos filtrados por mes (Solo para la gráfica de Marcas)
   const extractosFiltrados = useMemo(() => {
     if (mesFiltro === "todos") return extractos;
     return extractos.filter(e => {
       if (!e.fechaLlenado) return false;
-      return format(new Date(e.fechaLlenado), "yyyy-MM") === mesFiltro;
+      const d = parseMexicanDate(e.fechaLlenado);
+      if (!d) return false;
+      return format(d, "yyyy-MM") === mesFiltro;
     });
   }, [extractos, mesFiltro]);
 
@@ -97,26 +111,46 @@ function Dashboard() {
     }, {} as Record<string, number>);
   }, [extractosFiltrados]);
 
-  const chartData = Object.entries(brandCounts)
-    .map(([marca, total]) => ({ marca, total }))
+  const chartDataMarca = Object.entries(brandCounts)
+    .map(([marca, total]) => ({ name: marca, total }))
     .sort((a, b) => b.total - a.total);
 
+  const chartDataMes = [...periodosStats].sort((a, b) => a.periodo.localeCompare(b.periodo)).map(p => {
+    const [y, m] = p.periodo.split("-");
+    const date = new Date(parseInt(y), parseInt(m) - 1, 1);
+    const mesStr = date.toLocaleString("es-MX", { month: "short", year: "2-digit" });
+    return { name: mesStr.charAt(0).toUpperCase() + mesStr.slice(1), total: p.totalRegistros };
+  });
+
+  const chartData = tipoGrafica === "marca" ? chartDataMarca : chartDataMes;
+
   const ahora = new Date();
+  const turnoActual = obtenerTurnoPorHora(ahora.toISOString());
+
   const proximos72 = extractos
-    .filter(e => e.h72 && new Date(e.h72) > ahora && e.estado72h !== "Completado")
-    .sort((a, b) => new Date(a.h72!).getTime() - new Date(b.h72!).getTime())
+    .filter(e => e.h72 && e.estado72h !== "Completado")
+    .map(e => ({ ...e, parsedH72: parseMexicanDate(e.h72) }))
+    .filter(e => e.parsedH72 && e.parsedH72 > ahora)
+    .filter(e => obtenerTurnoPorHora(e.parsedH72!.toISOString()) === turnoActual)
+    .sort((a, b) => a.parsedH72!.getTime() - b.parsedH72!.getTime())
     .slice(0, 6);
 
-  // Próximas Purgas 8 = fechaLlenado + 64 horas, solo las futuras
+  // Próximas Purgas 8 = fechaLlenado + 64 horas, solo las futuras y del turno actual
   const proximasPurgas = extractos
     .filter(e => e.fechaLlenado)
-    .map(e => ({
-      id: e.id,
-      tanque: e.tanque,
-      marca: e.marca,
-      fechaPurga8: new Date(new Date(e.fechaLlenado).getTime() + 64 * 60 * 60 * 1000),
-    }))
-    .filter(e => e.fechaPurga8 > ahora)
+    .map(e => {
+      const parsedLlenado = parseMexicanDate(e.fechaLlenado);
+      return {
+        id: e.id,
+        tanque: e.tanque,
+        marca: e.marca,
+        fechaPurga8: parsedLlenado ? new Date(parsedLlenado.getTime() + 64 * 60 * 60 * 1000) : null,
+      };
+    })
+    .filter(e => e.fechaPurga8 && e.fechaPurga8 > ahora)
+    // @ts-ignore: Ya sabemos que fechaPurga8 no es null aquí
+    .filter(e => obtenerTurnoPorHora(e.fechaPurga8.toISOString()) === turnoActual)
+    // @ts-ignore
     .sort((a, b) => a.fechaPurga8.getTime() - b.fechaPurga8.getTime())
     .slice(0, 6);
 
@@ -173,23 +207,27 @@ function Dashboard() {
           <CardHeader className="pb-0 pt-5 px-5">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2 cursor-pointer" onClick={() => setTipoGrafica(tipoGrafica === "marca" ? "mes" : "marca")}>
                   <TrendingUp className="h-4 w-4 text-primary" />
-                  Distribución por Marca
+                  {tipoGrafica === "marca" ? "Distribución por Marca" : "Distribución por Meses"}
                 </CardTitle>
-                <p className="text-xs text-muted-foreground mt-0.5">Tanques activos por tipo de cerveza</p>
+                <p className="text-xs text-muted-foreground mt-0.5 cursor-pointer hover:underline" onClick={() => setTipoGrafica(tipoGrafica === "marca" ? "mes" : "marca")}>
+                  {tipoGrafica === "marca" ? "Clic aquí para ver por meses" : "Clic aquí para ver por marca"}
+                </p>
               </div>
-              {/* Filtro de mes */}
-              <select
-                value={mesFiltro}
-                onChange={e => setMesFiltro(e.target.value)}
-                className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
-              >
-                <option value="todos">Todos los meses</option>
-                {mesesDisponibles.map(m => (
-                  <option key={m.key} value={m.key} className="capitalize">{m.label}</option>
-                ))}
-              </select>
+              {/* Filtro de mes (solo si está en modo marca) */}
+              {tipoGrafica === "marca" && (
+                <select
+                  value={mesFiltro}
+                  onChange={e => setMesFiltro(e.target.value)}
+                  className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+                >
+                  <option value="todos">Todos los meses</option>
+                  {mesesDisponibles.map(m => (
+                    <option key={m.key} value={m.key} className="capitalize">{m.label}</option>
+                  ))}
+                </select>
+              )}
             </div>
           </CardHeader>
           <CardContent className="pt-3 px-3 pb-4">
@@ -197,33 +235,30 @@ function Dashboard() {
               {chartData.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground">
                   <FlaskConical className="h-10 w-10 opacity-20" />
-                  <p className="text-sm">Sin datos para el mes seleccionado.</p>
+                  <p className="text-sm">Sin datos para mostrar.</p>
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} margin={{ bottom: 72, left: -15, right: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.90 0.008 240)" vertical={false} />
-                    <XAxis
-                      dataKey="marca"
-                      fontSize={10}
-                      interval={0}
+                  <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                    <XAxis 
+                      dataKey="name" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 11, fill: '#6b7280' }}
                       angle={-40}
                       textAnchor="end"
-                      tick={{ fill: "oklch(0.52 0.025 255)" }}
-                      axisLine={false}
-                      tickLine={false}
+                      height={50}
                     />
-                    <YAxis
-                      fontSize={11}
-                      allowDecimals={false}
-                      tick={{ fill: "oklch(0.52 0.025 255)" }}
-                      axisLine={false}
-                      tickLine={false}
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 11, fill: '#6b7280' }}
                     />
-                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "oklch(0.96 0.005 240)" }} />
-                    <Bar dataKey="total" radius={[4, 4, 0, 0]}>
-                      {chartData.map((_, i) => (
-                        <Cell key={i} fill={BAR_COLORS[i % BAR_COLORS.length]} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.03)' }} />
+                    <Bar dataKey="total" radius={[4, 4, 0, 0]} maxBarSize={40}>
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={BAR_COLORS[index % BAR_COLORS.length]} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -233,84 +268,85 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-
-        {/* Próximos Chequeos 72h */}
-        <Card className="lg:col-span-2 xl:col-span-3 border-border shadow-sm">
-          <CardHeader className="pb-0 pt-5 px-5">
-            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <Clock className="h-4 w-4 text-sky-500" />
-              Próximos Chequeos 72h
-            </CardTitle>
-            <p className="text-xs text-muted-foreground mt-0.5">Los más próximos a vencer</p>
-          </CardHeader>
-          <CardContent className="pt-3 px-4 pb-4 space-y-2">
-            {proximos72.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
-                <CheckCircle2 className="h-8 w-8 opacity-20" />
-                <p className="text-sm text-center">Sin chequeos próximos</p>
-              </div>
-            ) : (
-              proximos72.map(e => (
-                <div
-                  key={e.id}
-                  className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2.5 border border-border/60 hover:border-border transition-colors"
-                >
-                  <div className="min-w-0 mr-3">
-                    <p className="text-sm font-semibold text-foreground truncate">Tanque {e.tanque}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">{e.marca}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-sm font-bold text-sky-600 font-mono">
-                      {e.h72 ? format(new Date(e.h72), "HH:mm") : "—"}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {e.h72 ? format(new Date(e.h72), "dd MMM", { locale: es }) : "—"}
-                    </p>
-                  </div>
+        {/* Proximos Chequeos 72h */}
+        <div className="lg:col-span-2 xl:col-span-3">
+          <Card className="h-full border-border shadow-sm flex flex-col">
+            <CardHeader className="py-4 px-5 border-b border-border/50 bg-muted/20">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                <Clock className="h-4 w-4 text-sky-500" />
+                Próximos Chequeos 72h ({turnoActual || "..."})
+              </CardTitle>
+              <p className="text-xs text-muted-foreground font-medium">Chequeos de tu turno actual</p>
+            </CardHeader>
+            <CardContent className="p-0 flex-1 flex flex-col">
+              {proximos72.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-6 text-muted-foreground text-center">
+                  <CheckCircle2 className="h-8 w-8 mb-2 opacity-20" />
+                  <p className="text-sm">Todo al día</p>
                 </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Próximas Purgas 8 */}
-        <Card className="lg:col-span-2 xl:col-span-3 border-border shadow-sm">
-          <CardHeader className="pb-0 pt-5 px-5">
-            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <Droplets className="h-4 w-4 text-red-500" />
-              Próximas Purgas (8ª)
-            </CardTitle>
-            <p className="text-xs text-muted-foreground mt-0.5">Purga 8 · 64 hrs después del llenado</p>
-          </CardHeader>
-          <CardContent className="pt-3 px-4 pb-4 space-y-2">
-            {proximasPurgas.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
-                <Droplets className="h-8 w-8 opacity-20" />
-                <p className="text-sm text-center">Sin purgas próximas</p>
-              </div>
-            ) : (
-              proximasPurgas.map(e => (
-                <div
-                  key={e.id}
-                  className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2.5 border border-border/60 hover:border-border transition-colors"
-                >
-                  <div className="min-w-0 mr-3">
-                    <p className="text-sm font-semibold text-foreground truncate">Tanque {e.tanque}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">{e.marca}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-sm font-bold text-red-500 font-mono">
-                      {format(e.fechaPurga8, "HH:mm")}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {format(e.fechaPurga8, "dd MMM", { locale: es })}
-                    </p>
-                  </div>
+              ) : (
+                <div className="divide-y divide-border/50">
+                  {proximos72.map((ext) => (
+                    <div key={ext.id} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
+                      <div>
+                        <p className="font-semibold text-sm text-foreground">Tanque {ext.tanque}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{ext.marca}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-sm text-sky-600">
+                          {format(ext.parsedH72!, "HH:mm")}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {format(ext.parsedH72!, "d MMM", { locale: es })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Proximas Purgas */}
+        <div className="lg:col-span-2 xl:col-span-3">
+          <Card className="h-full border-border shadow-sm flex flex-col">
+            <CardHeader className="py-4 px-5 border-b border-border/50 bg-muted/20">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                <Droplets className="h-4 w-4 text-rose-500" />
+                Próximas Purgas ({turnoActual || "..."})
+              </CardTitle>
+              <p className="text-xs text-muted-foreground font-medium">Purgas de tu turno actual (8ª - 64 hrs)</p>
+            </CardHeader>
+            <CardContent className="p-0 flex-1 flex flex-col">
+              {proximasPurgas.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-6 text-muted-foreground text-center">
+                  <CheckCircle2 className="h-8 w-8 mb-2 opacity-20" />
+                  <p className="text-sm">Sin purgas en este turno</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-border/50">
+                  {proximasPurgas.map((p) => (
+                    <div key={p.id} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
+                      <div>
+                        <p className="font-semibold text-sm text-foreground">Tanque {p.tanque}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{p.marca}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-sm text-rose-600">
+                          {format(p.fechaPurga8!, "HH:mm")}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {format(p.fechaPurga8!, "d MMM", { locale: es })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

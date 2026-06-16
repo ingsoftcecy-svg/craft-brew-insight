@@ -20,7 +20,7 @@ export function AppHeader() {
   }, []);
 
   const turno = obtenerTurnoPorHora(now.toISOString());
-  const tc = TURNO_CONFIG[turno] ?? { label: turno, bg: "bg-gray-100", text: "text-gray-600" };
+  const tc = turno && TURNO_CONFIG[turno] ? TURNO_CONFIG[turno] : { label: turno ?? "Desconocido", bg: "bg-gray-100", text: "text-gray-600" };
 
   return (
     <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-border bg-card px-5 shadow-sm">

@@ -91,39 +91,45 @@ export const Route = createFileRoute("/api/ingesta")({
           const addHours = (d: Date, h: number) => new Date(d.getTime() + h * 60 * 60 * 1000).toISOString();
 
           // Agrupar filas mapeadas por periodo
-          const filasPorPeriodo: Record<string, { extracto: ExtractoRow; purga: PurgaRow }[]> = {};
+          const filasPorPeriodo: Record<string, { extracto: ExtractoRow; purga: PurgaRow; eventosAgenda?: any[] }[]> = {};
 
-          for (let index = 0; index < rowsToProcess.length; index++) {
-            const rawRow = rowsToProcess[index];
-            let marca: any, tanque: any, rawFecha: any;
-            let h24: any, h48: any, h72: any, h96: any, h120: any, h144: any;
+          for (const [index, rawRow] of rowsToProcess.entries()) {
+            let tanque: any, marca: any, rawFecha: any, h24: any, h48: any, h72: any, h96: any, h120: any, h144: any;
 
             if (Array.isArray(rawRow)) {
               // Si es un Array de Arrays (formato ExcelData crudo de Power Automate)
               // Omitir cabeceras si la primera fila las contiene
-              if (index === 0 && (String(rawRow[0]).toLowerCase() === "marca" || String(rawRow[1]).toLowerCase() === "tanque" || String(rawRow[1]).toLowerCase() === "fermentador")) {
+              if (index === 0 && (String(rawRow[0]).toLowerCase().includes("marca") || String(rawRow[1]).toLowerCase().includes("tanque") || String(rawRow[1]).toLowerCase().includes("fermentador"))) {
                 continue;
               }
               marca = rawRow[0] || rawRow[9];
               tanque = rawRow[1] || rawRow[10];
-              rawFecha = rawRow[2] || rawRow[11];
-              h24 = rawRow[3] || rawRow[12];
+              // rawRow[5] (A a F), rawRow[3] (C a F), rawRow[2] (A a C o limpio)
+              rawFecha = rawRow[5] || rawRow[3] || rawRow[2] || rawRow[11];
+              h24 = (rawRow[3] !== rawFecha) ? (rawRow[3] || rawRow[12]) : rawRow[12];
               h48 = rawRow[4] || rawRow[13];
-              h72 = rawRow[5] || rawRow[14];
+              h72 = (rawRow[5] !== rawFecha) ? (rawRow[5] || rawRow[14]) : rawRow[14];
               h96 = rawRow[6] || rawRow[15];
               h120 = rawRow[7] || rawRow[16];
               h144 = rawRow[8] || rawRow[17];
             } else if (rawRow && typeof rawRow === "object") {
-              // Si es un objeto JSON tradicional
-              marca = String(rawRow.marca || rawRow.MARCA || rawRow.Column1 || "").trim();
-              tanque = String(rawRow.tanque || rawRow.fermentador || rawRow.TANQUE || rawRow.FERMENTADOR || rawRow.Column2 || "").trim();
-              rawFecha = rawRow.fechaFinLlenado || rawRow.fecha_llenado || rawRow["FECHA FIN DE LLENADO"] || rawRow.Column3;
-              h24 = String(rawRow.h24 || rawRow.Column4 || "").trim();
-              h48 = String(rawRow.h48 || rawRow.Column5 || "").trim();
-              h72 = String(rawRow.h72 || rawRow.Column6 || "").trim();
-              h96 = String(rawRow.h96 || rawRow.Column7 || "").trim();
-              h120 = String(rawRow.h120 || rawRow.Column8 || "").trim();
-              h144 = String(rawRow.h144 || rawRow.Column9 || "").trim();
+              // Buscar keys sin importar mayúsculas/minúsculas ni espacios exactos
+              const findKey = (searchStrings: string[]) => {
+                const searchLower = searchStrings.map(s => s.toLowerCase());
+                const key = Object.keys(rawRow).find(k => searchLower.includes(k.toLowerCase().trim()));
+                return key ? rawRow[key] : undefined;
+              };
+
+              marca = String(findKey(["marca", "Column1"]) || "").trim();
+              tanque = String(findKey(["tanque", "fermentador", "Column2"]) || "").trim();
+              rawFecha = findKey(["fecha fin llenado", "fechafinllenado", "fecha_llenado", "Column3", "Column6", "Column F"]);
+              
+              h24 = String(findKey(["h24", "Column4"]) || "").trim();
+              h48 = String(findKey(["h48", "Column5"]) || "").trim();
+              h72 = String(findKey(["h72", "Column6"]) || "").trim();
+              h96 = String(findKey(["h96", "Column7"]) || "").trim();
+              h120 = String(findKey(["h120", "Column8"]) || "").trim();
+              h144 = String(findKey(["h144", "Column9"]) || "").trim();
             }
 
             if (!tanque || !marca || !rawFecha) {

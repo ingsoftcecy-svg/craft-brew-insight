@@ -55,11 +55,12 @@ export function Checar72Table({ rows }: Plato72TableProps) {
                 </TableCell>
                 <TableCell className="whitespace-nowrap">
                   <button
-                    onClick={() => toggleEstado72h(r.id)}
+                    onClick={() => !isCompletado && toggleEstado72h(r.id)}
+                    disabled={isCompletado}
                     className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all shadow-sm ${
                       isCompletado
-                        ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:hover:bg-emerald-900/60"
-                        : "bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:hover:bg-amber-900/60"
+                        ? "bg-emerald-100 text-emerald-700 cursor-not-allowed dark:bg-emerald-900/40 dark:text-emerald-300"
+                        : "bg-amber-100 text-amber-700 hover:bg-amber-200 cursor-pointer dark:bg-amber-900/40 dark:text-amber-300 dark:hover:bg-amber-900/60"
                     }`}
                   >
                     {isCompletado ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
