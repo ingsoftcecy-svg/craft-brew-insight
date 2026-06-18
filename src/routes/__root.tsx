@@ -10,6 +10,8 @@ import { type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { NotFoundComponent } from "../components/core/not_found";
 import { ErrorComponent } from "../components/core/error_boundary";
+import { useEffect } from "react";
+import { useAuthStore } from "../store/useAuthStore";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -51,10 +53,22 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const { init, isLoading } = useAuthStore();
+
+  useEffect(() => {
+    const unsubscribe = init();
+    return () => unsubscribe && unsubscribe();
+  }, [init]);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      {isLoading ? (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-900"></div>
+        </div>
+      ) : (
+        <Outlet />
+      )}
     </QueryClientProvider>
   );
 }

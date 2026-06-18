@@ -8,7 +8,8 @@ export default defineConfig({
   plugins: [
     tanstackStart({ 
       server: { 
-        entry: "server"
+        entry: "server",
+        preset: "node-server"
       }
     }),
     tsconfigPaths(),

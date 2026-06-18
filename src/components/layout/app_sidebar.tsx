@@ -1,5 +1,6 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Calendar, Beaker, ClipboardList, CalendarDays, Clock } from "lucide-react";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { Home, Calendar, Beaker, ClipboardList, CalendarDays, Clock, LogOut } from "lucide-react";
+import { useAuthStore } from "@/store/useAuthStore";
 import {
   Sidebar,
   SidebarContent,
@@ -26,6 +27,13 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const path = useRouterState({ select: (r) => r.location.pathname });
+
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await useAuthStore.getState().signOut();
+    navigate({ to: "/login" });
+  };
 
   return (
     <Sidebar collapsible="icon" className="border-r border-slate-200/50 shadow-sm overflow-hidden bg-white/70 backdrop-blur-xl">
@@ -101,14 +109,23 @@ export function AppSidebar() {
 
       <SidebarFooter className="bg-transparent border-t border-slate-100 p-4 relative overflow-hidden group-data-[collapsible=icon]:hidden">
         {!collapsed && (
-          <div className="flex flex-col items-center justify-center gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] whitespace-nowrap">
-              Cerveceria Zacatecas
-            </p>
-            <p className="text-[8px] font-bold text-slate-400 tracking-[0.25em] whitespace-nowrap">
-              Creado: Ing. en Soft. Cecilia Solis
-            </p>
-            <div className="h-0.5 w-8 rounded-full bg-slate-200" />
+          <div className="flex flex-col gap-4">
+            <button
+              onClick={handleSignOut}
+              className="flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 rounded-lg transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+              Cerrar Sesión
+            </button>
+            <div className="flex flex-col items-center justify-center gap-1">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] whitespace-nowrap">
+                Cerveceria Zacatecas
+              </p>
+              <p className="text-[8px] font-bold text-slate-400 tracking-[0.25em] whitespace-nowrap">
+                Creado: Ing. en Soft. Cecilia Solis
+              </p>
+              <div className="h-0.5 w-8 rounded-full bg-slate-200" />
+            </div>
           </div>
         )}
       </SidebarFooter>

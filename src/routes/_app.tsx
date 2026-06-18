@@ -6,7 +6,18 @@ import { useEffect } from "react";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
 import '../lib/firebase';
 
+import { redirect } from "@tanstack/react-router";
+import { useAuthStore } from "@/store/useAuthStore";
+
 export const Route = createFileRoute("/_app")({
+  beforeLoad: () => {
+    const { isAuthenticated } = useAuthStore.getState();
+    if (!isAuthenticated) {
+      throw redirect({
+        to: "/login",
+      });
+    }
+  },
   component: AppLayout,
 });
 

@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as ApiIngestaRouteImport } from './routes/api.ingesta'
@@ -17,6 +18,11 @@ import { Route as AppExtracto72RouteImport } from './routes/_app.extracto72'
 import { Route as AppExtractoRouteImport } from './routes/_app.extracto'
 import { Route as AppAgendaRouteImport } from './routes/_app.agenda'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
@@ -54,6 +60,7 @@ const AppAgendaRoute = AppAgendaRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/login': typeof LoginRoute
   '/agenda': typeof AppAgendaRoute
   '/extracto': typeof AppExtractoRoute
   '/extracto72': typeof AppExtracto72Route
@@ -61,6 +68,7 @@ export interface FileRoutesByFullPath {
   '/api/ingesta': typeof ApiIngestaRoute
 }
 export interface FileRoutesByTo {
+  '/login': typeof LoginRoute
   '/agenda': typeof AppAgendaRoute
   '/extracto': typeof AppExtractoRoute
   '/extracto72': typeof AppExtracto72Route
@@ -71,6 +79,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/login': typeof LoginRoute
   '/_app/agenda': typeof AppAgendaRoute
   '/_app/extracto': typeof AppExtractoRoute
   '/_app/extracto72': typeof AppExtracto72Route
@@ -82,16 +91,25 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/login'
     | '/agenda'
     | '/extracto'
     | '/extracto72'
     | '/purgas'
     | '/api/ingesta'
   fileRoutesByTo: FileRoutesByTo
-  to: '/agenda' | '/extracto' | '/extracto72' | '/purgas' | '/api/ingesta' | '/'
+  to:
+    | '/login'
+    | '/agenda'
+    | '/extracto'
+    | '/extracto72'
+    | '/purgas'
+    | '/api/ingesta'
+    | '/'
   id:
     | '__root__'
     | '/_app'
+    | '/login'
     | '/_app/agenda'
     | '/_app/extracto'
     | '/_app/extracto72'
@@ -102,11 +120,19 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  LoginRoute: typeof LoginRoute
   ApiIngestaRoute: typeof ApiIngestaRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app': {
       id: '/_app'
       path: ''
@@ -179,6 +205,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  LoginRoute: LoginRoute,
   ApiIngestaRoute: ApiIngestaRoute,
 }
 export const routeTree = rootRouteImport
