@@ -49,7 +49,7 @@ export function DashboardCharts({ extractos, periodosStats }: DashboardChartsPro
       .map(([key, label]) => ({ key, label }));
   }, [extractos]);
 
-  // Extractos filtrados por mes (Solo para la gráfica de Marcas)
+  // Extractos filtrados por mes 
   const extractosFiltrados = useMemo(() => {
     if (mesFiltro === "todos") return extractos;
     return extractos.filter(e => {
@@ -116,7 +116,7 @@ export function DashboardCharts({ extractos, periodosStats }: DashboardChartsPro
         </div>
       </CardHeader>
       <CardContent className="pt-6 pb-2 px-2">
-        <div className="h-[350px] w-full">
+        <div className="h-[280px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
@@ -124,10 +124,9 @@ export function DashboardCharts({ extractos, periodosStats }: DashboardChartsPro
                 dataKey="name" 
                 axisLine={false} 
                 tickLine={false} 
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600, angle: -45, textAnchor: 'end' }}
+                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
                 dy={10}
-                interval={0}
-                height={120}
+                
               />
               <YAxis 
                 axisLine={false} 
