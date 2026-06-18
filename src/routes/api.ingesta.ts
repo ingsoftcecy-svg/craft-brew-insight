@@ -81,7 +81,9 @@ export const Route = createFileRoute("/api/ingesta")({
                 day = part2;
                 month = part1 - 1;
               }
-              fechaBase = new Date(year, month, day, hour, minute);
+              // Forzamos la zona horaria a UTC-6 (México) para evitar desfases en el servidor UTC
+              const isoString = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00-06:00`;
+              fechaBase = new Date(isoString);
             } else {
               fechaBase = new Date(strFecha);
             }
