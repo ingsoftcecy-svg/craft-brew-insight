@@ -12,11 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
+import { Route as ScanTanqueIdRouteImport } from './routes/scan.$tanqueId'
 import { Route as ApiIngestaRouteImport } from './routes/api.ingesta'
 import { Route as AppPurgasRouteImport } from './routes/_app.purgas'
 import { Route as AppExtracto72RouteImport } from './routes/_app.extracto72'
 import { Route as AppExtractoRouteImport } from './routes/_app.extracto'
 import { Route as AppAgendaRouteImport } from './routes/_app.agenda'
+import { Route as AppAdminQrPrintRouteImport } from './routes/_app.admin.qr-print'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -31,6 +33,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppRoute,
+} as any)
+const ScanTanqueIdRoute = ScanTanqueIdRouteImport.update({
+  id: '/scan/$tanqueId',
+  path: '/scan/$tanqueId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiIngestaRoute = ApiIngestaRouteImport.update({
   id: '/api/ingesta',
@@ -57,6 +64,11 @@ const AppAgendaRoute = AppAgendaRouteImport.update({
   path: '/agenda',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminQrPrintRoute = AppAdminQrPrintRouteImport.update({
+  id: '/admin/qr-print',
+  path: '/admin/qr-print',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -66,6 +78,8 @@ export interface FileRoutesByFullPath {
   '/extracto72': typeof AppExtracto72Route
   '/purgas': typeof AppPurgasRoute
   '/api/ingesta': typeof ApiIngestaRoute
+  '/scan/$tanqueId': typeof ScanTanqueIdRoute
+  '/admin/qr-print': typeof AppAdminQrPrintRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -74,7 +88,9 @@ export interface FileRoutesByTo {
   '/extracto72': typeof AppExtracto72Route
   '/purgas': typeof AppPurgasRoute
   '/api/ingesta': typeof ApiIngestaRoute
+  '/scan/$tanqueId': typeof ScanTanqueIdRoute
   '/': typeof AppIndexRoute
+  '/admin/qr-print': typeof AppAdminQrPrintRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -85,7 +101,9 @@ export interface FileRoutesById {
   '/_app/extracto72': typeof AppExtracto72Route
   '/_app/purgas': typeof AppPurgasRoute
   '/api/ingesta': typeof ApiIngestaRoute
+  '/scan/$tanqueId': typeof ScanTanqueIdRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/admin/qr-print': typeof AppAdminQrPrintRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,6 +115,8 @@ export interface FileRouteTypes {
     | '/extracto72'
     | '/purgas'
     | '/api/ingesta'
+    | '/scan/$tanqueId'
+    | '/admin/qr-print'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -105,7 +125,9 @@ export interface FileRouteTypes {
     | '/extracto72'
     | '/purgas'
     | '/api/ingesta'
+    | '/scan/$tanqueId'
     | '/'
+    | '/admin/qr-print'
   id:
     | '__root__'
     | '/_app'
@@ -115,13 +137,16 @@ export interface FileRouteTypes {
     | '/_app/extracto72'
     | '/_app/purgas'
     | '/api/ingesta'
+    | '/scan/$tanqueId'
     | '/_app/'
+    | '/_app/admin/qr-print'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
   ApiIngestaRoute: typeof ApiIngestaRoute
+  ScanTanqueIdRoute: typeof ScanTanqueIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -146,6 +171,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/scan/$tanqueId': {
+      id: '/scan/$tanqueId'
+      path: '/scan/$tanqueId'
+      fullPath: '/scan/$tanqueId'
+      preLoaderRoute: typeof ScanTanqueIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/ingesta': {
       id: '/api/ingesta'
@@ -182,6 +214,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAgendaRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin/qr-print': {
+      id: '/_app/admin/qr-print'
+      path: '/admin/qr-print'
+      fullPath: '/admin/qr-print'
+      preLoaderRoute: typeof AppAdminQrPrintRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -191,6 +230,7 @@ interface AppRouteChildren {
   AppExtracto72Route: typeof AppExtracto72Route
   AppPurgasRoute: typeof AppPurgasRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppAdminQrPrintRoute: typeof AppAdminQrPrintRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -199,6 +239,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppExtracto72Route: AppExtracto72Route,
   AppPurgasRoute: AppPurgasRoute,
   AppIndexRoute: AppIndexRoute,
+  AppAdminQrPrintRoute: AppAdminQrPrintRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -207,6 +248,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
   ApiIngestaRoute: ApiIngestaRoute,
+  ScanTanqueIdRoute: ScanTanqueIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

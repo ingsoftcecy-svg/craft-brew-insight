@@ -23,6 +23,7 @@ interface OperacionesState {
   updatePurgaField: (id: string, numeroPurga: number, campo: "tiempo" | "realiza", valor: string | number) => Promise<void>;
   cargarPurgasDesdeArchivo: (filas: any[]) => void;
   cargarExtractosDesdeArchivo: (filas: any[]) => void;
+  completarPurga: (id: string, numeroPurga: number, tiempo: number, realiza: string) => Promise<void>;
 }
 
 export const useOperacionesStore = create<OperacionesState>((set) => ({
@@ -120,6 +121,33 @@ export const useOperacionesStore = create<OperacionesState>((set) => ({
         await actualizarPurgaEnFirestore(periodo, id, { purgas: updatedRow.purgas });
       } catch (error) {
         console.error("Error al actualizar purga:", error);
+      }
+    }
+  },
+
+  completarPurga: async (id, numeroPurga, tiempo, realiza) => {
+    let updatedRow: PurgaRow | undefined;
+    set((state) => ({
+      purgas: state.purgas.map((r) => {
+        if (r.id !== id) return r;
+        const newPurgas = [...r.purgas];
+        if (!newPurgas[numeroPurga - 1]) newPurgas[numeroPurga - 1] = { fechaHora: null, tiempo: null, realiza: null };
+        
+        newPurgas[numeroPurga - 1].tiempo = tiempo;
+        newPurgas[numeroPurga - 1].realiza = realiza;
+        
+        updatedRow = { ...r, purgas: newPurgas };
+        return updatedRow;
+      })
+    }));
+
+    if (updatedRow) {
+      try {
+        const { actualizarPurgaEnFirestore } = await import("@/lib/api/purgasFirebaseService");
+        const periodo = useOperacionesStore.getState().periodoActual;
+        await actualizarPurgaEnFirestore(periodo, id, { purgas: updatedRow.purgas });
+      } catch (error) {
+        console.error("Error al completar purga:", error);
       }
     }
   },

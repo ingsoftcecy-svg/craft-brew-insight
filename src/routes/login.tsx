@@ -79,7 +79,7 @@ function LoginPage() {
                 {error}
               </div>
             )}
-            <div className="space-y-2.5">
+            <div className="space-y-2.5 relative">
               <label className="text-sm font-bold tracking-wide text-slate-700" htmlFor="email">
                 Correo Corporativo
               </label>
@@ -90,7 +90,7 @@ function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-12 rounded-xl border-slate-200 bg-white/50 px-4 text-slate-900 placeholder:text-slate-400 focus-visible:border-amber-500 focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-amber-500 transition-all duration-300 shadow-sm"
+                className="h-12 rounded-xl border-slate-200 bg-white/50 pl-4 pr-12 text-slate-900 placeholder:text-slate-400 focus-visible:border-amber-500 focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-amber-500 transition-all duration-300 shadow-sm"
               />
             </div>
             <div className="space-y-2.5 relative">

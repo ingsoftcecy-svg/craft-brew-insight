@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { Home, Calendar, Beaker, ClipboardList, CalendarDays, Clock, LogOut } from "lucide-react";
+import { Home, Calendar, Beaker, ClipboardList, CalendarDays, Clock, LogOut, Printer } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
   Sidebar,
@@ -21,6 +21,7 @@ const items = [
   { title: "Chequeo Plato (72 Hrs)", url: "/extracto72", icon: Clock         },
   { title: "Extractos (144 Hrs)",    url: "/extracto",   icon: Beaker        },
   { title: "Purgas de Trub",         url: "/purgas",     icon: ClipboardList },
+  { title: "Generador QR",           url: "/admin/qr-print", icon: Printer },
 ];
 
 export function AppSidebar() {
