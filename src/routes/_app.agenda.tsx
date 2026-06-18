@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
-import { AgendaCalendar } from "@/components/agenda_calendar";
+import { AgendaCalendar } from "@/components/calendar/agenda_calendar";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
 import { obtenerTurnoPorHora } from "@/data/turno"; 
 

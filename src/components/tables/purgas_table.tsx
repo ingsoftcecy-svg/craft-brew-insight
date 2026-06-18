@@ -1,6 +1,7 @@
 import { Fragment, memo, useState } from "react";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CustomTableHead, CustomTableCell } from "@/components/tables/custom_table_cells";
 import { type PurgaRow as PurgaRowType } from "@/types/proceso";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
 import { Circle } from "lucide-react";
@@ -26,27 +27,27 @@ const PurgaRow = memo(({ r }: { r: PurgaRowType }) => {
   return (
     <TableRow className="hover:bg-amber-50/60 transition-colors border-b border-slate-100 group">
       {/* Marca */}
-      <TableCell className="whitespace-nowrap py-3">
+      <CustomTableCell className="py-3">
         <span className="inline-flex items-center rounded-lg bg-blue-100 px-3 py-1 text-sm font-black text-blue-800 border border-blue-200 shadow-sm">
           {r.marca}
         </span>
-      </TableCell>
+      </CustomTableCell>
 
       {/* Tanque */}
-      <TableCell className="font-black text-sm text-slate-900">{r.tanque}</TableCell>
+      <CustomTableCell className="font-black text-sm text-slate-900">{r.tanque}</CustomTableCell>
 
       {/* Fecha Llenado */}
-      <TableCell className="text-sm font-bold tracking-tight whitespace-nowrap text-slate-700 tabular-nums">
+      <CustomTableCell className="text-sm font-bold tracking-tight text-slate-700 tabular-nums">
         {formatDate(r.fechaLlenado)}
-      </TableCell>
+      </CustomTableCell>
 
       {/* 8 Purgas */}
       {r.purgas.map((p, i) => (
         <Fragment key={i}>
-          <TableCell className="text-sm whitespace-nowrap font-medium text-slate-500 tabular-nums border-l border-slate-100 text-center">
+          <CustomTableCell className="text-sm font-medium text-slate-500 tabular-nums text-center">
             {formatDate(p.fechaHora)}
-          </TableCell>
-          <TableCell className="text-center p-1">
+          </CustomTableCell>
+          <TableCell className="text-center p-1 border-b border-slate-100">
             <select
               value={p.tiempo ? String(p.tiempo) : ""}
               onChange={(e) => updatePurgaField(r.id, i + 1, "tiempo", e.target.value)}
@@ -58,7 +59,7 @@ const PurgaRow = memo(({ r }: { r: PurgaRowType }) => {
               {TIEMPOS.map(t => <option key={t} value={t} className="text-slate-800">{t} min</option>)}
             </select>
           </TableCell>
-          <TableCell className="border-r border-slate-100 text-center p-1">
+          <CustomTableCell className="text-center p-1">
             <select
               value={p.realiza || ""}
               onChange={(e) => updatePurgaField(r.id, i + 1, "realiza", e.target.value)}
@@ -69,7 +70,7 @@ const PurgaRow = memo(({ r }: { r: PurgaRowType }) => {
               <option value="" disabled className="text-slate-300 font-medium">—</option>
               {EMPLEADOS.map(emp => <option key={emp} value={emp} className="text-slate-800">{emp}</option>)}
             </select>
-          </TableCell>
+          </CustomTableCell>
         </Fragment>
       ))}
     </TableRow>
@@ -91,21 +92,21 @@ export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
         <Table className="w-max min-w-full text-sm">
           <TableHeader className="bg-slate-100/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-20 shadow-sm">
             <TableRow className="border-b border-slate-200 hover:bg-transparent">
-              <TableHead rowSpan={2} className="border-r border-slate-200 align-middle text-sm font-extrabold  tracking-widest text-slate-700 min-w-[130px]">Marca</TableHead>
-              <TableHead rowSpan={2} className="border-r border-slate-200 align-middle text-sm font-extrabold  tracking-widest text-slate-700 min-w-[80px]">Tanque</TableHead>
-              <TableHead rowSpan={2} className="border-r border-slate-200 align-middle text-sm font-extrabold  tracking-widest text-slate-700 whitespace-nowrap min-w-[150px]">Fecha Llenado</TableHead>
+              <CustomTableHead rowSpan={2} className="align-middle min-w-[130px]">Marca</CustomTableHead>
+              <CustomTableHead rowSpan={2} className="align-middle min-w-[80px]">Tanque</CustomTableHead>
+              <CustomTableHead rowSpan={2} className="align-middle min-w-[150px]">Fecha Llenado</CustomTableHead>
               {Array.from({ length: 8 }, (_, i) => (
-                <TableHead key={i} colSpan={3} className="text-center border-r border-slate-200 text sm font-extrabold  tracking-widest text-slate-700">
+                <CustomTableHead key={i} colSpan={3} className="text-center">
                   Purga {i + 1}
-                </TableHead>
+                </CustomTableHead>
               ))}
             </TableRow>
             <TableRow className="border-b-0 hover:bg-transparent">
               {Array.from({ length: 8 }, (_, i) => (
                 <Fragment key={i}>
-                  <TableHead className="text-sm whitespace-nowrap font-bold  tracking-wider text-slate-500 text-center min-w-[130px]">Fecha / Hora</TableHead>
-                  <TableHead className="text-sm whitespace-nowrap font-bold  tracking-wider text-slate-500 text-center min-w-[60px]">Tiempo</TableHead>
-                  <TableHead className="text-sm whitespace-nowrap font-bold  tracking-wider text-slate-500 text-center border-r border-slate-200 min-w-[70px]">Realiza</TableHead>
+                  <TableHead className="text-sm font-bold tracking-wider text-slate-500 text-center border-l border-slate-200 min-w-[130px]">Fecha / Hora</TableHead>
+                  <TableHead className="text-sm font-bold tracking-wider text-slate-500 text-center min-w-[60px]">Tiempo</TableHead>
+                  <CustomTableHead className="py-2 text-slate-500 min-w-[70px]">Realiza</CustomTableHead>
                 </Fragment>
               ))}
             </TableRow>

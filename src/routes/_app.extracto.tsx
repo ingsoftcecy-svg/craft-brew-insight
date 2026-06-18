@@ -5,12 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ExtractoTable } from "@/components/extracto_table";
-import { UploadExtractos } from "@/components/subir_archivos_extracto";
+import { ExtractoTable } from "@/components/tables/extracto_table";
+import { UploadExtractos } from "@/components/forms/subir_archivos_extracto";
 import { BRANDS } from "@/data/brands";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
 import { obtenerTurnoPorHora } from "@/data/turno";
 import { parseMexicanDate } from "@/lib/utils";
+import { TableFilters } from "@/components/tables/table_filters";
 
 export const Route = createFileRoute("/_app/extracto")({
   head: () => ({
@@ -72,48 +73,13 @@ function ExtractoPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3 mt-2">
-          <div className="relative w-56 shrink-0">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(e) => { set_query(e.target.value); set_page(0); }}
-              placeholder="Buscar por tanque..."
-              className="pl-9 bg-slate-50 border-slate-200 rounded-xl h-10 font-medium"
-            />
-          </div>
-          
-          <Select value={periodoActual} onValueChange={(v) => { fetchData(v); set_page(0); }}>
-            <SelectTrigger className="w-36 bg-slate-50 border-slate-200 rounded-xl h-10 font-medium"><SelectValue placeholder="Mes" /></SelectTrigger>
-            <SelectContent>
-              {periodosDisponibles.map((p) => {
-                const [y, m] = p.split("-");
-                const date = new Date(parseInt(y), parseInt(m) - 1, 1);
-                const mesStr = date.toLocaleString("es-MX", { month: "long", year: "numeric" });
-                return (
-                  <SelectItem key={p} value={p}>
-                    {mesStr.charAt(0).toUpperCase() + mesStr.slice(1)}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-
-          <Select value={marca} onValueChange={(v) => { set_marca(v); set_page(0); }}>
-            <SelectTrigger className="w-40 bg-slate-50 border-slate-200 rounded-xl h-10 font-medium"><SelectValue placeholder="Marca" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas las marcas</SelectItem>
-              {BRANDS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={turno} onValueChange={(v) => { set_turno(v); set_page(0); }}>
-            <SelectTrigger className="w-40 bg-slate-50 border-slate-200 rounded-xl h-10 font-medium"><SelectValue placeholder="Turno" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los turnos</SelectItem>
-              <SelectItem value="Turno 1">Turno 1</SelectItem>
-              <SelectItem value="Turno 2">Turno 2</SelectItem>
-              <SelectItem value="Turno 3">Turno 3</SelectItem>
-            </SelectContent>
-          </Select>
+          <TableFilters 
+            query={query} setQuery={set_query}
+            periodoActual={periodoActual} setPeriodo={(v) => fetchData(v)} periodosDisponibles={periodosDisponibles}
+            marca={marca} setMarca={set_marca}
+            turno={turno} setTurno={set_turno}
+            resetPage={() => set_page(0)}
+          />
           <Button 
             variant="outline" 
             className="gap-2 bg-slate-50 border-slate-200 rounded-xl h-10 font-medium ml-auto"

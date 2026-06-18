@@ -39,9 +39,11 @@ export function AppSidebar() {
           {!collapsed && (
             <div className="flex flex-col leading-tight overflow-hidden animate-fade-in group-data-[collapsible=icon]:hidden">
               <span className="text-[15px] font-black text-slate-800 tracking-tight whitespace-nowrap">
-                Elaboración
+                Cold Block
               </span>
-              <span className="text-xs font-medium text-slate-500 mt-0.5 whitespace-nowrap">Control Operativo</span>
+              <span className="text-xs font-medium text-slate-500 mt-0.5 whitespace-nowrap">Control De Purgas</span>
+              <span className="text-xs font-medium text-slate-500 mt-0.5 whitespace-nowrap">En Fermentación</span>
+
             </div>
           )}
         </div>
@@ -49,11 +51,7 @@ export function AppSidebar() {
 
       <SidebarContent className="bg-transparent px-3 py-6 group-data-[collapsible=icon]:px-0">
         <SidebarGroup>
-          {!collapsed && (
-            <SidebarGroupLabel className="text-[11px] uppercase tracking-[0.2em] text-slate-400 font-bold px-2 pb-3 group-data-[collapsible=icon]:hidden">
-              Navegación General
-            </SidebarGroupLabel>
-          )}
+          
           <SidebarGroupContent>
             <SidebarMenu className="gap-1.5">
               {items.map((item) => {
@@ -105,7 +103,10 @@ export function AppSidebar() {
         {!collapsed && (
           <div className="flex flex-col items-center justify-center gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] whitespace-nowrap">
-              Zacatecas
+              Cerveceria Zacatecas
+            </p>
+            <p className="text-[8px] font-bold text-slate-400 tracking-[0.25em] whitespace-nowrap">
+              Creado: Ing. en Soft. Cecilia Solis
             </p>
             <div className="h-0.5 w-8 rounded-full bg-slate-200" />
           </div>

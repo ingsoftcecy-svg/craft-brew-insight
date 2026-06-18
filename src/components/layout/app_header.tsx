@@ -45,10 +45,7 @@ export function AppHeader() {
 
       {/* Right */}
       <div className="ml-auto flex items-center gap-1">
-        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100/80 transition-colors relative">
-          <Bell className="h-4 w-4" />
-          <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-amber-500 shadow-sm border border-white" />
-        </Button>
+        
         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100/80 transition-colors">
           <Settings className="h-4 w-4" />
         </Button>

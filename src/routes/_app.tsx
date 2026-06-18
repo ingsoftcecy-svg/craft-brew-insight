@@ -1,7 +1,7 @@
 import { Outlet, createFileRoute } from "@tanstack/react-router";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app_sidebar";
-import { AppHeader } from "@/components/app_header";
+import { AppSidebar } from "@/components/layout/app_sidebar";
+import { AppHeader } from "@/components/layout/app_header";
 import { useEffect } from "react";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
 import '../lib/firebase';

@@ -8,8 +8,8 @@ import {
 import { type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { NotFoundComponent } from "../components/not_found";
-import { ErrorComponent } from "../components/error_boundary";
+import { NotFoundComponent } from "../components/core/not_found";
+import { ErrorComponent } from "../components/core/error_boundary";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({

@@ -1,4 +1,5 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { CustomTableHead, CustomTableCell } from "@/components/tables/custom_table_cells";
 import { format } from "date-fns";
 import type { ExtractoRow } from "@/types/proceso";
 import { CheckCircle2, Circle, Clock } from "lucide-react";
@@ -28,11 +29,11 @@ export function Checar72Table({ rows }: Plato72TableProps) {
       <Table>
         <TableHeader className="bg-slate-100/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-10 shadow-sm">
           <TableRow className="border-b-0 hover:bg-transparent">
-            <TableHead className="border-r border-slate-200 text-sm font-extrabold tracking-widest text-slate-700 py-4">Marca</TableHead>
-            <TableHead className="border-r border-slate-200 text-sm font-extrabold tracking-widest text-slate-700 py-4 text-center">Tanque</TableHead>
-            <TableHead className="border-r border-slate-200 text-sm font-extrabold tracking-widest text-slate-700 py-4 text-center">Fecha Llenado</TableHead>
-            <TableHead className="border-r border-slate-200 text-sm font-extrabold tracking-widest text-slate-700 py-4 text-center">Fecha y Hora Chequeo 72 Hrs</TableHead>
-            <TableHead className="text-sm font-extrabold tracking-widest text-slate-700 py-4 text-center">Estado</TableHead>
+            <CustomTableHead>Marca</CustomTableHead>
+            <CustomTableHead className="text-center">Tanque</CustomTableHead>
+            <CustomTableHead className="text-center">Fecha Llenado</CustomTableHead>
+            <CustomTableHead className="text-center">Fecha y Hora Chequeo 72 Hrs</CustomTableHead>
+            <CustomTableHead className="border-r-0 text-center">Estado</CustomTableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -41,19 +42,19 @@ export function Checar72Table({ rows }: Plato72TableProps) {
             return (
               <TableRow key={r.id} className={`hover:bg-amber-50/60 transition-colors border-b border-slate-100 group ${isCompletado ? "opacity-75 bg-slate-50/40 hover:bg-slate-50/60" : ""}`}>
                 
-                <TableCell className="border-r border-slate-100 whitespace-nowrap py-3">
+                <CustomTableCell className="py-3">
                   <span className="inline-flex items-center rounded-lg bg-blue-100 px-3 py-1 text-sm font-black text-blue-800 border border-blue-200 shadow-sm">
                     {r.marca}
                   </span>
-                </TableCell>
-                <TableCell className={`border-r border-slate-100 font-black text-sm text-slate-900 text-center ${isCompletado ? "line-through opacity-50" : ""}`}>{r.tanque}</TableCell>
-                <TableCell className="border-r border-slate-100 text-sm font-bold tracking-tight whitespace-nowrap text-slate-700 tabular-nums text-center">
+                </CustomTableCell>
+                <CustomTableCell className={`font-black text-sm text-slate-900 text-center ${isCompletado ? "line-through opacity-50" : ""}`}>{r.tanque}</CustomTableCell>
+                <CustomTableCell className="text-sm font-bold tracking-tight text-slate-700 tabular-nums text-center">
                   {formatDate(r.fechaLlenado)}
-                </TableCell>
-                <TableCell className="border-r border-slate-100 text-sm font-medium tracking-tight whitespace-nowrap text-slate-500 tabular-nums text-center">
+                </CustomTableCell>
+                <CustomTableCell className="text-sm font-medium tracking-tight text-slate-500 tabular-nums text-center">
                   {formatDate(r.h72)}
-                </TableCell>
-                <TableCell className="whitespace-nowrap">
+                </CustomTableCell>
+                <CustomTableCell className="border-r-0">
                   <div className="flex justify-center">
                     <button
                       onClick={() => !isCompletado && toggleEstado72h(r.id)}
@@ -72,7 +73,7 @@ export function Checar72Table({ rows }: Plato72TableProps) {
                     {isCompletado ? "Completado" : "Pendiente"}
                   </button>
                   </div>
-                </TableCell>
+                </CustomTableCell>
               </TableRow>
             );
           })}

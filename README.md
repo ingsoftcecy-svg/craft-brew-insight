@@ -4,10 +4,11 @@ Craft Brew Insight es una aplicación web diseñada para el monitoreo, control y
 
 ## Características Principales
 
-*   📅 **Agenda General**: Planificación visual y control de turnos, mantenimientos de equipos y limpiezas CIP (Clean-In-Place) mediante un calendario interactivo.
-*   📉 **Monitoreo de Extractos (72 Hrs)**: Seguimiento detallado de la atenuación del mosto durante los primeros 3 días de fermentación (24, 48 y 72 horas).
-*   🧹 **Control de Purgas de Trub en Frío**: Registro y evaluación visual de las descargas de sedimentos por tanque, garantizando la calidad y limpieza del producto en maduración.
-*   📊 **Dashboard de KPIs**: Tarjetas de indicadores y visualización del estado general de la planta productiva.
+*   📅 **Agenda General**: Planificación visual sobre control de purgas y chequeo de platos en ciertas horas de la fermentación mediante un calendario interactivo.
+*   📉 **Purgas a las  (72 Hrs)**: Seguimiento detallado durante los primeros 3 días de fermentación (24, 48 y 72 horas).
+*   📉 **Purgas hasta las (144 Hrs)**: Seguimiento detallado durante 6 días de fermentación (24,48,72,96,120 y 144 horas).
+*   🧹 **Control de Purgas de Trub en Frío**: Se encarga de relizarse las 8 purgas hasta las 60 o 64 hrs.
+*   📊 **Dashboard**: Tarjetas de indicadores y visualización del estado general de las purgas.
 
 ## Stack Tecnológico
 
@@ -22,19 +23,28 @@ Este proyecto está construido con herramientas web modernas enfocadas en el ren
 
 ## Estructura del Proyecto
 
-El código fuente sigue convenciones modernas (utilizando `snake_case` para el sistema de archivos):
+El código fuente sigue convenciones modernas (utilizando `snake_case` para el sistema de archivos) y está organizado funcionalmente:
 
 ```text
 ├── src/
-│   ├── components/      # Componentes de UI reutilizables (shadcn, tablas, modales)
-│   ├── data/            # Datos estáticos y simulación de base de datos
-│   ├── lib/             # Utilidades, configuración del servidor y manejo de errores
-│   ├── routes/          # Rutas de la aplicación (file-based routing)
-│   ├── server.ts        # Punto de entrada para el servidor (SSR/API)
-│   ├── start.ts         # Middleware y configuración de arranque
-│   └── styles.css       # Estilos globales y variables de Tailwind
-├── vite.config.ts       # Configuración de Vite y plugins de TanStack
-└── package.json         # Dependencias y scripts
+│   ├── components/      # Componentes de React para la interfaz de usuario
+│   │   ├── calendar/    # Lógica y visualización del calendario (agenda)
+│   │   ├── core/        # Componentes base (páginas de error 404, error boundaries)
+│   │   ├── dashboard/   # Gráficas, KPIs y paneles de la página de inicio
+│   │   ├── forms/       # Componentes para carga de archivos y manipulación de datos
+│   │   ├── layout/      # Estructura maestra de la app (barra lateral, cabecera)
+│   │   ├── tables/      # Tablas de datos interactivos (extractos, purgas) y filtros
+│   │   └── ui/          # Componentes visuales genéricos y reutilizables (Shadcn UI)
+│   ├── data/            # Configuración estática (catálogos de marcas, turnos, mantenimientos)
+│   ├── lib/             # Funciones utilitarias, conexión a Firebase (servicios API)
+│   ├── routes/          # Páginas y URLs de la aplicación (TanStack Router)
+│   ├── store/           # Manejador de estado global de la app (Zustand)
+│   ├── types/           # Definiciones estrictas de datos para TypeScript
+│   ├── router.tsx       # Configuración principal del enrutador web
+│   ├── routeTree.gen.ts # Árbol de rutas generado automáticamente
+│   └── styles.css       # Estilos globales y variables de diseño (Tailwind CSS)
+├── vite.config.ts       # Configuración del empaquetador Vite
+└── package.json         # Dependencias y scripts del proyecto
 ```
 
 ## Instalación y Uso
