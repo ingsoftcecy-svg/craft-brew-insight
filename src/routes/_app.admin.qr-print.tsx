@@ -58,7 +58,7 @@ function QRPrintPage() {
               key={tanque} 
               className="flex flex-col items-center justify-center p-4 border border-dashed border-slate-300 rounded-xl bg-white page-break-inside-avoid"
             >
-              <div className="font-bold text-2xl mb-2">Tanque {tanque}</div>
+              <div className="font-bold text-2xl mb-2">UNITANQUE {tanque}</div>
               <QRCodeSVG 
                 value={scanUrl} 
                 size={120}
