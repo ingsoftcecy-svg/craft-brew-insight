@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { guardarExtractosEnFirestore } from "@/lib/api/extractosFirebaseService";
 import { guardarPurgasEnFirestore, obtenerPeriodo } from "@/lib/api/purgasFirebaseService";
+import { toMexicoISOString } from "@/lib/utils";
 import type { ExtractoRow, PurgaRow, PurgaEntry, MarcaCerveza, ExtractoEstado } from "@/types/proceso";
 
-// API Key fija de seguridad
-const API_KEY_SECRETA = "brew-insight-secure-token-2026";
+// API Key de seguridad (Se debe configurar en las variables de entorno del servidor o en .env)
+const API_KEY_SECRETA = process.env.API_KEY_SECRETA || process.env.VITE_API_KEY_SECRETA || "brew-insight-secure-token-2026";
 
 export const Route = createFileRoute("/api/ingesta")({
   server: {
@@ -90,7 +91,7 @@ export const Route = createFileRoute("/api/ingesta")({
             return isNaN(fechaBase.getTime()) ? null : fechaBase;
           };
 
-          const addHours = (d: Date, h: number) => new Date(d.getTime() + h * 60 * 60 * 1000).toISOString();
+          const addHours = (d: Date, h: number) => toMexicoISOString(new Date(d.getTime() + h * 60 * 60 * 1000));
 
           // Agrupar filas mapeadas por periodo
           const filasPorPeriodo: Record<string, { extracto: ExtractoRow; purga: PurgaRow; eventosAgenda?: any[] }[]> = {};
@@ -154,7 +155,7 @@ export const Route = createFileRoute("/api/ingesta")({
               id: idUnico,
               tanque: String(tanque),
               marca: marca as MarcaCerveza,
-              fechaLlenado: fechaBase.toISOString(),
+              fechaLlenado: toMexicoISOString(fechaBase),
               h24: sanitizeDate(h24, 24),
               h48: sanitizeDate(h48, 48),
               h72: sanitizeDate(h72, 72),
@@ -172,7 +173,7 @@ export const Route = createFileRoute("/api/ingesta")({
             for (let i = 1; i <= 8; i++) {
               const purgaDate = new Date(fechaBase.getTime() + i * 7.5 * 3600000);
               purgasMapeadas.push({
-                fechaHora: purgaDate.toISOString(),
+                fechaHora: toMexicoISOString(purgaDate),
                 tiempo: null,
                 realiza: null,
               });
@@ -180,8 +181,8 @@ export const Route = createFileRoute("/api/ingesta")({
               eventosAgenda.push({
                 id: `ev-auto-${tanque || fechaBase.getTime()}-p${i}`,
                 titulo: `Purga ${i} - Tanque ${tanque || "S/N"}`,
-                inicio: purgaDate.toISOString(),
-                fin: new Date(purgaDate.getTime() + 30 * 60000).toISOString(),
+                inicio: toMexicoISOString(purgaDate),
+                fin: toMexicoISOString(new Date(purgaDate.getTime() + 30 * 60000)),
                 tipo: "Turno",
                 descripcion: `Marca: ${marca}`,
                 turno: obtenerTurnoPorHora(purgaDate),
@@ -193,8 +194,8 @@ export const Route = createFileRoute("/api/ingesta")({
               eventosAgenda.push({
                 id: `ev-auto-ext-72-h72-${tanque || fechaBase.getTime()}`,
                 titulo: `Chequeo Plato 72h - Tanque ${tanque || "S/N"}`,
-                inicio: fechaEvento72.toISOString(),
-                fin: new Date(fechaEvento72.getTime() + 30 * 60000).toISOString(),
+                inicio: toMexicoISOString(fechaEvento72),
+                fin: toMexicoISOString(new Date(fechaEvento72.getTime() + 30 * 60000)),
                 tipo: "Turno",
                 descripcion: `Marca: ${marca}`,
                 turno: obtenerTurnoPorHora(fechaEvento72),
@@ -204,9 +205,9 @@ export const Route = createFileRoute("/api/ingesta")({
             const filaPurga: PurgaRow = {
               id: `pr-${tanque}-${fechaBase.getTime()}`,
               tanque: String(tanque),
-              fecha: fechaBase.toISOString(),
+              fecha: toMexicoISOString(fechaBase),
               marca: marca as MarcaCerveza,
-              fechaLlenado: fechaBase.toISOString(),
+              fechaLlenado: toMexicoISOString(fechaBase),
               horas: "0",
               historicas: "0",
               purgas: purgasMapeadas,

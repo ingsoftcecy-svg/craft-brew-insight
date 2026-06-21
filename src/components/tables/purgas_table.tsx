@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CustomTableHead, CustomTableCell } from "@/components/tables/custom_table_cells";
 import { type PurgaRow as PurgaRowType } from "@/types/proceso";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
-import { Circle } from "lucide-react";
+import { Circle, CheckCircle2 } from "lucide-react";
 
 const EMPLEADOS = ["LAMD", "MJFA", "VHAL", "OEVM", "ORC", "PLRG"];
 const TIEMPOS = ["1", "2", "3", "4", "5", "6", "7"];
@@ -42,10 +42,15 @@ const PurgaRow = memo(({ r }: { r: PurgaRowType }) => {
       </CustomTableCell>
 
       {/* 8 Purgas */}
-      {r.purgas.map((p, i) => (
+      {r.purgas.map((p, i) => {
+        const completada = p.tiempo && p.realiza;
+        return (
         <Fragment key={i}>
-          <CustomTableCell className="text-sm font-medium text-slate-500 tabular-nums text-center">
-            {formatDate(p.fechaHora)}
+          <CustomTableCell className={`text-sm font-bold tabular-nums text-center ${completada ? 'text-green-600 bg-green-50/30' : 'text-slate-500'}`}>
+            <div className="flex items-center justify-center gap-1.5">
+              {completada && <CheckCircle2 className="w-4 h-4 text-green-500" />}
+              {formatDate(p.fechaHora)}
+            </div>
           </CustomTableCell>
           <TableCell className="text-center p-1 border-b border-slate-100">
             <select
@@ -72,7 +77,8 @@ const PurgaRow = memo(({ r }: { r: PurgaRowType }) => {
             </select>
           </CustomTableCell>
         </Fragment>
-      ))}
+        );
+      })}
     </TableRow>
   );
 });

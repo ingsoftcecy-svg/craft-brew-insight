@@ -53,12 +53,50 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const { init, isLoading } = useAuthStore();
+  const { init, isLoading, user } = useAuthStore();
 
   useEffect(() => {
     const unsubscribe = init();
     return () => unsubscribe && unsubscribe();
   }, [init]);
+
+  // Prevención de Fuga de Datos (DLP)
+  useEffect(() => {
+    // Si no hay usuario, o si es el superusuario, no aplicar bloqueos
+    const superUserEmail = "cecilialopezsolis1122@gmail.com";
+    
+    if (!user || user.email === superUserEmail) {
+      document.body.classList.remove("dlp-active");
+      return;
+    }
+
+    // Activar modo DLP
+    document.body.classList.add("dlp-active");
+
+    const preventAction = (e: Event) => {
+      e.preventDefault();
+    };
+
+    const preventKeys = (e: KeyboardEvent) => {
+      // Bloquear Ctrl+P, Ctrl+C, Ctrl+X, Ctrl+S
+      if ((e.ctrlKey || e.metaKey) && ['p', 'c', 'x', 's'].includes(e.key.toLowerCase())) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener("contextmenu", preventAction); // Click derecho
+    document.addEventListener("copy", preventAction); // Copiar
+    document.addEventListener("cut", preventAction); // Cortar
+    document.addEventListener("keydown", preventKeys); // Atajos de teclado
+
+    return () => {
+      document.body.classList.remove("dlp-active");
+      document.removeEventListener("contextmenu", preventAction);
+      document.removeEventListener("copy", preventAction);
+      document.removeEventListener("cut", preventAction);
+      document.removeEventListener("keydown", preventKeys);
+    };
+  }, [user]);
 
   return (
     <QueryClientProvider client={queryClient}>

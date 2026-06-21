@@ -2,6 +2,7 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components
 import { CustomTableHead, CustomTableCell } from "@/components/tables/custom_table_cells";
 import { format } from "date-fns";
 import { Circle } from "lucide-react";
+import { parseDateToMexico } from "@/lib/utils";
 
 interface ExtractoTableProps {
   rows: any[];
@@ -10,8 +11,8 @@ interface ExtractoTableProps {
 function formatDate(isoString: string | null | undefined) {
   if (!isoString) return "—";
   try {
-    const d = new Date(isoString);
-    if (isNaN(d.getTime())) return isoString;
+    const d = parseDateToMexico(isoString);
+    if (!d) return isoString;
     return format(d, "dd/MM HH:mm");
   } catch (e) {
     return isoString;

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 import { format, isSameMonth, isSameDay, addMonths, subMonths } from "date-fns";
 import { es } from "date-fns/locale";
-import { cn } from "@/lib/utils";
+import { cn, parseDateToMexico } from "@/lib/utils";
 import { type AgendaEvent } from "@/types/proceso";
 import { Dispatch, SetStateAction } from "react";
 
@@ -103,7 +103,7 @@ export function AgendaCalendar({ cursor, set_cursor, days, events }: AgendaCalen
                 <div className="space-y-2 flex-1">
                   {day_events.slice(0, 3).map((e) => (
                     <div key={e.id} className={cn("whitespace-normal break-words leading-snug rounded-lg px-2.5 py-2 text-xs md:text-[13px] shadow-sm", getEventColorClass(e))}>
-                      <div className="font-black mb-0.5">{format(new Date(e.inicio), "HH:mm")}</div>
+                      <div className="font-black mb-0.5">{format(parseDateToMexico(e.inicio) || new Date(), "HH:mm")}</div>
                       <div className="opacity-90 font-medium">{e.titulo}</div>
                     </div>
                   ))}
@@ -126,7 +126,7 @@ export function AgendaCalendar({ cursor, set_cursor, days, events }: AgendaCalen
                             <div key={e.id} className={cn("rounded-xl p-4 shadow-sm", getEventColorClass(e))}>
                               <div className="font-bold flex items-center gap-3 text-sm">
                                 <span className={cn("h-3 w-3 rounded-full shadow-sm", getEventColorClass(e, true))} />
-                                <span>{format(new Date(e.inicio), "HH:mm")}</span>
+                                <span>{format(parseDateToMexico(e.inicio) || new Date(), "HH:mm")}</span>
                                 <span className="opacity-50">•</span>
                                 <span>{e.titulo}</span>
                               </div>

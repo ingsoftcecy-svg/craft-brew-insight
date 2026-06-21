@@ -6,7 +6,7 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  init: () => void;
+  init: () => import('firebase/auth').Unsubscribe;
   signOut: () => Promise<void>;
 }
 

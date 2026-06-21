@@ -88,6 +88,10 @@ export function DashboardCharts({ extractos, periodosStats }: DashboardChartsPro
 
   const chartData = tipoGrafica === "marca" ? chartDataMarca : chartDataMes;
 
+  const totalRegistrosActual = useMemo(() => {
+    return chartData.reduce((acc, curr) => acc + curr.total, 0);
+  }, [chartData]);
+
   return (
     <Card className="border-border shadow-sm hover:shadow-lg transition-all duration-300 group">
       <CardHeader className="pb-0 pt-5 px-5">
@@ -116,17 +120,20 @@ export function DashboardCharts({ extractos, periodosStats }: DashboardChartsPro
         </div>
       </CardHeader>
       <CardContent className="pt-6 pb-2 px-2">
-        <div className="h-[280px] w-full">
+        <div className="h-[340px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 60 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
               <XAxis 
                 dataKey="name" 
                 axisLine={false} 
                 tickLine={false} 
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
+                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
                 dy={10}
-                
+                interval={0}
+                angle={-45}
+                textAnchor="end"
+                height={80}
               />
               <YAxis 
                 axisLine={false} 
@@ -148,6 +155,9 @@ export function DashboardCharts({ extractos, periodosStats }: DashboardChartsPro
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+        </div>
+        <div className="mt-1 pl-4 text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+          Total de registros: <span className="font-bold text-foreground text-sm">{totalRegistrosActual}</span>
         </div>
       </CardContent>
     </Card>

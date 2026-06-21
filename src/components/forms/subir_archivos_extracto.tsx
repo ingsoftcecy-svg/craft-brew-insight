@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
+import { toMexicoISOString } from "@/lib/utils";
 import {
   Upload,
   FileSpreadsheet,
@@ -48,9 +49,21 @@ function parsearFechaExcel(valor: any): Date | null {
 
   const str = String(valor).trim();
 
+  // Número serial de Excel: los seriales representan días desde 1900-01-01.
+  // El resultado son componentes de fecha/hora SIN zona horaria.
+  // Los interpretamos como hora de México construyendo un Date local.
   if (!isNaN(Number(str)) && Number(str) > 30000) {
-    const utcDate = new Date((Number(str) - 25569) * 86400 * 1000);
-    return new Date(utcDate.getTime() + Math.abs(utcDate.getTimezoneOffset()) * 60000);
+    const totalDays = Number(str) - 25569; // días desde epoch Unix
+    const wholeDays = Math.floor(totalDays);
+    const fracDay = totalDays - wholeDays;
+    // Construir fecha base a partir de los días
+    const base = new Date(1970, 0, 1 + wholeDays);
+    // Extraer hora fraccionaria
+    const totalSeconds = Math.round(fracDay * 86400);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    base.setHours(hours, minutes, 0, 0);
+    return base;
   }
 
   if (str.includes("/")) {
@@ -82,6 +95,11 @@ function parsearFechaExcel(valor: any): Date | null {
   }
 
   if (str.includes("-")) {
+    // Si ya viene con offset (ej. "2026-06-18T09:30:00.000-06:00"), parsear normalmente
+    if (str.includes("T") && (str.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(str))) {
+      const d = new Date(str);
+      return isNaN(d.getTime()) ? null : d;
+    }
     const [fechaPart, horaPart] = str.split(" ");
     const partes = fechaPart.split("-");
     let fecha: Date;
@@ -165,7 +183,7 @@ function limpiarYMapear(filasJson: any[]): ResultadoLimpieza {
       continue;
     }
 
-    const fechaLlenado = fechaParsed.toISOString();
+    const fechaLlenado = toMexicoISOString(fechaParsed);
 
     if (!periodoDetectado && fechaParsed) {
       periodoDetectado = obtenerPeriodo(fechaParsed);
@@ -178,12 +196,12 @@ function limpiarYMapear(filasJson: any[]): ResultadoLimpieza {
     const parseHora = (col: string, horasSumar: number) => {
       // 1. Si viene en el Excel de forma explícita, lo tomamos
       const v = parsearFechaExcel(fila[col]);
-      if (v) return v.toISOString();
+      if (v) return toMexicoISOString(v);
       if (fila[col]) return String(fila[col]);
       
       // 2. Si no viene, lo calculamos automáticamente sumando las horas a la fecha de llenado
       const fechaCalculada = new Date(fechaParsed.getTime() + horasSumar * 60 * 60 * 1000);
-      return fechaCalculada.toISOString();
+      return toMexicoISOString(fechaCalculada);
     };
 
     filasLimpias.push({

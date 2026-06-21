@@ -51,9 +51,14 @@ export function TaskListPanel({ title, subtitle, icon: HeaderIcon, emptyMessage,
   return (
     <Card className="h-full border-border shadow-sm flex flex-col">
       <CardHeader className="pb-0 pt-5 px-5">
-        <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
-          <HeaderIcon className={`h-4 w-4 ${theme.icon}`} />
-          {title}
+        <CardTitle className="text-sm font-semibold flex items-center text-foreground w-full">
+          <HeaderIcon className={`h-4 w-4 mr-2 ${theme.icon}`} />
+          <span>{title}</span>
+          {items.length > 0 && (
+            <span className={`ml-auto px-2 py-0.5 rounded-md text-xs font-bold border shadow-sm ${theme.badge}`}>
+              {items.length}
+            </span>
+          )}
         </CardTitle>
         <p className="text-xs text-muted-foreground font-medium">{subtitle}</p>
       </CardHeader>

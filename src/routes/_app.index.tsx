@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FlaskConical, Clock, CheckCircle2, Droplets, Database } from "lucide-react";
+import { FlaskConical, Clock, CheckCircle2, Droplets, Database, Beaker } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
 import { useEffect } from "react";
 import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import { obtenerTurnoPorHora } from "@/data/turno";
 import { parseMexicanDate } from "@/lib/utils";
 
@@ -22,7 +23,7 @@ export const Route = createFileRoute("/_app/")({
 });
 
 function Dashboard() {
-  const { extractos, periodosStats, isLoading, fetchData } = useOperacionesStore();
+  const { extractos, purgas, periodosStats, isLoading, fetchData } = useOperacionesStore();
 
   useEffect(() => { fetchData("todos"); }, [fetchData]);
 
@@ -37,8 +38,6 @@ function Dashboard() {
   const fermentando   = extractosPeriodoActivo.length;
   const completados72 = extractosPeriodoActivo.filter(e => e.h72 && e.estado72h === "Completado").length;
   const pendientes72  = extractosPeriodoActivo.filter(e => e.h72 && e.estado72h !== "Completado").length;
-  const pendientes24  = extractosPeriodoActivo.filter(e => e.h24 && e.estado24h !== "Completado").length;
-  const completados24  = extractosPeriodoActivo.filter(e => e.h24 && e.estado24h === "Completado").length;
 
   const ahora = new Date();
   const turnoActual = obtenerTurnoPorHora(ahora.toISOString());
@@ -74,34 +73,55 @@ function Dashboard() {
 
   const { start: inicioTurno, end: finTurno } = getLimitesTurnoActual(ahora);
 
-  const proximos72 = extractos
-    .filter(e => e.h72 && e.estado72h !== "Completado")
-    .map(e => ({ ...e, date: parseMexicanDate(e.h72) as Date }))
-    .filter(e => e.date && e.date >= inicioTurno && e.date <= finTurno)
-    .sort((a, b) => a.date.getTime() - b.date.getTime())
-    .slice(0, 6);
+  // --- CHEQUEOS DE PLATO (24h a 144h) ---
+  const horasChequeo = [
+    { key: "h24", label: "24h", color: "sky" as const },
+    { key: "h48", label: "48h", color: "sky" as const },
+    { key: "h72", label: "72h", color: "indigo" as const },
+    { key: "h96", label: "96h", color: "indigo" as const },
+    { key: "h120", label: "120h", color: "sky" as const },
+    { key: "h144", label: "144h", color: "indigo" as const },
+  ];
 
-   const proximos24 = extractos
-    .filter(e => e.h24 && e.estado24h !== "Completado")
-    .map(e => ({ ...e, date: parseMexicanDate(e.h24) as Date }))
-    .filter(e => e.date && e.date >= inicioTurno && e.date <= finTurno)
-    .sort((a, b) => a.date.getTime() - b.date.getTime())
-    .slice(0, 6);
+  const chequeosDelTurno = horasChequeo.map(({ key, label, color }) => {
+    const items = extractos
+      .filter((e: any) => e[key] && e[`estado${label}`] !== "Completado")
+      .map((e: any) => ({ ...e, date: parseMexicanDate(e[key]) as Date }))
+      .filter(e => e.date && e.date >= inicioTurno && e.date <= finTurno)
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .slice(0, 6);
+    return { key, label, color, items };
+  });
 
-  const proximasPurgas = extractos
-    .filter(e => e.fechaLlenado)
-    .map(e => {
-      const parsedLlenado = parseMexicanDate(e.fechaLlenado);
-      return {
-        id: e.id,
-        tanque: e.tanque,
-        marca: e.marca,
-        date: parsedLlenado ? new Date(parsedLlenado.getTime() + 64 * 60 * 60 * 1000) : null as unknown as Date,
-      };
-    })
-    .filter(e => e.date && e.date >= inicioTurno && e.date <= finTurno)
-    .sort((a, b) => a.date.getTime() - b.date.getTime())
-    .slice(0, 6);
+  // --- PURGAS DE TRUB (Purga 1 a 8) ---
+  const purgasDelTurno = Array.from({ length: 8 }, (_, i) => {
+    const numeroPurga = i + 1;
+    const items = purgas
+      .filter(p => {
+        const entry = p.purgas?.[i];
+        if (!entry?.fechaHora) return false;
+        // Solo mostrar si NO tiene tiempo ni realiza (pendiente)
+        if (entry.tiempo && entry.realiza) return false;
+        return true;
+      })
+      .map(p => {
+        const entry = p.purgas[i];
+        const date = parseMexicanDate(entry.fechaHora!);
+        return {
+          id: `${p.id}-p${numeroPurga}`,
+          tanque: p.tanque,
+          marca: p.marca,
+          date: date as Date,
+          purgaId: p.id,
+        };
+      })
+      .filter(item => item.date && item.date >= inicioTurno && item.date <= finTurno)
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .slice(0, 8);
+    return { numeroPurga, items };
+  });
+
+  const totalPurgasPendientes = purgasDelTurno.reduce((acc, p) => acc + p.items.length, 0);
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
@@ -109,7 +129,7 @@ function Dashboard() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white/50 p-6 rounded-2xl border border-slate-100 shadow-sm backdrop-blur-sm">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-800">Tablero General</h1>
-          <p className="text-sm text-slate-500 mt-1 font-medium">Monitor de Purgas y Chequeo de Platos</p>
+          <p className="text-sm text-slate-500 mt-1 font-medium">Monitor de Chequeos de Plato y Purgas de Trub · {turnoActual}</p>
         </div>
       </div>
 
@@ -139,49 +159,70 @@ function Dashboard() {
             bg="bg-gradient-to-br from-sky-100 to-sky-50 border-sky-200"
           />
           <KpiCard
-            label="Chequeos 72h Completados"
-            value={completados72}
-            icon={CheckCircle2}
-            sub="Confirmados"
-            color="text-emerald-600"
-            bg="bg-gradient-to-br from-emerald-100 to-emerald-50 border-emerald-200"
+            label="Purgas Pendientes Turno"
+            value={totalPurgasPendientes}
+            icon={Droplets}
+            sub="Purgas de trub este turno"
+            color="text-rose-600"
+            bg="bg-gradient-to-br from-rose-100 to-rose-50 border-rose-200"
           />
         </div>
       )}
       
-      <div className="grid gap-5 grid-cols-1 lg:grid-cols-3 mb-5">
-        <TaskListPanel
-          title="Próximos Chequeos 24h"
-          subtitle="Chequeos de tu turno actual"
-          icon={Clock}
-          emptyMessage="Todo al día"
-          items={proximos24}
-          colorTheme="sky"
-          itemIcon={Database}
-          linkTo="/extracto"
-        />
+      {/* ═══════════════ SECCIÓN: CHEQUEOS DE PLATO ═══════════════ */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-indigo-500 flex items-center justify-center shadow-sm">
+            <Beaker className="h-4 w-4 text-white" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-slate-800 tracking-tight">Chequeos de Plato</h2>
+            <p className="text-xs text-slate-500 font-medium">De 24 a 144 hrs · Turno actual</p>
+          </div>
+        </div>
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          {chequeosDelTurno.map(({ key, label, color, items }) => (
+            <TaskListPanel
+              key={key}
+              title={`Chequeo ${label}`}
+              subtitle="Pendientes de este turno"
+              icon={Clock}
+              emptyMessage="Todo al día"
+              items={items}
+              colorTheme={color}
+              itemIcon={Database}
+              linkTo="/extracto"
+            />
+          ))}
+        </div>
+      </div>
 
-        <TaskListPanel
-          title="Próximos Chequeos 72h"
-          subtitle="Chequeos de tu turno actual"
-          icon={Clock}
-          emptyMessage="Todo al día"
-          items={proximos72}
-          colorTheme="indigo"
-          itemIcon={Database}
-          linkTo="/extracto72"
-        />
-
-        <TaskListPanel
-          title="Próximas Purgas"
-          subtitle="Purgas de tu turno actual (8ª - 64 hrs)"
-          icon={Droplets}
-          emptyMessage="Sin purgas en este turno"
-          items={proximasPurgas}
-          colorTheme="rose"
-          itemIcon={Droplets}
-          linkTo="/purgas"
-        />
+      {/* ═══════════════ SECCIÓN: PURGAS DE TRUB ═══════════════ */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center shadow-sm">
+            <Droplets className="h-4 w-4 text-white" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-slate-800 tracking-tight">Purgas de Trub</h2>
+            <p className="text-xs text-slate-500 font-medium">8 purgas por lote · Turno actual · Ligadas a QR</p>
+          </div>
+        </div>
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+            {purgasDelTurno.map(({ numeroPurga, items }) => (
+              <TaskListPanel
+                key={`purga-${numeroPurga}`}
+                title={`Purga ${numeroPurga}`}
+                subtitle={`Pendientes de este turno`}
+                icon={Droplets}
+                emptyMessage="Todo al día"
+                items={items}
+                colorTheme="rose"
+                itemIcon={Droplets}
+                linkTo="/purgas"
+              />
+            ))}
+          </div>
       </div>
       
       {/* Chart row */}

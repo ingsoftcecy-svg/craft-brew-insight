@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 import { getFirestore } from "firebase/firestore";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -17,6 +18,26 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 export const firestore = getFirestore(app);
+
+// Desactivar el escudo reCAPTCHA de Auth en modo local para poder probar los SMS falsos sin errores
+if (import.meta.env.DEV) {
+  auth.settings.appVerificationDisabledForTesting = true;
+}
+
+// Inicializar Firebase App Check (Capa 6: Escudo Anti-Bots)
+if (typeof window !== "undefined") {
+  // Reemplazar con clave real en producción
+  const recaptchaKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "tu-clave-de-recaptcha-enterprise";
+  try {
+    initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider(recaptchaKey),
+      isTokenAutoRefreshEnabled: true
+    });
+    console.log("🛡️ Firebase App Check inicializado correctamente.");
+  } catch (error) {
+    console.error("Error al inicializar App Check:", error);
+  }
+}
 
 // Verificar que la bd si este conectada correctamente 
 if (typeof window !== "undefined") {

@@ -125,3 +125,19 @@
     -webkit-font-smoothing: antialiased;
   }
 }
+
+/* Prevención de Fuga de Datos (DLP) */
+body.dlp-active {
+  /* Prevenir selección y sombreado de texto */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+@media print {
+  /* Si alguien presiona Imprimir, la pantalla sale en blanco */
+  body.dlp-active {
+    display: none !important;
+  }
+}
