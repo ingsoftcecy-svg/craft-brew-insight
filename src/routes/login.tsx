@@ -15,6 +15,11 @@ declare global {
 }
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } => {
+    return {
+      redirect: typeof search.redirect === 'string' ? search.redirect : undefined,
+    }
+  },
   beforeLoad: () => {
     const { isAuthenticated } = useAuthStore.getState();
     if (isAuthenticated) {
@@ -33,6 +38,7 @@ function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { redirect: redirectUrl } = Route.useSearch();
 
   // MFA States
   const [mfaResolver, setMfaResolver] = useState<MultiFactorResolver | null>(null);
@@ -49,7 +55,11 @@ function LoginPage() {
     try {
       await setPersistence(auth, browserLocalPersistence);
       await signInWithEmailAndPassword(auth, email, password);
-      navigate({ to: "/" });
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
+      } else {
+        navigate({ to: "/" });
+      }
     } catch (err: any) {
       console.error("Login error:", err);
       if (err.code === "auth/multi-factor-auth-required") {
@@ -127,7 +137,11 @@ function LoginPage() {
       const credential = PhoneAuthProvider.credential(verificationId, smsCode);
       const multiFactorAssertion = PhoneMultiFactorGenerator.assertion(credential);
       await mfaResolver.resolveSignIn(multiFactorAssertion);
-      navigate({ to: "/" });
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
+      } else {
+        navigate({ to: "/" });
+      }
     } catch (err: any) {
       console.error("MFA verification error:", err);
       setError("Código incorrecto o expirado.");

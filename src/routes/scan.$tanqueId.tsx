@@ -1,4 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
 import { useMemo, useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -7,8 +8,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, CheckCircle2, Clock } from "lucide-react";
 import { parseMexicanDate } from "@/lib/utils";
+import { auth } from "@/lib/firebase";
+import { signInAnonymously } from "firebase/auth";
 
 export const Route = createFileRoute("/scan/$tanqueId")({
+  beforeLoad: async ({ location }) => {
+    const { isAuthenticated } = useAuthStore.getState();
+    if (!isAuthenticated) {
+      try {
+        await signInAnonymously(auth);
+      } catch (error) {
+        console.error("Failed to sign in anonymously", error);
+        throw redirect({
+          to: "/login",
+          search: { redirect: location.href }
+        });
+      }
+    }
+  },
   component: ScanPage,
 });
 
@@ -26,10 +43,11 @@ function ScanPage() {
     fetchData();
   }, [fetchData]);
 
-  // Encontrar el lote más reciente para este tanque
   const loteActivo = useMemo(() => {
+    const normalizeTanque = (id: any) => String(id).trim().replace(/^0+(?=\d)/, '').toLowerCase();
+    
     const purgasDelTanque = purgas.filter(
-      (p) => String(p.tanque) === String(tanqueId)
+      (p) => normalizeTanque(p.tanque) === normalizeTanque(tanqueId)
     );
 
     if (purgasDelTanque.length === 0) return null;
