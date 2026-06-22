@@ -1,7 +1,7 @@
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { CustomTableHead, CustomTableCell } from "@/components/tables/custom_table_cells";
 import { format } from "date-fns";
-import { Circle } from "lucide-react";
+import { Circle, CheckCircle2 } from "lucide-react";
 import { parseDateToMexico } from "@/lib/utils";
 
 interface ExtractoTableProps {
@@ -48,12 +48,42 @@ export function ExtractoTable({ rows }: ExtractoTableProps) {
               <CustomTableCell className="text-sm font-bold tracking-tight text-slate-700 tabular-nums">
                 {formatDate(r.fechaLlenado)}
               </CustomTableCell>
-              <CustomTableCell className={`text-sm tabular-nums text-center ${!r.h24 ? 'text-slate-300' : 'text-slate-500 font-medium'}`}>{formatDate(r.h24)}</CustomTableCell>
-              <CustomTableCell className={`text-sm tabular-nums text-center ${!r.h48 ? 'text-slate-300' : 'text-slate-500 font-medium'}`}>{formatDate(r.h48)}</CustomTableCell>
-              <CustomTableCell className={`text-sm tabular-nums text-center ${!r.h72 ? 'text-slate-300' : 'text-slate-500 font-medium'}`}>{formatDate(r.h72)}</CustomTableCell>
-              <CustomTableCell className={`text-sm tabular-nums text-center ${!r.h96 ? 'text-slate-300' : 'text-slate-500 font-medium'}`}>{formatDate(r.h96)}</CustomTableCell>
-              <CustomTableCell className={`text-sm tabular-nums text-center ${!r.h120 ? 'text-slate-300' : 'text-slate-500 font-medium'}`}>{formatDate(r.h120)}</CustomTableCell>
-              <CustomTableCell className={`border-r-0 text-sm tabular-nums text-center ${!r.h144 ? 'text-slate-300' : 'text-slate-500 font-medium'}`}>{formatDate(r.h144)}</CustomTableCell>
+              <CustomTableCell className={`text-sm tabular-nums text-center ${!r.h24 ? 'text-slate-300' : (r.estado24h === "Completado" ? 'text-emerald-600 font-bold bg-emerald-50/50' : 'text-slate-500 font-medium')}`}>
+                <div className="flex items-center justify-center gap-1.5">
+                  {r.estado24h === "Completado" && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
+                  {formatDate(r.h24)}
+                </div>
+              </CustomTableCell>
+              <CustomTableCell className={`text-sm tabular-nums text-center ${!r.h48 ? 'text-slate-300' : (r.estado48h === "Completado" ? 'text-emerald-600 font-bold bg-emerald-50/50' : 'text-slate-500 font-medium')}`}>
+                <div className="flex items-center justify-center gap-1.5">
+                  {r.estado48h === "Completado" && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
+                  {formatDate(r.h48)}
+                </div>
+              </CustomTableCell>
+              <CustomTableCell className={`text-sm tabular-nums text-center ${!r.h72 ? 'text-slate-300' : (r.estado72h === "Completado" ? 'text-emerald-600 font-bold bg-emerald-50/50' : 'text-slate-500 font-medium')}`}>
+                <div className="flex items-center justify-center gap-1.5">
+                  {r.estado72h === "Completado" && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
+                  {formatDate(r.h72)}
+                </div>
+              </CustomTableCell>
+              <CustomTableCell className={`text-sm tabular-nums text-center ${!r.h96 ? 'text-slate-300' : (r.estado96h === "Completado" ? 'text-emerald-600 font-bold bg-emerald-50/50' : 'text-slate-500 font-medium')}`}>
+                <div className="flex items-center justify-center gap-1.5">
+                  {r.estado96h === "Completado" && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
+                  {formatDate(r.h96)}
+                </div>
+              </CustomTableCell>
+              <CustomTableCell className={`text-sm tabular-nums text-center ${!r.h120 ? 'text-slate-300' : (r.estado120h === "Completado" ? 'text-emerald-600 font-bold bg-emerald-50/50' : 'text-slate-500 font-medium')}`}>
+                <div className="flex items-center justify-center gap-1.5">
+                  {r.estado120h === "Completado" && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
+                  {formatDate(r.h120)}
+                </div>
+              </CustomTableCell>
+              <CustomTableCell className={`border-r-0 text-sm tabular-nums text-center ${!r.h144 ? 'text-slate-300' : (r.estado144h === "Completado" ? 'text-emerald-600 font-bold bg-emerald-50/50' : 'text-slate-500 font-medium')}`}>
+                <div className="flex items-center justify-center gap-1.5">
+                  {r.estado144h === "Completado" && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
+                  {formatDate(r.h144)}
+                </div>
+              </CustomTableCell>
             </TableRow>
           ))}
           {rows.length === 0 && (

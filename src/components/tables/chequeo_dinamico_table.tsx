@@ -2,12 +2,12 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components
 import { CustomTableHead, CustomTableCell } from "@/components/tables/custom_table_cells";
 import { format } from "date-fns";
 import type { ExtractoRow } from "@/types/proceso";
-import { CheckCircle2, Circle, Clock } from "lucide-react";
+import { CheckCircle2, Circle } from "lucide-react";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
-import { Cross } from "recharts";
 
-interface Plato72TableProps {
+interface ChequeoDinamicoTableProps {
   rows: ExtractoRow[];
+  horaLabel: string; // e.g. "24h", "72h"
 }
 
 function formatDate(isoString?: string | null) {
@@ -21,8 +21,8 @@ function formatDate(isoString?: string | null) {
   }
 }
 
-export function Checar72Table({ rows }: Plato72TableProps) {
-  const toggleEstado72h = useOperacionesStore(s => s.toggleEstado72h);
+export function ChequeoDinamicoTable({ rows, horaLabel }: ChequeoDinamicoTableProps) {
+  const toggleEstadoChequeo = useOperacionesStore(s => s.toggleEstadoChequeo);
 
   return (
     <div className="w-full overflow-x-auto">
@@ -32,13 +32,18 @@ export function Checar72Table({ rows }: Plato72TableProps) {
             <CustomTableHead>Marca</CustomTableHead>
             <CustomTableHead className="text-center">Tanque</CustomTableHead>
             <CustomTableHead className="text-center">Fecha Llenado</CustomTableHead>
-            <CustomTableHead className="text-center">Fecha y Hora Chequeo 72 Hrs</CustomTableHead>
+            <CustomTableHead className="text-center">Fecha y Hora Chequeo {horaLabel}</CustomTableHead>
             <CustomTableHead className="border-r-0 text-center">Estado</CustomTableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.map((r) => {
-            const isCompletado = r.estado72h === "Completado";
+            const propNameEstado = `estado${horaLabel}` as keyof ExtractoRow;
+            const propNameFecha = `h${horaLabel.replace('h', '')}` as keyof ExtractoRow;
+            
+            const isCompletado = r[propNameEstado] === "Completado";
+            const fechaChequeo = r[propNameFecha] as string | null;
+
             return (
               <TableRow key={r.id} className={`hover:bg-amber-50/60 transition-colors border-b border-slate-100 group ${isCompletado ? "opacity-75 bg-slate-50/40 hover:bg-slate-50/60" : ""}`}>
                 
@@ -52,26 +57,33 @@ export function Checar72Table({ rows }: Plato72TableProps) {
                   {formatDate(r.fechaLlenado)}
                 </CustomTableCell>
                 <CustomTableCell className="text-sm font-medium tracking-tight text-slate-500 tabular-nums text-center">
-                  {formatDate(r.h72)}
+                  {formatDate(fechaChequeo)}
                 </CustomTableCell>
                 <CustomTableCell className="border-r-0">
                   <div className="flex justify-center">
                     <button
-                      onClick={() => !isCompletado && toggleEstado72h(r.id)}
+                      onClick={() => !isCompletado && toggleEstadoChequeo(r.id, horaLabel)}
                       disabled={isCompletado}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-bold transition-all shadow-sm ${
-                      isCompletado
-                        ? "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none border border-transparent"
-                        : "bg-amber-100 border border-amber-200 text-amber-800 hover:border-amber-500 hover:text-amber-900 hover:bg-amber-200 hover:shadow"
-                    }`}
-                  >
-                    {isCompletado ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    ) : (
-                      <Clock className="h-4 w-4" />
-                    )}
-                    {isCompletado ? "Completado" : "Pendiente"}
-                  </button>
+                      className={`
+                        relative flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-300
+                        ${isCompletado 
+                          ? 'bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-default' 
+                          : 'bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200 hover:shadow-sm cursor-pointer hover:scale-105 active:scale-95'
+                        }
+                      `}
+                    >
+                      {isCompletado ? (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          <span>Completado</span>
+                        </>
+                      ) : (
+                        <>
+                          <Circle className="w-4 h-4 text-amber-600/70" />
+                          <span>Pendiente</span>
+                        </>
+                      )}
+                    </button>
                   </div>
                 </CustomTableCell>
               </TableRow>
@@ -79,13 +91,8 @@ export function Checar72Table({ rows }: Plato72TableProps) {
           })}
           {rows.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-slate-500 py-16">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="p-4 bg-slate-100 rounded-full">
-                    <Circle className="h-6 w-6 text-slate-400" />
-                  </div>
-                  <p className="font-bold text-sm">Sin resultados</p>
-                </div>
+              <TableCell colSpan={5} className="text-center py-12 text-slate-500 font-medium">
+                No hay chequeos de {horaLabel} para mostrar con los filtros actuales.
               </TableCell>
             </TableRow>
           )}

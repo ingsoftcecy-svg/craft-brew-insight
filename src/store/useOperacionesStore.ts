@@ -253,30 +253,34 @@ export const useOperacionesStore = create<OperacionesState>((set) => ({
     extractos: state.extractos.map((e) => e.id === id ? { ...e, ...data } : e)
   })),
 
-  toggleEstado72h: async (id: string) => {
+  toggleEstadoChequeo: async (id: string, label: string) => {
     const state = useOperacionesStore.getState();
     const target = state.extractos.find(e => e.id === id);
     if (!target) return;
 
-    const nuevoEstado = target.estado72h === "Completado" ? "Pendiente" : "Completado";
+    const propName = `estado${label}` as keyof typeof target;
+    
+    // Si ya está completado, no permitir regresarlo a pendiente
+    if (target[propName] === "Completado") return;
+
+    const nuevoEstado = "Completado";
     const periodo = state.periodoActual;
 
-    // Optimistic UI update
     set((s) => ({
-      extractos: s.extractos.map(e => e.id === id ? { ...e, estado72h: nuevoEstado } : e)
+      extractos: s.extractos.map(e => e.id === id ? { ...e, [propName]: nuevoEstado } : e)
     }));
 
     try {
       const { actualizarExtractoEnFirestore } = await import("@/lib/api/extractosFirebaseService");
-      await actualizarExtractoEnFirestore(periodo, id, { estado72h: nuevoEstado });
+      await actualizarExtractoEnFirestore(periodo, id, { [propName]: nuevoEstado });
     } catch (error) {
-      // Revertir en caso de error
       set((s) => ({
-        extractos: s.extractos.map(e => e.id === id ? { ...e, estado72h: target.estado72h } : e)
+        extractos: s.extractos.map(e => e.id === id ? { ...e, [propName]: target[propName] } : e)
       }));
-      console.error("Error al actualizar estado 72h:", error);
+      console.error(`Error al actualizar estado ${label}:`, error);
     }
   },
+
   toggleEstado24h: async (id: string) => {
     const state = useOperacionesStore.getState();
     const target = state.extractos.find(e => e.id === id);

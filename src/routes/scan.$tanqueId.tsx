@@ -15,7 +15,7 @@ export const Route = createFileRoute("/scan/$tanqueId")({
 function ScanPage() {
   const { tanqueId } = Route.useParams();
   const navigate = useNavigate();
-  const { purgas, completarPurga, fetchData } = useOperacionesStore();
+  const { purgas, completarPurga, fetchData, isLoading } = useOperacionesStore();
   const [tiempo, setTiempo] = useState("");
   const [realiza, setRealiza] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,10 +23,8 @@ function ScanPage() {
 
   // Asegurar que los datos estén cargados (en caso de entrar directo por URL)
   useEffect(() => {
-    if (purgas.length === 0) {
-      fetchData();
-    }
-  }, [purgas.length, fetchData]);
+    fetchData();
+  }, [fetchData]);
 
   // Encontrar el lote más reciente para este tanque
   const loteActivo = useMemo(() => {
@@ -69,7 +67,7 @@ function ScanPage() {
     }, 2000);
   };
 
-  if (purgas.length === 0) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
@@ -80,11 +78,11 @@ function ScanPage() {
   if (!loteActivo) {
     return (
       <div className="max-w-md mx-auto mt-10 p-4">
-        <Card className="border-red-100 bg-red-50/50">
+        <Card className="border-blue-100 bg-blue-50/50">
           <CardContent className="pt-6 flex flex-col items-center text-center">
-            <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
-            <h2 className="text-xl font-bold text-red-900 mb-2">Tanque No Encontrado</h2>
-            <p className="text-red-700">No hay ningún lote activo registrado para el Tanque {tanqueId}.</p>
+            <AlertCircle className="w-12 h-12 text-blue-500 mb-4" />
+            <h2 className="text-xl font-bold text-blue-900 mb-2">No hay purgas pendientes</h2>
+            <p className="text-blue-700">No hay ningún lote activo registrado para el Tanque {tanqueId}.</p>
             <Button 
               className="mt-6" 
               variant="outline" 

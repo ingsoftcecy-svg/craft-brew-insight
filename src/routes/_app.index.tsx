@@ -86,7 +86,7 @@ function Dashboard() {
   const chequeosDelTurno = horasChequeo.map(({ key, label, color }) => {
     const items = extractos
       .filter((e: any) => e[key] && e[`estado${label}`] !== "Completado")
-      .map((e: any) => ({ ...e, date: parseMexicanDate(e[key]) as Date }))
+      .map((e: any) => ({ ...e, date: parseMexicanDate(e[key]) as Date, realId: e.id }))
       .filter(e => e.date && e.date >= inicioTurno && e.date <= finTurno)
       .sort((a, b) => a.date.getTime() - b.date.getTime())
       .slice(0, 6);
@@ -109,6 +109,7 @@ function Dashboard() {
         const date = parseMexicanDate(entry.fechaHora!);
         return {
           id: `${p.id}-p${numeroPurga}`,
+          realId: p.id,
           tanque: p.tanque,
           marca: p.marca,
           date: date as Date,
@@ -189,9 +190,10 @@ function Dashboard() {
               icon={Clock}
               emptyMessage="Todo al día"
               items={items}
-              colorTheme={color}
+              colorTheme={color as any}
               itemIcon={Database}
-              linkTo="/extracto"
+              linkTo="/chequeos"
+              baseSearchParams={{ tipo: label }}
             />
           ))}
         </div>

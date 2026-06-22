@@ -153,7 +153,12 @@ export async function obtenerExtractosPorPeriodo(
       h120: data.h120 ?? null,
       h144: data.h144 ?? null,
       estado: data.estado ?? "En Rango",
-      estado72h: data.estado72h ?? "En Rango",
+      estado24h: data.estado24h ?? "Pendiente",
+      estado48h: data.estado48h ?? "Pendiente",
+      estado72h: data.estado72h ?? "Pendiente",
+      estado96h: data.estado96h ?? "Pendiente",
+      estado120h: data.estado120h ?? "Pendiente",
+      estado144h: data.estado144h ?? "Pendiente",
     } as ExtractoRow;
   });
 }

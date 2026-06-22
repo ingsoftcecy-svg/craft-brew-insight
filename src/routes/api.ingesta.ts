@@ -3,6 +3,8 @@ import { guardarExtractosEnFirestore } from "@/lib/api/extractosFirebaseService"
 import { guardarPurgasEnFirestore, obtenerPeriodo } from "@/lib/api/purgasFirebaseService";
 import { toMexicoISOString } from "@/lib/utils";
 import type { ExtractoRow, PurgaRow, PurgaEntry, MarcaCerveza, ExtractoEstado } from "@/types/proceso";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 // API Key de seguridad (Se debe configurar en las variables de entorno del servidor o en .env)
 const API_KEY_SECRETA = process.env.API_KEY_SECRETA || process.env.VITE_API_KEY_SECRETA || "brew-insight-secure-token-2026";
@@ -19,6 +21,24 @@ export const Route = createFileRoute("/api/ingesta")({
               status: 401,
               headers: { "Content-Type": "application/json" },
             });
+          }
+
+          // 1.5. Autenticarse en Firebase para tener permisos de escritura
+          const apiEmail = process.env.API_FIREBASE_EMAIL || process.env.VITE_API_FIREBASE_EMAIL;
+          const apiPassword = process.env.API_FIREBASE_PASSWORD || process.env.VITE_API_FIREBASE_PASSWORD;
+
+          if (apiEmail && apiPassword) {
+            try {
+              await signInWithEmailAndPassword(auth, apiEmail, apiPassword);
+            } catch (authError: any) {
+              console.error("Error autenticando a la API en Firebase:", authError);
+              return new Response(JSON.stringify({ error: "Error de autenticación interna de la API en Firebase. " + authError.message }), {
+                status: 500,
+                headers: { "Content-Type": "application/json" },
+              });
+            }
+          } else {
+            console.warn("⚠️ API_FIREBASE_EMAIL y/o API_FIREBASE_PASSWORD no configurados en las variables de entorno. Podría fallar por falta de permisos.");
           }
 
           // 2. Extraer datos del body enviado

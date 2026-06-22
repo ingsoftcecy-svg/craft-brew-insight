@@ -28,9 +28,15 @@ function PurgasPage() {
   const { purgas, fetchData, periodoActual, periodosDisponibles } = useOperacionesStore();
   const searchParams: any = useSearch({ strict: false });
   const [query, set_query] = useState(searchParams.tanque || "");
+  const [targetId, setTargetId] = useState(searchParams.targetId || "");
   const [marca, set_marca] = useState<string>("all");
   const [turno, set_turno] = useState<string>(() => obtenerTurnoPorHora(new Date().toISOString()) || "all");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+
+  const handleSetQuery = (val: string) => {
+    set_query(val);
+    setTargetId("");
+  };
 
   useEffect(() => {
     fetchData();
@@ -38,6 +44,9 @@ function PurgasPage() {
 
   const filtered = useMemo(() => {
     const results = purgas.filter((r) => {
+      if (targetId) {
+        return r.id === targetId;
+      }
       const match_q = !query || r.tanque.toLowerCase().includes(query.toLowerCase());
       const match_m = marca === "all" || r.marca === marca;
       const turnoCalculado = obtenerTurnoPorHora(r.fechaLlenado);
@@ -52,7 +61,7 @@ function PurgasPage() {
       const dateB = parsedB ? parsedB.getTime() : 0;
       return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
     });
-  }, [purgas, query, marca, turno, sortOrder]);
+  }, [purgas, query, targetId, marca, turno, sortOrder]);
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto pb-10">

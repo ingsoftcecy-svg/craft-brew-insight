@@ -17,9 +17,10 @@ import {
 } from "@/lib/api/extractosFirebaseService";
 import {
   obtenerPeriodo,
+  guardarPurgasEnFirestore,
   type UploadProgress,
 } from "@/lib/api/purgasFirebaseService";
-import type { ExtractoRow, MarcaCerveza } from "@/types/proceso";
+import type { ExtractoRow, MarcaCerveza, PurgaRow } from "@/types/proceso";
 
 const COLUMNAS_REQUERIDAS = new Set([
   "MARCA",
@@ -230,6 +231,7 @@ function limpiarYMapear(filasJson: any[]): ResultadoLimpieza {
 
 export function UploadExtractos() {
   const cargarExtractosDesdeArchivo = useOperacionesStore((s) => s.cargarExtractosDesdeArchivo);
+  const fetchData = useOperacionesStore((s) => s.fetchData);
   const [isDragging, setIsDragging] = useState(false);
   const [status, setStatus] = useState<{ tipo: "exito" | "error" | "leyendo"; mensaje: string } | null>(null);
   const [progreso, setProgreso] = useState<UploadProgress | null>(null);
@@ -300,23 +302,46 @@ export function UploadExtractos() {
             periodo: resultado.periodo,
           });
 
+          const filasPurgas: PurgaRow[] = resultado.filas.map((fila) => {
+            const dLlenado = new Date(fila.fechaLlenado);
+            return {
+              id: fila.id.replace('ext-', 'pur-'),
+              tanque: fila.tanque,
+              marca: fila.marca,
+              fechaLlenado: fila.fechaLlenado,
+              extractoId: fila.id,
+              purgas: Array.from({ length: 8 }, (_, i) => ({
+                fechaHora: toMexicoISOString(new Date(dLlenado.getTime() + (i + 1) * 8 * 60 * 60 * 1000)),
+                tiempo: null,
+                realiza: null
+              }))
+            };
+          });
+
           cargarExtractosDesdeArchivo(resultado.filas as any[]);
 
-          setStatus({ tipo: "leyendo", mensaje: "Guardando en base de datos..." });
+          setStatus({ tipo: "leyendo", mensaje: "Guardando extractos y purgas en base de datos..." });
 
-          const res = await guardarExtractosEnFirestore(
+          const resExtractos = await guardarExtractosEnFirestore(
             resultado.filas,
             resultado.periodo,
-            (p) => setProgreso(p)
+            (p) => setProgreso({ ...p, mensaje: `Extractos: ${p.mensaje}` })
           );
 
-          if (res.exito) {
+          const resPurgas = await guardarPurgasEnFirestore(
+            filasPurgas,
+            resultado.periodo,
+            (p) => setProgreso({ ...p, mensaje: `Purgas: ${p.mensaje}` })
+          );
+
+          if (resExtractos.exito && resPurgas.exito) {
+            fetchData(resultado.periodo);
             setStatus({
               tipo: "exito",
-              mensaje: `✅ ${resultado.filas.length.toLocaleString()} registros guardados en periodo ${resultado.periodo}. Se descartaron ${resultado.descartadas.toLocaleString()} filas vacías y ${resultado.columnasDescartadas.length} columnas innecesarias.`,
+              mensaje: `✅ ${resultado.filas.length.toLocaleString()} registros guardados en periodo ${resultado.periodo}. Se descartaron ${resultado.descartadas.toLocaleString()} filas vacías.`,
             });
           } else {
-            throw new Error(res.mensaje);
+            throw new Error(resExtractos.mensaje || resPurgas.mensaje);
           }
         } catch (error: any) {
           setStatus({

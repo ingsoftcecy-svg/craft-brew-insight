@@ -15,8 +15,8 @@ import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as ScanTanqueIdRouteImport } from './routes/scan.$tanqueId'
 import { Route as ApiIngestaRouteImport } from './routes/api.ingesta'
 import { Route as AppPurgasRouteImport } from './routes/_app.purgas'
-import { Route as AppExtracto72RouteImport } from './routes/_app.extracto72'
 import { Route as AppExtractoRouteImport } from './routes/_app.extracto'
+import { Route as AppChequeosRouteImport } from './routes/_app.chequeos'
 import { Route as AppAgendaRouteImport } from './routes/_app.agenda'
 import { Route as AppAdminQrPrintRouteImport } from './routes/_app.admin.qr-print'
 
@@ -49,14 +49,14 @@ const AppPurgasRoute = AppPurgasRouteImport.update({
   path: '/purgas',
   getParentRoute: () => AppRoute,
 } as any)
-const AppExtracto72Route = AppExtracto72RouteImport.update({
-  id: '/extracto72',
-  path: '/extracto72',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppExtractoRoute = AppExtractoRouteImport.update({
   id: '/extracto',
   path: '/extracto',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppChequeosRoute = AppChequeosRouteImport.update({
+  id: '/chequeos',
+  path: '/chequeos',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAgendaRoute = AppAgendaRouteImport.update({
@@ -74,8 +74,8 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
   '/agenda': typeof AppAgendaRoute
+  '/chequeos': typeof AppChequeosRoute
   '/extracto': typeof AppExtractoRoute
-  '/extracto72': typeof AppExtracto72Route
   '/purgas': typeof AppPurgasRoute
   '/api/ingesta': typeof ApiIngestaRoute
   '/scan/$tanqueId': typeof ScanTanqueIdRoute
@@ -84,8 +84,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/agenda': typeof AppAgendaRoute
+  '/chequeos': typeof AppChequeosRoute
   '/extracto': typeof AppExtractoRoute
-  '/extracto72': typeof AppExtracto72Route
   '/purgas': typeof AppPurgasRoute
   '/api/ingesta': typeof ApiIngestaRoute
   '/scan/$tanqueId': typeof ScanTanqueIdRoute
@@ -97,8 +97,8 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/_app/agenda': typeof AppAgendaRoute
+  '/_app/chequeos': typeof AppChequeosRoute
   '/_app/extracto': typeof AppExtractoRoute
-  '/_app/extracto72': typeof AppExtracto72Route
   '/_app/purgas': typeof AppPurgasRoute
   '/api/ingesta': typeof ApiIngestaRoute
   '/scan/$tanqueId': typeof ScanTanqueIdRoute
@@ -111,8 +111,8 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/agenda'
+    | '/chequeos'
     | '/extracto'
-    | '/extracto72'
     | '/purgas'
     | '/api/ingesta'
     | '/scan/$tanqueId'
@@ -121,8 +121,8 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/agenda'
+    | '/chequeos'
     | '/extracto'
-    | '/extracto72'
     | '/purgas'
     | '/api/ingesta'
     | '/scan/$tanqueId'
@@ -133,8 +133,8 @@ export interface FileRouteTypes {
     | '/_app'
     | '/login'
     | '/_app/agenda'
+    | '/_app/chequeos'
     | '/_app/extracto'
-    | '/_app/extracto72'
     | '/_app/purgas'
     | '/api/ingesta'
     | '/scan/$tanqueId'
@@ -193,18 +193,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPurgasRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/extracto72': {
-      id: '/_app/extracto72'
-      path: '/extracto72'
-      fullPath: '/extracto72'
-      preLoaderRoute: typeof AppExtracto72RouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/extracto': {
       id: '/_app/extracto'
       path: '/extracto'
       fullPath: '/extracto'
       preLoaderRoute: typeof AppExtractoRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/chequeos': {
+      id: '/_app/chequeos'
+      path: '/chequeos'
+      fullPath: '/chequeos'
+      preLoaderRoute: typeof AppChequeosRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/agenda': {
@@ -226,8 +226,8 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAgendaRoute: typeof AppAgendaRoute
+  AppChequeosRoute: typeof AppChequeosRoute
   AppExtractoRoute: typeof AppExtractoRoute
-  AppExtracto72Route: typeof AppExtracto72Route
   AppPurgasRoute: typeof AppPurgasRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAdminQrPrintRoute: typeof AppAdminQrPrintRoute
@@ -235,8 +235,8 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAgendaRoute: AppAgendaRoute,
+  AppChequeosRoute: AppChequeosRoute,
   AppExtractoRoute: AppExtractoRoute,
-  AppExtracto72Route: AppExtracto72Route,
   AppPurgasRoute: AppPurgasRoute,
   AppIndexRoute: AppIndexRoute,
   AppAdminQrPrintRoute: AppAdminQrPrintRoute,

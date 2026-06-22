@@ -8,6 +8,7 @@ type ColorTheme = "sky" | "indigo" | "rose";
 
 interface TaskItem {
   id: string;
+  realId?: string;
   tanque: string;
   marca: string;
   date: Date;
@@ -22,6 +23,7 @@ interface TaskListPanelProps {
   colorTheme: ColorTheme;
   itemIcon: any;
   linkTo: string;
+  baseSearchParams?: Record<string, any>;
 }
 
 const colorClasses: Record<ColorTheme, { icon: string; bgGradient: string; itemIcon: string; badge: string }> = {
@@ -45,7 +47,7 @@ const colorClasses: Record<ColorTheme, { icon: string; bgGradient: string; itemI
   }
 };
 
-export function TaskListPanel({ title, subtitle, icon: HeaderIcon, emptyMessage, items, colorTheme, itemIcon: ItemIcon, linkTo }: TaskListPanelProps) {
+export function TaskListPanel({ title, subtitle, icon: HeaderIcon, emptyMessage, items, colorTheme, itemIcon: ItemIcon, linkTo, baseSearchParams = {} }: TaskListPanelProps) {
   const theme = colorClasses[colorTheme];
 
   return (
@@ -74,7 +76,7 @@ export function TaskListPanel({ title, subtitle, icon: HeaderIcon, emptyMessage,
               <Link 
                 // @ts-ignore
                 to={linkTo} 
-                search={{ tanque: item.tanque }} 
+                search={{ tanque: item.tanque, targetId: item.realId || item.id, ...baseSearchParams }} 
                 key={item.id} 
                 className="group flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 border border-transparent hover:border-border/50 transition-all cursor-pointer"
               >

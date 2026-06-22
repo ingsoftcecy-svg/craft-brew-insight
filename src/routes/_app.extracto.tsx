@@ -29,10 +29,16 @@ function ExtractoPage() {
   const { extractos, fetchData, periodoActual, periodosDisponibles } = useOperacionesStore();
   const searchParams: any = useSearch({ strict: false });
   const [query, set_query] = useState(searchParams.tanque || "");
+  const [targetId, setTargetId] = useState(searchParams.targetId || "");
   const [marca, set_marca] = useState<string>("all");
   const [turno, set_turno] = useState<string>(() => obtenerTurnoPorHora(new Date().toISOString()) || "all");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const [page, set_page] = useState(0);
+
+  const handleSetQuery = (val: string) => {
+    set_query(val);
+    setTargetId("");
+  };
 
   useEffect(() => {
     fetchData();
@@ -40,6 +46,9 @@ function ExtractoPage() {
 
   const filtered = useMemo(() => {
     const results = extractos.filter((r) => {
+      if (targetId) {
+        return r.id === targetId;
+      }
       const match_q = !query || r.tanque.toLowerCase().includes(query.toLowerCase());
       const match_m = marca === "all" || r.marca === marca;
       const turnoCalculado = r.h72 ? obtenerTurnoPorHora(r.h72) : null;
@@ -54,7 +63,7 @@ function ExtractoPage() {
       const dateB = parsedB ? parsedB.getTime() : 0;
       return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
     });
-  }, [extractos, query, marca, turno, sortOrder]);
+  }, [extractos, query, targetId, marca, turno, sortOrder]);
 
   const pages = Math.max(1, Math.ceil(filtered.length / page_size));
   const rows = filtered.slice(page * page_size, (page + 1) * page_size);
@@ -74,7 +83,7 @@ function ExtractoPage() {
 
         <div className="flex flex-wrap items-center gap-3 mt-2">
           <TableFilters 
-            query={query} setQuery={set_query}
+            query={query} setQuery={handleSetQuery}
             periodoActual={periodoActual} setPeriodo={(v) => fetchData(v)} periodosDisponibles={periodosDisponibles}
             marca={marca} setMarca={set_marca}
             turno={turno} setTurno={set_turno}

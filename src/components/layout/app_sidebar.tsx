@@ -18,10 +18,9 @@ import {
 const items = [
   { title: "Dashboard",              url: "/",           icon: Home          },
   { title: "Agenda",                 url: "/agenda",     icon: Calendar      },
-  { title: "Chequeo Plato (72 Hrs)", url: "/extracto72", icon: Clock         },
-  { title: "Extractos (144 Hrs)",    url: "/extracto",   icon: Beaker        },
+  { title: "Chequeo de Platos",    url: "/extracto",   icon: Beaker        },
   { title: "Purgas de Trub",         url: "/purgas",     icon: ClipboardList },
-  { title: "Generador QR",           url: "/admin/qr-print", icon: Printer },
+  { title: "QR de Unitanques",           url: "/admin/qr-print", icon: Printer },
 ];
 
 export function AppSidebar() {
