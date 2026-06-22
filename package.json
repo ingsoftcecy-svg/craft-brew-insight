@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "postbuild": "powershell -Command \"Remove-Item -Recurse -Force functions/dist -ErrorAction SilentlyContinue; Copy-Item -Recurse dist functions/dist\"",
+    "deploy": "npm run build && npx firebase deploy",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",

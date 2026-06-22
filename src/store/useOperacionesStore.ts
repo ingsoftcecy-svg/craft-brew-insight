@@ -53,10 +53,18 @@ export const useOperacionesStore = create<OperacionesState>((set) => ({
                             (periodos.includes(useOperacionesStore.getState().periodoActual) ? useOperacionesStore.getState().periodoActual : null) ||
                             (periodos.length > 0 ? periodos[0] : "2026-06");
       
+      const extractosPromise = targetPeriodo === "todos" 
+        ? obtenerTodosLosExtractos() 
+        : obtenerExtractosPorPeriodo(targetPeriodo);
+        
+      const purgasPromise = targetPeriodo === "todos" 
+        ? obtenerTodasLasPurgas() 
+        : obtenerPurgasPorPeriodo(targetPeriodo);
+
       const [extractosFb, purgasFb, eventosAgendaFb] = await Promise.all([
-        targetPeriodo === "todos" ? obtenerTodosLosExtractos().catch(() => []) : obtenerExtractosPorPeriodo(targetPeriodo).catch(() => []),
-        targetPeriodo === "todos" ? obtenerTodasLasPurgas().catch(() => []) : obtenerPurgasPorPeriodo(targetPeriodo).catch(() => []),
-        obtenerEventosAgenda().catch(() => []),
+        extractosPromise.catch((err) => { console.error("Error cargando extractos:", err); return []; }),
+        purgasPromise.catch((err) => { console.error("Error cargando purgas:", err); return []; }),
+        obtenerEventosAgenda().catch((err) => { console.error("Error cargando agenda:", err); return []; }),
       ]);
 
   

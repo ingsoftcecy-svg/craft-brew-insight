@@ -24,20 +24,19 @@ if (import.meta.env.DEV) {
   auth.settings.appVerificationDisabledForTesting = true;
 }
 
-// Inicializar Firebase App Check (Capa 6: Escudo Anti-Bots)
-if (typeof window !== "undefined") {
-  // Reemplazar con clave real en producción
-  const recaptchaKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "tu-clave-de-recaptcha-enterprise";
-  try {
-    initializeAppCheck(app, {
-      provider: new ReCaptchaEnterpriseProvider(recaptchaKey),
-      isTokenAutoRefreshEnabled: true
-    });
-    console.log("🛡️ Firebase App Check inicializado correctamente.");
-  } catch (error) {
-    console.error("Error al inicializar App Check:", error);
-  }
-}
+// Firebase App Check desactivado para evitar conflicto con el reCAPTCHA del login por SMS
+// Firebase App Check desactivado permanentemente porque hace conflicto con el envío de SMS (MFA)
+// if (typeof window !== "undefined") {
+//   const recaptchaKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+//   if (recaptchaKey) {
+//     try {
+//       initializeAppCheck(app, {
+//         provider: new ReCaptchaEnterpriseProvider(recaptchaKey),
+//         isTokenAutoRefreshEnabled: true
+//       });
+//     } catch (error) {}
+//   }
+// }
 
 // Verificar que la bd si este conectada correctamente 
 if (typeof window !== "undefined") {

@@ -56,12 +56,17 @@ function LoginPage() {
         const resolver = getMultiFactorResolver(auth, err);
         setMfaResolver(resolver);
         
-        // Inicializar reCAPTCHA para SMS
-        if (!window.recaptchaVerifier) {
-          window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-            size: 'invisible'
-          });
-        }
+        // Limpiar y recrear reCAPTCHA para SMS
+        try {
+          if (window.recaptchaVerifier) {
+            window.recaptchaVerifier.clear();
+            window.recaptchaVerifier = null;
+          }
+        } catch (_) {}
+        
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          size: 'invisible'
+        });
       } else {
         setError("Credenciales incorrectas. Verifica tu correo y contraseña.");
       }
@@ -76,6 +81,13 @@ function LoginPage() {
     setError("");
 
     try {
+      // Asegurar que el reCAPTCHA esté listo
+      if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          size: 'invisible'
+        });
+      }
+
       const phoneInfoOptions = {
         multiFactorHint: mfaResolver.hints[selectedHintIndex],
         session: mfaResolver.session
@@ -90,8 +102,15 @@ function LoginPage() {
       setVerificationId(verId);
       setShowSmsInput(true);
     } catch (err: any) {
-      console.error("MFA SMS Error:", err);
-      setError("Error al enviar el SMS. Intenta de nuevo.");
+      console.error("MFA SMS Error:", err.code, err.message);
+      // Limpiar reCAPTCHA para que se pueda reintentar
+      try {
+        if (window.recaptchaVerifier) {
+          window.recaptchaVerifier.clear();
+          window.recaptchaVerifier = null;
+        }
+      } catch (_) {}
+      setError(`Error al enviar SMS: ${err.code || err.message}`);
     } finally {
       setIsLoading(false);
     }
