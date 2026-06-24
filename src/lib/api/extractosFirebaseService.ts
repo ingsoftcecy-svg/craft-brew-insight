@@ -145,6 +145,7 @@ export async function obtenerExtractosPorPeriodo(
       id: d.id,
       tanque: data.tanque ?? "",
       marca: data.marca ?? "",
+      fechaInicioLlenado: data.fechaInicioLlenado ?? "",
       fechaLlenado: data.fechaLlenado ?? "",
       h24: data.h24 ?? null,
       h48: data.h48 ?? null,

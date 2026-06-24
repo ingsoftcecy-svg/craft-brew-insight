@@ -76,7 +76,7 @@ export function TaskListPanel({ title, subtitle, icon: HeaderIcon, emptyMessage,
               <Link 
                 // @ts-ignore
                 to={linkTo} 
-                search={{ tanque: item.tanque, targetId: item.realId || item.id, ...baseSearchParams }} 
+                search={{ tanque: item.tanque, targetId: item.realId || item.id, ...baseSearchParams } as any} 
                 key={item.id} 
                 className="group flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 border border-transparent hover:border-border/50 transition-all cursor-pointer"
               >

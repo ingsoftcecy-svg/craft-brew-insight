@@ -17,7 +17,7 @@ interface OperacionesState {
   fetchData: (periodoSeleccionado?: string) => Promise<void>;
   addPurga: (purga: PurgaRow) => void;
   updateExtracto: (id: string, data: Partial<ExtractoRow>) => void;
-  toggleEstado72h: (id: string) => Promise<void>;
+  toggleEstadoChequeo: (id: string, label: string) => Promise<void>;
   addEventoAgenda: (evento: AgendaEvent) => void;
   updatePurgaRow: (tanque: string, numeroPurga: number, fechaHora: string, tiempo: number, realiza: string) => void;
   updatePurgaField: (id: string, numeroPurga: number, campo: "tiempo" | "realiza", valor: string | number) => Promise<void>;
@@ -192,6 +192,7 @@ export const useOperacionesStore = create<OperacionesState>((set) => ({
         tanque,
         fecha: fila.fecha || fila.fechaLlenado || "",
         marca,
+        fechaInicioLlenado: fila.fechaInicioLlenado || "",
         fechaLlenado: fila.fechaLlenado || "",
         horas: String(fila.horas || "0"),
         historicas: String(fila.historicas || "0"),

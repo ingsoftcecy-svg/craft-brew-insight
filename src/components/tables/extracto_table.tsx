@@ -27,7 +27,7 @@ export function ExtractoTable({ rows }: ExtractoTableProps) {
           <TableRow className="border-b-0 hover:bg-transparent">
             <CustomTableHead>Marca</CustomTableHead>
             <CustomTableHead>Tanque</CustomTableHead>
-            <CustomTableHead>Fecha Llenado</CustomTableHead>
+            <CustomTableHead>Fecha Fin Llenado</CustomTableHead>
             <CustomTableHead className="text-center">24 Hrs</CustomTableHead>
             <CustomTableHead className="text-center">48 Hrs</CustomTableHead>
             <CustomTableHead className="text-center">72 Hrs</CustomTableHead>

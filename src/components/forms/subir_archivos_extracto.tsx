@@ -209,6 +209,7 @@ function limpiarYMapear(filasJson: any[]): ResultadoLimpieza {
       id: `ext-${String(fermentadorVal).trim()}-${fechaParsed.getTime()}`,
       tanque: String(fermentadorVal).trim(),
       marca,
+      fechaInicioLlenado: fechaLlenado, // Fallback for manual upload
       fechaLlenado,
       h24: parseHora("PLATO_24_HRS", 24),
       h48: parseHora("PLATO_48_HRS", 48),
@@ -307,14 +308,18 @@ export function UploadExtractos() {
             return {
               id: fila.id.replace('ext-', 'pur-'),
               tanque: fila.tanque,
+              fecha: fila.fechaLlenado,
               marca: fila.marca,
+              fechaInicioLlenado: fila.fechaInicioLlenado,
               fechaLlenado: fila.fechaLlenado,
+              horas: "0",
+              historicas: "0",
               extractoId: fila.id,
-              purgas: Array.from({ length: 8 }, (_, i) => ({
-                fechaHora: toMexicoISOString(new Date(dLlenado.getTime() + (i + 1) * 8 * 60 * 60 * 1000)),
+              purgas: Array.from({ length: 9 }).map(() => ({
+                fechaHora: null,
                 tiempo: null,
-                realiza: null
-              }))
+                realiza: null,
+              })),
             };
           });
 

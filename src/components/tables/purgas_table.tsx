@@ -24,6 +24,44 @@ function formatDate(isoString?: string | null) {
 const PurgaRow = memo(({ r }: { r: PurgaRowType }) => {
   const updatePurgaField = useOperacionesStore(s => s.updatePurgaField);
 
+  const renderPurga = (p: any, i: number) => {
+    const completada = p.tiempo && p.realiza;
+    return (
+      <Fragment key={i}>
+        <CustomTableCell className={`text-sm font-bold tabular-nums text-center ${completada ? 'text-green-600 bg-green-50/30' : 'text-slate-500'}`}>
+          <div className="flex items-center justify-center gap-1.5">
+            {completada && <CheckCircle2 className="w-4 h-4 text-green-500" />}
+            {formatDate(p.fechaHora)}
+          </div>
+        </CustomTableCell>
+        <TableCell className="text-center p-1 border-b border-slate-100">
+          <select
+            value={p.tiempo ? String(p.tiempo) : ""}
+            onChange={(e) => updatePurgaField(r.id, i + 1, "tiempo", e.target.value)}
+            className={`h-7 w-[55px] mx-auto bg-transparent border hover:border-amber-300 hover:bg-white rounded text-sm font-bold px-1 text-center cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-500 appearance-none transition-colors ${
+              p.tiempo ? "border-amber-200 text-amber-900 bg-amber-50" : "border-transparent text-slate-400"
+            }`}
+          >
+            <option value="" disabled className="text-slate-300 font-medium">—</option>
+            {TIEMPOS.map(t => <option key={t} value={t} className="text-slate-800">{t} min</option>)}
+          </select>
+        </TableCell>
+        <CustomTableCell className="text-center p-1">
+          <select
+            value={p.realiza || ""}
+            onChange={(e) => updatePurgaField(r.id, i + 1, "realiza", e.target.value)}
+            className={`h-7 w-[65px] mx-auto bg-transparent border hover:border-amber-300 hover:bg-white rounded text-sm font-bold px-1 text-center cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-500 appearance-none transition-colors ${
+              p.realiza ? "border-amber-200 text-amber-900 bg-amber-50" : "border-transparent text-slate-400"
+            }`}
+          >
+            <option value="" disabled className="text-slate-300 font-medium">—</option>
+            {EMPLEADOS.map(emp => <option key={emp} value={emp} className="text-slate-800">{emp}</option>)}
+          </select>
+        </CustomTableCell>
+      </Fragment>
+    );
+  };
+
   return (
     <TableRow className="hover:bg-amber-50/60 transition-colors border-b border-slate-100 group">
       {/* Marca */}
@@ -36,49 +74,16 @@ const PurgaRow = memo(({ r }: { r: PurgaRowType }) => {
       {/* Tanque */}
       <CustomTableCell className="font-black text-sm text-slate-900">{r.tanque}</CustomTableCell>
 
+      {/* Purga Inicial */}
+      {r.purgas.length > 0 && renderPurga(r.purgas[0], 0)}
+
       {/* Fecha Llenado */}
       <CustomTableCell className="text-sm font-bold tracking-tight text-slate-700 tabular-nums">
         {formatDate(r.fechaLlenado)}
       </CustomTableCell>
 
       {/* 8 Purgas */}
-      {r.purgas.map((p, i) => {
-        const completada = p.tiempo && p.realiza;
-        return (
-        <Fragment key={i}>
-          <CustomTableCell className={`text-sm font-bold tabular-nums text-center ${completada ? 'text-green-600 bg-green-50/30' : 'text-slate-500'}`}>
-            <div className="flex items-center justify-center gap-1.5">
-              {completada && <CheckCircle2 className="w-4 h-4 text-green-500" />}
-              {formatDate(p.fechaHora)}
-            </div>
-          </CustomTableCell>
-          <TableCell className="text-center p-1 border-b border-slate-100">
-            <select
-              value={p.tiempo ? String(p.tiempo) : ""}
-              onChange={(e) => updatePurgaField(r.id, i + 1, "tiempo", e.target.value)}
-              className={`h-7 w-[55px] mx-auto bg-transparent border hover:border-amber-300 hover:bg-white rounded text-sm font-bold px-1 text-center cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-500 appearance-none transition-colors ${
-                p.tiempo ? "border-amber-200 text-amber-900 bg-amber-50" : "border-transparent text-slate-400"
-              }`}
-            >
-              <option value="" disabled className="text-slate-300 font-medium">—</option>
-              {TIEMPOS.map(t => <option key={t} value={t} className="text-slate-800">{t} min</option>)}
-            </select>
-          </TableCell>
-          <CustomTableCell className="text-center p-1">
-            <select
-              value={p.realiza || ""}
-              onChange={(e) => updatePurgaField(r.id, i + 1, "realiza", e.target.value)}
-              className={`h-7 w-[65px] mx-auto bg-transparent border hover:border-amber-300 hover:bg-white rounded text-sm font-bold px-1 text-center cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-500 appearance-none transition-colors ${
-                p.realiza ? "border-amber-200 text-amber-900 bg-amber-50" : "border-transparent text-slate-400"
-              }`}
-            >
-              <option value="" disabled className="text-slate-300 font-medium">—</option>
-              {EMPLEADOS.map(emp => <option key={emp} value={emp} className="text-slate-800">{emp}</option>)}
-            </select>
-          </CustomTableCell>
-        </Fragment>
-        );
-      })}
+      {r.purgas.slice(1).map((p, index) => renderPurga(p, index + 1))}
     </TableRow>
   );
 });
@@ -100,15 +105,16 @@ export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
             <TableRow className="border-b border-slate-200 hover:bg-transparent">
               <CustomTableHead rowSpan={2} className="align-middle min-w-[130px]">Marca</CustomTableHead>
               <CustomTableHead rowSpan={2} className="align-middle min-w-[80px]">Tanque</CustomTableHead>
-              <CustomTableHead rowSpan={2} className="align-middle min-w-[150px]">Fecha Llenado</CustomTableHead>
-              {Array.from({ length: 8 }, (_, i) => (
+              <CustomTableHead colSpan={3} className="text-center">Purga Inicial</CustomTableHead>
+              <CustomTableHead rowSpan={2} className="align-middle min-w-[150px]">Fecha Fin Llenado</CustomTableHead>
+              {Array.from({ length: 8}, (_, i) => (
                 <CustomTableHead key={i} colSpan={3} className="text-center">
-                  Purga {i + 1}
+                  {`Purga ${i + 1}`}
                 </CustomTableHead>
               ))}
             </TableRow>
             <TableRow className="border-b-0 hover:bg-transparent">
-              {Array.from({ length: 8 }, (_, i) => (
+              {Array.from({ length: 9 }, (_, i) => (
                 <Fragment key={i}>
                   <TableHead className="text-sm font-bold tracking-wider text-slate-500 text-center border-l border-slate-200 min-w-[130px]">Fecha / Hora</TableHead>
                   <TableHead className="text-sm font-bold tracking-wider text-slate-500 text-center min-w-[60px]">Tiempo</TableHead>

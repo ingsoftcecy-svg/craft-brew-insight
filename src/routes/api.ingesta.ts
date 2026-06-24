@@ -117,7 +117,7 @@ export const Route = createFileRoute("/api/ingesta")({
           const filasPorPeriodo: Record<string, { extracto: ExtractoRow; purga: PurgaRow; eventosAgenda?: any[] }[]> = {};
 
           for (const [index, rawRow] of rowsToProcess.entries()) {
-            let tanque: any, marca: any, rawFecha: any, h24: any, h48: any, h72: any, h96: any, h120: any, h144: any;
+            let tanque: any, marca: any, rawFechaLlenado: any, rawFecha: any, h24: any, h48: any, h72: any, h96: any, h120: any, h144: any;
 
             if (Array.isArray(rawRow)) {
               // Si es un Array de Arrays (formato ExcelData crudo de Power Automate)
@@ -135,6 +135,7 @@ export const Route = createFileRoute("/api/ingesta")({
               h96 = rawRow[6] || rawRow[15];
               h120 = rawRow[7] || rawRow[16];
               h144 = rawRow[8] || rawRow[17];
+              rawFechaLlenado = rawFecha;
             } else if (rawRow && typeof rawRow === "object") {
               // Buscar keys sin importar mayúsculas/minúsculas ni espacios exactos
               const findKey = (searchStrings: string[]) => {
@@ -145,7 +146,8 @@ export const Route = createFileRoute("/api/ingesta")({
 
               marca = String(findKey(["marca", "Column1"]) || "").trim();
               tanque = String(findKey(["tanque", "fermentador", "Column2"]) || "").trim();
-              rawFecha = findKey(["fecha fin llenado", "fechafinllenado", "fecha_llenado", "Column3", "Column6", "Column F"]);
+              rawFechaLlenado = findKey (["fecha inicio llenado", "fechainiciollenado", "fecha_inicio_llenado","Column F"])
+              rawFecha = findKey(["fecha fin llenado", "fechafinllenado", "fecha_llenado", "Column3", "Column6", "Column G"]);
               
               h24 = String(findKey(["h24", "Column4"]) || "").trim();
               h48 = String(findKey(["h48", "Column5"]) || "").trim();
@@ -155,13 +157,17 @@ export const Route = createFileRoute("/api/ingesta")({
               h144 = String(findKey(["h144", "Column9"]) || "").trim();
             }
 
-            if (!tanque || !marca || !rawFecha) {
+            if (!tanque || !marca || !rawFecha || !rawFechaLlenado) {
               continue; // Saltar filas incompletas o inválidas
             }
 
-            const fechaBase = parseFecha(rawFecha);
-            if (!fechaBase || fechaBase.getFullYear() < 2000) continue;
+            const fechaFinObj = parseFecha(rawFecha);
+            const fechaInicioObj = parseFecha(rawFechaLlenado);
+            
+            if (!fechaFinObj || fechaFinObj.getFullYear() < 2000) continue;
+            if (!fechaInicioObj || fechaInicioObj.getFullYear() < 2000) continue;
 
+            const fechaBase = fechaFinObj;
             const periodo = obtenerPeriodo(fechaBase);
             const idUnico = `ext-${tanque}-${fechaBase.getTime()}`;
 
@@ -175,7 +181,8 @@ export const Route = createFileRoute("/api/ingesta")({
               id: idUnico,
               tanque: String(tanque),
               marca: marca as MarcaCerveza,
-              fechaLlenado: toMexicoISOString(fechaBase),
+              fechaInicioLlenado: toMexicoISOString(fechaInicioObj),
+              fechaLlenado: toMexicoISOString(fechaFinObj),
               h24: sanitizeDate(h24, 24),
               h48: sanitizeDate(h48, 48),
               h72: sanitizeDate(h72, 72),
@@ -190,8 +197,25 @@ export const Route = createFileRoute("/api/ingesta")({
             const eventosAgenda: any[] = [];
             const { obtenerTurnoPorHora } = await import("@/data/turno");
 
+            // Purga Inicial
+            purgasMapeadas.push({
+              fechaHora: toMexicoISOString(fechaInicioObj),
+              tiempo: null,
+              realiza: null,
+            });
+
+            eventosAgenda.push({
+              id: `ev-auto-${tanque || fechaBase.getTime()}-pinicial`,
+              titulo: `Purga Inicial - Tanque ${tanque || "S/N"}`,
+              inicio: toMexicoISOString(fechaInicioObj),
+              fin: toMexicoISOString(new Date(fechaInicioObj.getTime() + 30 * 60000)),
+              tipo: "Turno",
+              descripcion: `Marca: ${marca}`,
+              turno: obtenerTurnoPorHora(toMexicoISOString(fechaInicioObj)),
+            });
+
             for (let i = 1; i <= 8; i++) {
-              const purgaDate = new Date(fechaBase.getTime() + i * 7.5 * 3600000);
+              const purgaDate = new Date(fechaBase.getTime() + i * 8 * 3600000);
               purgasMapeadas.push({
                 fechaHora: toMexicoISOString(purgaDate),
                 tiempo: null,
@@ -205,7 +229,7 @@ export const Route = createFileRoute("/api/ingesta")({
                 fin: toMexicoISOString(new Date(purgaDate.getTime() + 30 * 60000)),
                 tipo: "Turno",
                 descripcion: `Marca: ${marca}`,
-                turno: obtenerTurnoPorHora(purgaDate),
+                turno: obtenerTurnoPorHora(toMexicoISOString(purgaDate)),
               });
             }
 
@@ -227,7 +251,8 @@ export const Route = createFileRoute("/api/ingesta")({
               tanque: String(tanque),
               fecha: toMexicoISOString(fechaBase),
               marca: marca as MarcaCerveza,
-              fechaLlenado: toMexicoISOString(fechaBase),
+              fechaInicioLlenado: toMexicoISOString(fechaInicioObj),
+              fechaLlenado: toMexicoISOString(fechaFinObj),
               horas: "0",
               historicas: "0",
               purgas: purgasMapeadas,

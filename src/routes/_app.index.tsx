@@ -93,9 +93,9 @@ function Dashboard() {
     return { key, label, color, items };
   });
 
-  // --- PURGAS DE TRUB (Purga 1 a 8) ---
-  const purgasDelTurno = Array.from({ length: 8 }, (_, i) => {
-    const numeroPurga = i + 1;
+  // --- PURGAS DE TRUB (Purga Inicial + 1 a 8) ---
+  const purgasDelTurno = Array.from({ length: 9 }, (_, i) => {
+    const tituloPurga = i === 0 ? "Purga Inicial" : `Purga ${i}`;
     const items = purgas
       .filter(p => {
         const entry = p.purgas?.[i];
@@ -108,7 +108,7 @@ function Dashboard() {
         const entry = p.purgas[i];
         const date = parseMexicanDate(entry.fechaHora!);
         return {
-          id: `${p.id}-p${numeroPurga}`,
+          id: `${p.id}-p${i}`,
           realId: p.id,
           tanque: p.tanque,
           marca: p.marca,
@@ -119,7 +119,7 @@ function Dashboard() {
       .filter(item => item.date && item.date >= inicioTurno && item.date <= finTurno)
       .sort((a, b) => a.date.getTime() - b.date.getTime())
       .slice(0, 8);
-    return { numeroPurga, items };
+    return { tituloPurga, items, index: i };
   });
 
   const totalPurgasPendientes = purgasDelTurno.reduce((acc, p) => acc + p.items.length, 0);
@@ -210,11 +210,11 @@ function Dashboard() {
             <p className="text-xs text-slate-500 font-medium">8 purgas por lote · Turno actual · Ligadas a QR</p>
           </div>
         </div>
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-            {purgasDelTurno.map(({ numeroPurga, items }) => (
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+            {purgasDelTurno.map(({ tituloPurga, items, index }) => (
               <TaskListPanel
-                key={`purga-${numeroPurga}`}
-                title={`Purga ${numeroPurga}`}
+                key={`purga-${index}`}
+                title={tituloPurga}
                 subtitle={`Pendientes de este turno`}
                 icon={Droplets}
                 emptyMessage="Todo al día"

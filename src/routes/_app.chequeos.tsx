@@ -12,10 +12,10 @@ import { obtenerTurnoPorHora } from "@/data/turno";
 import { TableFilters } from "@/components/tables/table_filters";
 
 export const Route = createFileRoute("/_app/chequeos")({
-  head: ({ search }: { search: any }) => ({
+  head: () => ({
     meta: [
-      { title: `Chequeo a las ${search?.tipo || "..."}` },
-      { name: "description", content: `Vista dinámica de los chequeos de Plato a las ${search?.tipo}.` },
+      { title: `Chequeos` },
+      { name: "description", content: `Vista dinámica de los chequeos de Plato.` },
     ],
   }),
   component: ChequeosDinamicoPage,

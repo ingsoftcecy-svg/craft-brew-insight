@@ -60,13 +60,24 @@ function ScanPage() {
     })[0];
   }, [purgas, tanqueId]);
 
-  // Encontrar la primera purga pendiente (0 a 7)
+  // Encontrar la primera purga pendiente que no haya expirado (15 min de tolerancia)
   const indicePurgaPendiente = useMemo(() => {
     if (!loteActivo) return -1;
-    // Buscamos la primera purga donde falte tiempo o realiza
-    const index = loteActivo.purgas.findIndex(
-      (p) => p.tiempo === null || p.tiempo === undefined || p.realiza === null || p.realiza === "" || p.realiza === undefined
-    );
+    
+    const now = new Date();
+    
+    const index = loteActivo.purgas.findIndex((p) => {
+      const estaIncompleta = p.tiempo === null || p.tiempo === undefined || p.realiza === null || p.realiza === "" || p.realiza === undefined;
+      if (!estaIncompleta) return false;
+
+      if (!p.fechaHora) return true;
+
+      const programada = new Date(p.fechaHora);
+      const expirada = now.getTime() > programada.getTime() + 15 * 60000;
+      
+      return !expirada;
+    });
+    
     return index;
   }, [loteActivo]);
 
@@ -78,11 +89,6 @@ function ScanPage() {
     await completarPurga(loteActivo.id, indicePurgaPendiente + 1, Number(tiempo), realiza);
     setIsSubmitting(false);
     setSuccess(true);
-    
-    // Regresar después de un momento
-    setTimeout(() => {
-      navigate({ to: "/purgas" });
-    }, 2000);
   };
 
   if (isLoading) {
@@ -150,7 +156,9 @@ function ScanPage() {
 
       <Card className="border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden">
         <div className="bg-slate-800 p-4 text-white text-center">
-          <CardTitle className="text-xl">Registro de Purga {indicePurgaPendiente + 1}</CardTitle>
+          <CardTitle className="text-xl">
+            {indicePurgaPendiente === 0 ? "Registro de Purga Inicial" : `Registro de Purga ${indicePurgaPendiente}`}
+          </CardTitle>
           <CardDescription className="text-slate-300 mt-1">
             Programada para: {loteActivo.purgas[indicePurgaPendiente]?.fechaHora || "Sin asignar"}
           </CardDescription>
@@ -160,8 +168,18 @@ function ScanPage() {
           {success ? (
             <div className="flex flex-col items-center text-center py-6 animate-in fade-in zoom-in duration-300">
               <CheckCircle2 className="w-16 h-16 text-green-500 mb-4" />
-              <h3 className="text-xl font-bold text-slate-800">¡Guardado con éxito!</h3>
-              <p className="text-slate-500 mt-2">Redirigiendo...</p>
+              <h3 className="text-xl font-bold text-slate-800">¡Purga registrada!</h3>
+              <Button 
+                className="mt-6" 
+                variant="outline" 
+                onClick={() => {
+                  setSuccess(false);
+                  setTiempo("");
+                  setRealiza("");
+                }}
+              >
+                Cerrar o escanear otra
+              </Button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">

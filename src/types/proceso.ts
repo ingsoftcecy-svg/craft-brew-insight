@@ -46,6 +46,7 @@ export interface ExtractoRow {
   id: string;
   marca: MarcaCerveza;
   tanque: string;
+  fechaInicioLlenado: string;
   fechaLlenado: string;
   h24: string | null;
   h48: string | null;
@@ -80,6 +81,7 @@ export interface PurgaRow {
   tanque: string;
   fecha: string;
   marca: MarcaCerveza;
+  fechaInicioLlenado: string;
   fechaLlenado: string;
   horas: string;
   historicas: string;

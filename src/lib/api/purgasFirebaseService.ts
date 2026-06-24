@@ -180,6 +180,7 @@ export async function obtenerPurgasPorPeriodo(
       tanque: data.tanque ?? "",
       fecha: data.fecha ?? "",
       marca: data.marca ?? "Modelo Especial",
+      fechaInicioLlenado: data.fechaInicioLlenado ?? "",
       fechaLlenado: data.fechaLlenado ?? "",
       horas: data.horas ?? "0",
       historicas: data.historicas ?? "0",
