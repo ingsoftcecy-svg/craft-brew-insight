@@ -82,10 +82,11 @@ export interface PurgaRow {
   fecha: string;
   marca: MarcaCerveza;
   fechaInicioLlenado: string;
+  tiempoLlenadoHoras?: number;
   fechaLlenado: string;
   horas: string;
   historicas: string;
-  purgas: PurgaEntry[]; // length 8
+  purgas: PurgaEntry[]; // length 9
 }
 
 export interface Plato72Row {

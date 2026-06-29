@@ -252,6 +252,7 @@ export const Route = createFileRoute("/api/ingesta")({
               fecha: toMexicoISOString(fechaBase),
               marca: marca as MarcaCerveza,
               fechaInicioLlenado: toMexicoISOString(fechaInicioObj),
+              
               fechaLlenado: toMexicoISOString(fechaFinObj),
               horas: "0",
               historicas: "0",

@@ -98,12 +98,13 @@ export function DashboardCharts({ extractos, periodosStats }: DashboardChartsPro
         <div className="flex items-center justify-between gap-3">
           <div>
             <CardTitle 
-              className="text-sm font-semibold text-foreground flex items-center gap-2 cursor-pointer" 
+              className="text-xl font-bold text-slate-800 flex items-center gap-2 cursor-pointer" 
               onClick={() => setTipoGrafica(tipoGrafica === "marca" ? "mes" : "marca")}
             >
-              <TrendingUp className="h-4 w-4 text-primary" />
+              <TrendingUp className="h-5 w-5 text-slate-500" />
               {tipoGrafica === "marca" ? "Distribución por Marca" : "Distribución por Meses"}
             </CardTitle>
+            <p className="text-sm text-slate-500 mt-1">Registros consolidados del proceso de fermentación</p>
           </div>
           {tipoGrafica === "marca" && (
             <select

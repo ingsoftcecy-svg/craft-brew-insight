@@ -74,6 +74,18 @@ const PurgaRow = memo(({ r }: { r: PurgaRowType }) => {
       {/* Tanque */}
       <CustomTableCell className="font-black text-sm text-slate-900">{r.tanque}</CustomTableCell>
 
+       {/* Fecha Llenado / Tiempo Llenado */}
+      <CustomTableCell className="text-sm font-bold tracking-tight text-slate-700 tabular-nums">
+        <div className="flex flex-col">
+          <span>{formatDate(r.fechaLlenado)}</span>
+          {r.tiempoLlenadoHoras !== undefined && (
+             <span className="text-xs text-blue-600 bg-blue-50 px-1 py-0.5 rounded w-fit mt-0.5 border border-blue-100">
+               {r.tiempoLlenadoHoras} hrs llenado
+             </span>
+          )}
+        </div>
+      </CustomTableCell>
+      
       {/* Purga Inicial */}
       {r.purgas.length > 0 && renderPurga(r.purgas[0], 0)}
 
