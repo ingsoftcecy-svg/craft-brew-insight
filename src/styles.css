@@ -136,8 +136,17 @@ body.dlp-active {
 }
 
 @media print {
-  /* Si alguien presiona Imprimir, la pantalla sale en blanco */
+  /* Si alguien presiona Imprimir (ctrl+p manual), la pantalla sale en blanco por DLP */
+  /* NOTA: El botón "Imprimir Lista" quita esta clase temporalmente para permitir imprimir */
   body.dlp-active {
     display: none !important;
+  }
+
+  /* Asegurar que los contenedores de flexbox y h-screen no corten la impresión */
+  body, html, #root, main, div {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
   }
 }

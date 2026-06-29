@@ -1,10 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FlaskConical, Clock, CheckCircle2, Droplets, Database, Beaker } from "lucide-react";
+import { FlaskConical, Clock, CheckCircle2, Droplets, Database, Beaker, Printer } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
 import { useEffect } from "react";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import { obtenerTurnoPorHora } from "@/data/turno";
 import { parseMexicanDate } from "@/lib/utils";
 
@@ -34,10 +33,6 @@ function Dashboard() {
     if (!date) return false;
     return format(date, "yyyy-MM") === periodoActivo;
   });
-
-  const fermentando   = extractosPeriodoActivo.length;
-  const completados72 = extractosPeriodoActivo.filter(e => e.h72 && e.estado72h === "Completado").length;
-  const pendientes72  = extractosPeriodoActivo.filter(e => e.h72 && e.estado72h !== "Completado").length;
 
   const ahora = new Date();
   const turnoActual = obtenerTurnoPorHora(ahora.toISOString());
@@ -73,6 +68,16 @@ function Dashboard() {
 
   const { start: inicioTurno, end: finTurno } = getLimitesTurnoActual(ahora);
 
+  const handlePrint = () => {
+    document.body.classList.remove("dlp-active");
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => {
+        document.body.classList.add("dlp-active");
+      }, 500);
+    }, 50);
+  };
+
   // --- CHEQUEOS DE PLATO (24h a 144h) ---
   const horasChequeo = [
     { key: "h24", label: "24h", color: "sky" as const },
@@ -92,6 +97,31 @@ function Dashboard() {
       .slice(0, 6);
     return { key, label, color, items };
   });
+
+  // Identificar tanques únicos que no han terminado su ciclo (hasta la h144).
+  // Como se importó historial, filtramos los que tengan un h144 muy viejo (más de 7 días en el pasado)
+  // para que no salgan los 140 tanques como "ocupados".
+  const limiteViejo = new Date();
+  limiteViejo.setDate(limiteViejo.getDate() - 7);
+
+  const tanquesOcupados = new Set(
+    extractos.filter(e => {
+      if (e.estado144h === "Completado") return false;
+      const h144Date = parseMexicanDate(e.h144);
+      if (!h144Date) return false;
+      return h144Date >= limiteViejo;
+    }).map(e => e.tanque)
+  );
+
+  const fermentando = tanquesOcupados.size;
+  const totalChequeosPendientes = chequeosDelTurno.reduce((acc, c) => acc + c.items.length, 0);
+  
+  // Para completados del turno, necesitamos buscar en extractos los que sí estén completados
+  // y su fecha caiga en este turno.
+  const completados72 = extractos
+    .map(e => ({ ...e, date: parseMexicanDate(e.h72) as Date }))
+    .filter(e => e.date && e.date >= inicioTurno && e.date <= finTurno && e.estado72h === "Completado")
+    .length;
 
   // --- PURGAS DE TRUB (Purga Inicial + 1 a 8) ---
   const purgasDelTurno = Array.from({ length: 9 }, (_, i) => {
@@ -127,7 +157,7 @@ function Dashboard() {
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
       {/* Page title */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white/50 p-6 rounded-2xl border border-slate-100 shadow-sm backdrop-blur-sm">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white/50 p-6 rounded-2xl border border-slate-100 shadow-sm backdrop-blur-sm print:hidden">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-800">Tablero General</h1>
           <p className="text-sm text-slate-500 mt-1 font-medium">Monitor de Chequeos de Plato y Purgas de Trub · {turnoActual}</p>
@@ -136,13 +166,13 @@ function Dashboard() {
 
       {/* KPIs */}
       {isLoading ? (
-        <div className="grid gap-4 grid-cols-3">
+        <div className="grid gap-4 grid-cols-3 print:hidden">
           {[...Array(3)].map((_, i) => (
             <Card key={i} className="h-24 animate-pulse bg-muted/50 border-border/50" />
           ))}
         </div>
       ) : (
-        <div className="grid gap-4 grid-cols-3">
+        <div className="grid gap-4 grid-cols-3 print:hidden">
           <KpiCard
             label="Tanques en Fermentación"
             value={fermentando}
@@ -152,8 +182,8 @@ function Dashboard() {
             bg="bg-gradient-to-br from-amber-100 to-amber-50 border-amber-200"
           />
           <KpiCard
-            label="Chequeos 72h Pendientes"
-            value={pendientes72}
+            label="Chequeos de Platos Pendientes"
+            value={totalChequeosPendientes}
             icon={Clock}
             sub="Por realizar"
             color="text-sky-600"
@@ -171,15 +201,24 @@ function Dashboard() {
       )}
       
       {/* ═══════════════ SECCIÓN: CHEQUEOS DE PLATO ═══════════════ */}
-      <div>
-        <div className="flex items-center gap-2 mb-4">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-indigo-500 flex items-center justify-center shadow-sm">
-            <Beaker className="h-4 w-4 text-white" />
+      <div className="print:hidden">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-indigo-500 flex items-center justify-center shadow-sm">
+              <Beaker className="h-4 w-4 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-800 tracking-tight">Chequeos de Plato</h2>
+              <p className="text-xs text-slate-500 font-medium">De 24 a 144 hrs · Turno actual</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg font-bold text-slate-800 tracking-tight">Chequeos de Plato</h2>
-            <p className="text-xs text-slate-500 font-medium">De 24 a 144 hrs · Turno actual</p>
-          </div>
+          <button 
+            onClick={handlePrint}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
+          >
+            <Printer className="h-4 w-4" />
+            Imprimir Lista
+          </button>
         </div>
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {chequeosDelTurno.map(({ key, label, color, items }) => (
@@ -201,35 +240,83 @@ function Dashboard() {
 
       {/* ═══════════════ SECCIÓN: PURGAS DE TRUB ═══════════════ */}
       <div>
-        <div className="flex items-center gap-2 mb-4">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center shadow-sm">
-            <Droplets className="h-4 w-4 text-white" />
+        <div className="print:hidden">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center shadow-sm">
+              <Droplets className="h-4 w-4 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-800 tracking-tight">Purgas de Trub</h2>
+              <p className="text-xs text-slate-500 font-medium">8 purgas por lote · Turno actual · Ligadas a QR</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg font-bold text-slate-800 tracking-tight">Purgas de Trub</h2>
-            <p className="text-xs text-slate-500 font-medium">8 purgas por lote · Turno actual · Ligadas a QR</p>
-          </div>
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+              {purgasDelTurno.map(({ tituloPurga, items, index }) => (
+                <TaskListPanel
+                  key={`purga-${index}`}
+                  title={tituloPurga}
+                  subtitle={`Pendientes de este turno`}
+                  icon={Droplets}
+                  emptyMessage="Todo al día"
+                  items={items}
+                  colorTheme="rose"
+                  itemIcon={Droplets}
+                  linkTo="/purgas"
+                />
+              ))}
+            </div>
         </div>
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-            {purgasDelTurno.map(({ tituloPurga, items, index }) => (
-              <TaskListPanel
-                key={`purga-${index}`}
-                title={tituloPurga}
-                subtitle={`Pendientes de este turno`}
-                icon={Droplets}
-                emptyMessage="Todo al día"
-                items={items}
-                colorTheme="rose"
-                itemIcon={Droplets}
-                linkTo="/purgas"
-              />
-            ))}
-          </div>
       </div>
       
       {/* Chart row */}
-      <div className="grid gap-5 mt-5">
+      <div className="grid gap-5 mt-5 print:hidden">
         <DashboardCharts extractos={extractos} periodosStats={periodosStats} />
+      </div>
+
+      {/* ═══════════════ VISTA DE IMPRESIÓN ═══════════════ */}
+      <div className="hidden print:block w-full text-black bg-white">
+        <div className="mb-6 border-b pb-4">
+          <h1 className="text-2xl font-bold uppercase">Checklist de Operación - Chequeos de Plato</h1>
+          <p className="text-sm text-gray-600 mt-1">Turno: {turnoActual} | Fecha: {format(ahora, "dd/MM/yyyy HH:mm")}</p>
+        </div>
+        
+        <table className="w-full border-collapse border border-black text-left text-sm">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="border border-black p-2 font-bold text-center w-20">Hora</th>
+              <th className="border border-black p-2 font-bold w-24">Tanque</th>
+              <th className="border border-black p-2 font-bold w-32">Marca</th>
+              <th className="border border-black p-2 font-bold w-24 text-center">Plato</th>
+              <th className="border border-black p-2 font-bold">PH</th>
+              <th className="border border-black p-2 font-bold">Presión</th>
+            </tr>
+          </thead>
+          <tbody>
+            {chequeosDelTurno.flatMap(c => 
+              c.items.map(item => ({
+                tipo: c.label,
+                tanque: item.tanque,
+                marca: item.marca,
+                date: item.date,
+              }))
+            ).sort((a, b) => a.date.getTime() - b.date.getTime()).map((item, i) => (
+              <tr key={i} className="h-12">
+                <td className="border border-black p-2 text-center font-medium">{format(item.date, "HH:mm")}</td>
+                <td className="border border-black p-2 font-semibold">T-{item.tanque}</td>
+                <td className="border border-black p-2">{item.marca}</td>
+                <td className="border border-black p-2 text-center text-gray-700">{item.tipo}</td>
+                
+                <td className="border border-black p-2"></td>
+                <td className="border border-black p-2"></td>
+              </tr>
+            ))}
+            {chequeosDelTurno.flatMap(c => c.items).length === 0 && (
+              <tr>
+                <td colSpan={7} className="border border-black p-4 text-center text-gray-500 italic">No hay chequeos programados para este turno</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

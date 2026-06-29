@@ -23,7 +23,7 @@ export function AppHeader() {
   const tc = turno && TURNO_CONFIG[turno] ? TURNO_CONFIG[turno] : { label: turno ?? "Desconocido", bg: "bg-gray-100", text: "text-gray-600" };
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-slate-200/60 bg-white/60 backdrop-blur-lg px-5 shadow-sm transition-all duration-300">
+    <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-slate-200/60 bg-white/60 backdrop-blur-lg px-5 shadow-sm transition-all duration-300 print:hidden">
       <SidebarTrigger className="text-slate-400 hover:text-slate-700 transition-colors -ml-1" />
 
       {/* Date */}
