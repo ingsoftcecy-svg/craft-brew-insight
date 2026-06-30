@@ -3,9 +3,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { PurgaRow } from "@/types/proceso";
 import { format, parseISO, isValid } from "date-fns";
 import { es } from "date-fns/locale";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Clock } from "lucide-react";
 
 interface TiempoPurgaChartsProps {
   purgas: PurgaRow[];
@@ -95,17 +94,14 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
   // Componente interno para evitar repetir el JSX del estilo de gráfica
   const ChartPanel = ({ title, data }: { title: string; data: any[] }) => {
     return (
-      <div className="flex flex-col border border-slate-200 bg-white shadow-sm h-[320px] rounded-xl overflow-hidden">
-        {/* Encabezado */}
-        <div className="bg-slate-800 text-white text-center py-2 font-bold text-sm tracking-wider px-2 line-clamp-1">
-          {title}
-        </div>
-        <div className="bg-slate-100 text-slate-600 border-b border-slate-200 text-center py-1 text-xs font-bold tracking-widest">
-          MINUTOS
+      <div className="flex flex-col h-[320px] w-full relative">
+        <div className="mb-4 pl-2">
+          <h3 className="text-sm font-bold text-slate-700 capitalize">{title.toLowerCase()}</h3>
+          <p className="text-xs text-slate-500">Promedio en minutos</p>
         </div>
         
         {/* Gráfica */}
-        <div className="flex-1 p-2 bg-white relative">
+        <div className="flex-1 w-full relative">
           {data.length === 0 ? (
             <div className="h-full flex items-center justify-center text-slate-400 text-sm">
               Sin datos
@@ -116,14 +112,14 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis 
                   dataKey="etiqueta" 
-                  tick={{ fontSize: 10 }} 
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
                   axisLine={{ stroke: "#e2e8f0" }} 
                   tickLine={false}
                   dy={10}
                 />
                 <YAxis 
                   domain={[0, 15]} 
-                  tick={{ fontSize: 11 }} 
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
                   axisLine={{ stroke: "#e2e8f0" }} 
                   tickLine={false} 
                 />
@@ -155,44 +151,40 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
   };
 
   return (
-    <Card className="border-border shadow-sm">
-      <CardHeader className="pb-3">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <Card className="border-border shadow-sm hover:shadow-lg transition-all duration-300 group">
+      <CardHeader className="pb-0 pt-5 px-5">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
           <div>
-            <CardTitle className="text-xl font-bold text-slate-800">Tiempos de Purga de Trub</CardTitle>
-            <CardDescription>Análisis de tendencia por día, semana y mes</CardDescription>
+            <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
+              <Clock className="h-5 w-5 text-slate-500" />
+              Tiempos de Purga de Trub
+              
+            </CardTitle>
+            <p className="text-sm text-slate-500 mt-1">Análisis de tendencia por día, semana y mes</p>
           </div>
           
-          <div className="flex flex-wrap items-end gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
-            <div className="space-y-1">
-              <Label className="text-xs text-slate-500">Tanque</Label>
-              <Select value={filtroTanque} onValueChange={setFiltroTanque}>
-                <SelectTrigger className="w-[120px] h-8 text-xs bg-white">
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  {tanquesUnicos.map(t => (
-                    <SelectItem key={t} value={t}>T-{t}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              value={filtroTanque}
+              onChange={(e) => setFiltroTanque(e.target.value)}
+              className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+            >
+              <option value="todos">Todos los tanques</option>
+              {tanquesUnicos.map(t => (
+                <option key={t} value={t}>T-{t}</option>
+              ))}
+            </select>
             
-            <div className="space-y-1">
-              <Label className="text-xs text-slate-500">Marca</Label>
-              <Select value={filtroMarca} onValueChange={setFiltroMarca}>
-                <SelectTrigger className="w-[160px] h-8 text-xs bg-white">
-                  <SelectValue placeholder="Todas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todas">Todas</SelectItem>
-                  {marcasUnicas.map(m => (
-                    <SelectItem key={m} value={m} className="capitalize">{m}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <select
+              value={filtroMarca}
+              onChange={(e) => setFiltroMarca(e.target.value)}
+              className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+            >
+              <option value="todas">Todas las marcas</option>
+              {marcasUnicas.map(m => (
+                <option key={m} value={m} className="capitalize">{m}</option>
+              ))}
+            </select>
           </div>
         </div>
       </CardHeader>

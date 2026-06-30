@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceArea, ReferenceLine, ComposedChart, Bar } from "recharts";
+import { LineChart, BarChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceArea, ReferenceLine, ComposedChart, Bar, Area, Scatter } from "recharts";
+import { Activity, BarChart4, LineChart as LineChartIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,8 +14,10 @@ interface CpCpkChartProps {
 
 export function CpCpkChart({ purgas }: CpCpkChartProps) {
   // Configuración de límites (LSL y USL ajustables por el usuario)
-  const [usl, setUsl] = useState<number>(6);
-  const [lsl, setLsl] = useState<number>(2);
+  const [uslStr, setUslStr] = useState<string>("6");
+  const [lslStr, setLslStr] = useState<string>("2");
+  const usl = Math.max(0, Number(uslStr) || 0);
+  const lsl = Math.max(0, Number(lslStr) || 0);
   const [variable, setVariable] = useState<"tiempoPurga" | "tiempoLlenado">("tiempoPurga");
   const [marcaFiltro, setMarcaFiltro] = useState<string>("todas");
 
@@ -90,9 +93,9 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
     const cpkLower = (mean - lsl) / (3 * stdDev);
     const cpkCalc = Math.min(cpkUpper, cpkLower);
     
-    // El usuario pidió que el mínimo siempre sea 0 y el máximo 1.33
-    const cp = Math.min(1.33, Math.max(0, cpCalc));
-    const cpk = Math.min(1.33, Math.max(0, cpkCalc));
+    // El usuario pidió que el máximo sea 1.33
+    const cp = Math.min(1.33, cpCalc);
+    const cpk = Math.min(1.33, cpkCalc);
 
     // Mediana
     const sorted = [...values].sort((a, b) => a - b);
@@ -123,13 +126,16 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
     if (n > 0) {
       minVal = Math.min(...values);
       maxVal = Math.max(...values);
-      numClasses = Math.ceil(1 + Math.log2(n));
+      const rawClasses = 1 + Math.log2(n);
       range = maxVal - minVal;
-      classWidth = range / (numClasses > 0 ? numClasses : 1);
+      classWidth = range / (rawClasses > 0 ? rawClasses : 1);
       
       if (classWidth === 0) classWidth = 1; // Seguridad
 
-      const bins = Array.from({ length: numClasses }, (_, i) => {
+      numClasses = rawClasses; // Para mostrar en UI el valor exacto como en Excel
+      const numClassesToDraw = Math.ceil(rawClasses);
+
+      const bins = Array.from({ length: numClassesToDraw }, (_, i) => {
         const binStart = minVal + i * classWidth;
         const binEnd = minVal + (i + 1) * classWidth;
         return {
@@ -142,8 +148,8 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
       });
 
       values.forEach(v => {
-        for (let i = 0; i < numClasses; i++) {
-          if (i === numClasses - 1) { 
+        for (let i = 0; i < numClassesToDraw; i++) {
+          if (i === numClassesToDraw - 1) { 
             if (v >= bins[i].binStart && v <= bins[i].binEnd) {
               bins[i].count++;
               break;
@@ -199,59 +205,56 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
   const yDomainMax = Math.max(usl + (usl - lsl) * 0.5, Math.max(...chartData.map(d => d.valor), usl * 1.2));
 
   return (
-    <Card className="border-border shadow-sm">
-      <CardHeader className="pb-3">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <Card className="border-border shadow-sm hover:shadow-lg transition-all duration-300 group">
+      <CardHeader className="pb-0 pt-5 px-5">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
           <div>
-            <CardTitle className="text-xl font-bold text-slate-800">Gráfica de Control e Índices Cp/Cpk</CardTitle>
-            <CardDescription>Monitoreo de estabilidad de proceso (Zonas Verde/Amarilla)</CardDescription>
+            <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
+              <Activity className="h-5 w-5 text-slate-500" />
+              Gráfica de Control e Índices Cp/Cpk
+            </CardTitle>
+            <p className="text-sm text-slate-500 mt-1">Control Estadistico de Proceso</p>
           </div>
           
-          <div className="flex flex-wrap items-end gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
-            <div className="space-y-1">
-              <Label className="text-xs text-slate-500">Métrica</Label>
-              <Select value={variable} onValueChange={(val: any) => setVariable(val)}>
-                <SelectTrigger className="w-[160px] h-8 text-xs bg-white">
-                  <SelectValue placeholder="Seleccionar" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tiempoPurga">Tiempos de Purga</SelectItem>
-                  <SelectItem value="tiempoLlenado">Tiempo de Llenado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs text-slate-500">Marca</Label>
-              <Select value={marcaFiltro} onValueChange={(val: any) => setMarcaFiltro(val)}>
-                <SelectTrigger className="w-[160px] h-8 text-xs bg-white">
-                  <SelectValue placeholder="Todas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todas">Todas las marcas</SelectItem>
-                  {marcasDisponibles.map(m => (
-                    <SelectItem key={m} value={m}>{m}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs text-slate-500">Mínimo (LSL)</Label>
-              <Input 
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              value={variable}
+              onChange={(e) => setVariable(e.target.value as any)}
+              className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+            >
+              <option value="tiempoPurga">Tiempo de Purga</option>
+              <option value="tiempoLlenado">Tiempo de Llenado</option>
+            </select>
+
+            <select
+              value={marcaFiltro}
+              onChange={(e) => setMarcaFiltro(e.target.value)}
+              className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+            >
+              <option value="todas">Todas las marcas</option>
+              {marcasDisponibles.map(m => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+
+            <div className="flex items-center gap-1 shrink-0">
+              <span className="text-xs font-medium text-slate-500">LI</span>
+              <input 
                 type="number" 
                 min="0"
-                value={lsl} 
-                onChange={(e) => setLsl(Math.max(0, Number(e.target.value)))}
-                className="w-20 h-8 text-xs bg-white"
+                value={lslStr} 
+                onChange={(e) => setLslStr(e.target.value)}
+                className="w-16 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs text-slate-500">Máximo (USL)</Label>
-              <Input 
+            <div className="flex items-center gap-1 shrink-0">
+              <span className="text-xs font-medium text-slate-500">LS</span>
+              <input 
                 type="number" 
                 min="0"
-                value={usl} 
-                onChange={(e) => setUsl(Math.max(0, Number(e.target.value)))}
-                className="w-20 h-8 text-xs bg-white"
+                value={uslStr} 
+                onChange={(e) => setUslStr(e.target.value)}
+                className="w-16 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </div>
           </div>
@@ -298,7 +301,7 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
 
             <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mt-2">
               <div className="bg-slate-50 border border-slate-100 p-2 rounded-xl text-center">
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">N° Datos (n)</p>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">N° Datos </p>
                 <p className="text-lg font-black text-slate-700">{stats.n}</p>
               </div>
               <div className="bg-slate-50 border border-slate-100 p-2 rounded-xl text-center">
@@ -306,27 +309,30 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
                 <p className="text-lg font-black text-slate-700">{stats.minVal.toFixed(1)} - {stats.maxVal.toFixed(1)}</p>
               </div>
               <div className="bg-slate-50 border border-slate-100 p-2 rounded-xl text-center">
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Rango (r)</p>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Rango</p>
                 <p className="text-lg font-black text-slate-700">{stats.range.toFixed(1)}</p>
               </div>
               <div className="bg-slate-50 border border-slate-100 p-2 rounded-xl text-center">
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Clases (c)</p>
-                <p className="text-lg font-black text-slate-700">{stats.numClasses}</p>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Clases (c) </p>
+                <p className="text-lg font-black text-slate-700">{stats.numClasses.toFixed(2)}</p>
               </div>
               <div className="bg-slate-50 border border-slate-100 p-2 rounded-xl text-center">
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Ancho (h)</p>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Ancho de Clases </p>
                 <p className="text-lg font-black text-slate-700">{stats.classWidth.toFixed(2)}</p>
               </div>
             </div>
 
             <div className="h-[350px] w-full mt-6 relative">
-              <h3 className="text-sm font-bold text-slate-700 mb-2">Dot Graph</h3>
+                <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-slate-500" />
+                  Dot Graph
+                </CardTitle>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                   <XAxis 
                     dataKey="id" 
-                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
                     dy={10}
@@ -366,47 +372,68 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
               </ResponsiveContainer>
             </div>
 
-            {/* Histograma y Distribución Normal */}
+            {/* Histograma */}
             <div className="h-[350px] w-full mt-10 relative">
-              <h3 className="text-sm font-bold text-slate-700 mb-2">Histograma y Distribución Normal</h3>
+              <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                  <BarChart4 className="h-5 w-5 text-slate-500" />
+                  Histograma
+              </CardTitle>
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={stats.histogramData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+                <BarChart data={stats.histogramData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                   <XAxis 
                     dataKey="label" 
-                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
                     dy={10}
                   />
                   <YAxis 
-                    yAxisId="left"
                     tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
-                  />
-                  <YAxis 
-                    yAxisId="right"
-                    orientation="right"
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
-                    axisLine={false}
-                    tickLine={false}
-                    domain={[0, 'dataMax + 2']}
                   />
                   <Tooltip 
                     cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} 
                     contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                   />
                   <Bar 
-                    yAxisId="left"
                     dataKey="count" 
                     name="Frecuencia"
                     fill="#f59e0b" 
                     radius={[4, 4, 0, 0]}
                     animationDuration={1000}
                   />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Distribución Normal */}
+            <div className="h-[350px] w-full mt-10 relative">
+              <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                  <LineChartIcon className="h-5 w-5 text-slate-500" />
+                  Distribución Normal
+                </CardTitle>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={stats.histogramData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                  <XAxis 
+                    dataKey="label" 
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
+                    axisLine={false}
+                    tickLine={false}
+                    dy={10}
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip 
+                    cursor={{ stroke: "#94a3b8", strokeWidth: 1, strokeDasharray: "3 3" }} 
+                    contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  />
                   <Line 
-                    yAxisId="left"
                     type="monotone" 
                     dataKey="normalDist" 
                     name="Dist. Normal"
@@ -416,7 +443,7 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
                     activeDot={{ r: 6, fill: "#0284c7", stroke: "#fff", strokeWidth: 2 }}
                     animationDuration={1500}
                   />
-                </ComposedChart>
+                </LineChart>
               </ResponsiveContainer>
             </div>
           </div>

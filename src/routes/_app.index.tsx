@@ -6,10 +6,6 @@ import { useEffect } from "react";
 import { format } from "date-fns";
 import { obtenerTurnoPorHora } from "@/data/turno";
 import { parseMexicanDate } from "@/lib/utils";
-import { CpCpkChart } from "@/components/dashboard/cp_cpk_chart";
-import { SicChart } from "@/components/dashboard/sic_chart";
-import { TiempoPurgaCharts } from "@/components/dashboard/tiempo_purga_charts";
-import { LlenadoBoxplotChart } from "@/components/dashboard/llenado_boxplot_chart";
 
 import { KpiCard } from "@/components/dashboard/kpi_card";
 import { TaskListPanel } from "@/components/dashboard/task_list_panel";
@@ -272,14 +268,7 @@ function Dashboard() {
         </div>
       </div>
       
-      {/* Chart row */}
-      <div className="grid gap-5 mt-5 print:hidden">
-        <DashboardCharts extractos={extractos} periodosStats={periodosStats} />
-        <CpCpkChart purgas={purgas} />
-        <LlenadoBoxplotChart purgas={purgas} />
-        <TiempoPurgaCharts purgas={purgas} />
-      </div>
-
+      
       {/* ═══════════════ VISTA DE IMPRESIÓN ═══════════════ */}
       <div className="hidden print:block w-full text-black bg-white">
         <div className="mb-6 border-b pb-4">

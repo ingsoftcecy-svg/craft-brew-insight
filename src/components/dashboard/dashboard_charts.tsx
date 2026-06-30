@@ -104,7 +104,7 @@ export function DashboardCharts({ extractos, periodosStats }: DashboardChartsPro
               <TrendingUp className="h-5 w-5 text-slate-500" />
               {tipoGrafica === "marca" ? "Distribución por Marca" : "Distribución por Meses"}
             </CardTitle>
-            <p className="text-sm text-slate-500 mt-1">Registros consolidados del proceso de fermentación</p>
+          
           </div>
           {tipoGrafica === "marca" && (
             <select

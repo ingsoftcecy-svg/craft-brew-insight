@@ -1,9 +1,10 @@
 import { useState, useMemo } from "react";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceArea, ReferenceLine, ComposedChart, Bar } from "recharts";
+import { BarChart2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PurgaRow } from "@/types/proceso";
+import { parseMexicanDate } from "@/lib/utils";
 
 interface BoxPlotChartProps {
   purgas: PurgaRow[];
@@ -22,20 +23,25 @@ function getPercentile(data: number[], percentile: number) {
 
 export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
   // LSL y USL en minutos
-  const [usl, setUsl] = useState<number>(120);
-  const [lsl, setLsl] = useState<number>(60);
+  const [uslStr, setUslStr] = useState<string>("120");
+  const [lslStr, setLslStr] = useState<string>("60");
+  const usl = Math.max(0, Number(uslStr) || 0);
+  const lsl = Math.max(0, Number(lslStr) || 0);
 
   // 1. Filtrar y calcular tiempo en minutos
   const tiemposLlenado = useMemo(() => {
     const list: { marca: string; minutos: number; tanque: string }[] = [];
     purgas.forEach(p => {
-      if (p.fechaLlenado && p.fechaInicioLlenado) {
-        const fin = new Date(p.fechaLlenado).getTime();
-        const inicio = new Date(p.fechaInicioLlenado).getTime();
-        const diffMin = (fin - inicio) / 60000;
-        if (diffMin > 0 && diffMin < 1000) { // ignorar locuras de datos
-          list.push({ marca: p.marca, minutos: diffMin, tanque: p.tanque });
+      let val = p.tiempoLlenadoHoras;
+      if (val == null && p.fechaInicioLlenado && p.fechaLlenado) {
+        const inicio = parseMexicanDate(p.fechaInicioLlenado);
+        const fin = parseMexicanDate(p.fechaLlenado);
+        if (inicio && fin) {
+          val = (fin.getTime() - inicio.getTime()) / 60000;
         }
+      }
+      if (val != null && val > 0) {
+        list.push({ marca: p.marca, minutos: val, tanque: p.tanque });
       }
     });
     return list;
@@ -53,6 +59,7 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
       const values = grupos[marca].sort((a, b) => a - b);
       const min = values[0] || 0;
       const max = values[values.length - 1] || 0;
+      const mean = values.reduce((a, b) => a + b, 0) / (values.length || 1);
       const q1 = getPercentile(values, 25);
       const median = getPercentile(values, 50);
       const q3 = getPercentile(values, 75);
@@ -62,6 +69,7 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
         min: Number(min.toFixed(2)),
         q1: Number(q1.toFixed(2)),
         median: Number(median.toFixed(2)),
+        mean: Number(mean.toFixed(2)),
         q3: Number(q3.toFixed(2)),
         max: Number(max.toFixed(2)),
         count: values.length,
@@ -88,9 +96,9 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
     const cpkLower = (mean - lsl) / (3 * stdDev);
     const cpkCalc = Math.min(cpkUpper, cpkLower);
     
-    // El usuario pidió que el mínimo siempre sea 0
-    const cp = Math.max(0, cpCalc);
-    const cpk = Math.max(0, cpkCalc);
+    // El usuario pidió que el máximo sea 1.33
+    const cp = Math.min(1.33, cpCalc);
+    const cpk = Math.min(1.33, cpkCalc);
 
     // Mediana
     const sorted = [...values].sort((a, b) => a - b);
@@ -166,11 +174,12 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
           <p className="font-bold text-slate-800 border-b pb-1 mb-1">Marca: {data.marca}</p>
           <p className="text-slate-600">Llenados: <span className="font-semibold text-slate-900">{data.count} tanques</span></p>
           <div className="mt-2 space-y-1 text-xs">
-            <p className="flex justify-between w-32"><span className="text-slate-500">Máx:</span> <span className="font-semibold">{data.max} m</span></p>
-            <p className="flex justify-between w-32"><span className="text-slate-500">Q3 (75%):</span> <span className="font-semibold">{data.q3} m</span></p>
-            <p className="flex justify-between w-32"><span className="text-red-500 font-bold">Mediana:</span> <span className="text-red-500 font-bold">{data.median} m</span></p>
-            <p className="flex justify-between w-32"><span className="text-slate-500">Q1 (25%):</span> <span className="font-semibold">{data.q1} m</span></p>
-            <p className="flex justify-between w-32"><span className="text-slate-500">Mín:</span> <span className="font-semibold">{data.min} m</span></p>
+            <p className="flex justify-between w-44"><span className="text-slate-500">Máx:</span> <span className="font-semibold">{data.max} m</span></p>
+            <p className="flex justify-between w-44"><span className="text-slate-500">Percentil 75:</span> <span className="font-semibold">{data.q3} m</span></p>
+            <p className="flex justify-between w-44"><span className="text-red-500 font-bold">Percentil 50 (Mediana):</span> <span className="text-red-500 font-bold">{data.median} m</span></p>
+            <p className="flex justify-between w-44"><span className="text-blue-600 font-bold">Media (Promedio):</span> <span className="text-blue-600 font-bold">{data.mean} m</span></p>
+            <p className="flex justify-between w-44"><span className="text-slate-500">Percentil 25:</span> <span className="font-semibold">{data.q1} m</span></p>
+            <p className="flex justify-between w-44"><span className="text-slate-500">Mín:</span> <span className="font-semibold">{data.min} m</span></p>
           </div>
         </div>
       );
@@ -179,22 +188,37 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
   };
 
   return (
-    <Card className="border-border shadow-sm mt-6">
-      <CardHeader className="pb-3">
+    <Card className="border-border shadow-sm hover:shadow-lg transition-all duration-300 group mt-6">
+      <CardHeader className="pb-0 pt-5 px-5">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <CardTitle className="text-xl font-bold text-slate-800">Box & Whisker - Tiempos de Llenado</CardTitle>
-            <CardDescription>Variabilidad por Marca y Capacidad (Cp/Cpk) en Minutos</CardDescription>
+            <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
+              <BarChart2 className="h-5 w-5 text-slate-500" />
+              Box & Whiskers
+              
+            </CardTitle>
           </div>
           
-          <div className="flex flex-wrap items-end gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
-            <div className="space-y-1">
-              <Label className="text-xs text-slate-500">Mínimo (LSL) min</Label>
-              <Input type="number" min="0" value={lsl} onChange={(e) => setLsl(Math.max(0, Number(e.target.value)))} className="w-20 h-8 text-xs bg-white" />
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-1 shrink-0">
+              <span className="text-xs font-medium text-slate-500">LI</span>
+              <input 
+                type="number" 
+                min="0"
+                value={lslStr} 
+                onChange={(e) => setLslStr(e.target.value)}
+                className="w-16 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs text-slate-500">Máximo (USL) min</Label>
-              <Input type="number" min="0" value={usl} onChange={(e) => setUsl(Math.max(0, Number(e.target.value)))} className="w-20 h-8 text-xs bg-white" />
+            <div className="flex items-center gap-1 shrink-0">
+              <span className="text-xs font-medium text-slate-500">LS</span>
+              <input 
+                type="number" 
+                min="0"
+                value={uslStr} 
+                onChange={(e) => setUslStr(e.target.value)}
+                className="w-16 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
             </div>
           </div>
         </div>
@@ -242,14 +266,14 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                  <XAxis dataKey="marca" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} dy={10} />
+                  <XAxis dataKey="marca" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }} angle={-45} textAnchor="end" axisLine={false} tickLine={false} dy={10} height={80} interval={0} />
                   <YAxis domain={[0, 'dataMax + 20']} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }} axisLine={false} tickLine={false} />
                   
                   <ReferenceArea y1={lsl} y2={usl} fill="#22c55e" fillOpacity={0.15} />
                   <ReferenceArea y1={0} y2={lsl} fill="#ef4444" fillOpacity={0.1} />
                   
-                  <ReferenceLine y={usl} stroke="#16a34a" strokeDasharray="3 3" label={{ position: 'top', value: 'USL', fill: '#16a34a', fontSize: 12, fontWeight: 'bold' }} />
-                  <ReferenceLine y={lsl} stroke="#16a34a" strokeDasharray="3 3" label={{ position: 'bottom', value: 'LSL', fill: '#16a34a', fontSize: 12, fontWeight: 'bold' }} />
+                  <ReferenceLine y={usl} stroke="#16a34a" strokeDasharray="3 3" label={{ position: 'top', value: 'LS', fill: '#16a34a', fontSize: 12, fontWeight: 'bold' }} />
+                  <ReferenceLine y={lsl} stroke="#16a34a" strokeDasharray="3 3" label={{ position: 'bottom', value: 'LI', fill: '#16a34a', fontSize: 12, fontWeight: 'bold' }} />
                   
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: "#f1f5f9" }} />
                   

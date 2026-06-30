@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { Home, Calendar, Beaker, ClipboardList, CalendarDays, Clock, LogOut, Printer } from "lucide-react";
+import { Home, Calendar, Beaker, ClipboardList, CalendarDays, Clock, LogOut, Printer, TrendingUp } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
   Sidebar,
@@ -17,6 +17,7 @@ import {
 
 const items = [
   { title: "Dashboard",              url: "/",           icon: Home          },
+  { title: "Gráficos",               url: "/graficos",   icon: TrendingUp    },
   { title: "Agenda",                 url: "/agenda",     icon: Calendar      },
   { title: "Chequeo de Platos",    url: "/extracto",   icon: Beaker        },
   { title: "Purgas de Trub",         url: "/purgas",     icon: ClipboardList },
