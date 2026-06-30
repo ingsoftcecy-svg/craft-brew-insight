@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { type ReactNode } from "react";
 
-import appCss from "../styles.css?url";
+import appCss from "../styles/global.css?url";
 import { NotFoundComponent } from "../components/core/not_found";
 import { ErrorComponent } from "../components/core/error_boundary";
 import { useEffect } from "react";

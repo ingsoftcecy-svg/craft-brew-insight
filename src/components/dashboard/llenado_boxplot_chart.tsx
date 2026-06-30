@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label";
 import { PurgaRow } from "@/types/proceso";
 import { parseMexicanDate } from "@/lib/utils";
+import { ProcessCapabilityAnalyzer } from "@/components/core/analisisestaditcio";
+import "@/styles/dashboard.css";
 
 interface BoxPlotChartProps {
   purgas: PurgaRow[];
@@ -80,44 +82,14 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
     return data;
   }, [tiemposLlenado]);
 
-  // 3. Cálculos globales de Cp, Cpk, Moda y Mediana
+  // Estadísticas globales utilizando OOP
   const statsGlobales = useMemo(() => {
-    const values = tiemposLlenado.map(t => t.minutos);
-    if (values.length === 0) return { mean: 0, stdDev: 0, cp: 0, cpk: 0, median: 0, mode: 0 };
-    
-    // Media y Desviación
-    const mean = values.reduce((a, b) => a + b, 0) / values.length;
-    const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (values.length - 1 || 1);
-    const stdDev = Math.sqrt(variance) || 0.001;
-
-    // Cp y Cpk
-    const cpCalc = (usl - lsl) / (6 * stdDev);
-    const cpkUpper = (usl - mean) / (3 * stdDev);
-    const cpkLower = (mean - lsl) / (3 * stdDev);
-    const cpkCalc = Math.min(cpkUpper, cpkLower);
-    
-    // El usuario pidió que el máximo sea 1.33
-    const cp = Math.min(1.33, cpCalc);
-    const cpk = Math.min(1.33, cpkCalc);
-
-    // Mediana
-    const sorted = [...values].sort((a, b) => a - b);
-    const mid = Math.floor(sorted.length / 2);
-    const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-
-    // Moda
-    const freq: Record<number, number> = {};
-    let maxFreq = 0;
-    let mode = sorted[0];
-    for (const v of sorted) {
-      freq[v] = (freq[v] || 0) + 1;
-      if (freq[v] > maxFreq) {
-        maxFreq = freq[v];
-        mode = v;
-      }
+    if (tiemposLlenado.length === 0) {
+      return { mean: 0, stdDev: 0, cp: 0, cpk: 0, median: 0, mode: 0 };
     }
-
-    return { mean, stdDev, cp, cpk, median, mode };
+    const values = tiemposLlenado.map(t => t.minutos);
+    const analyzer = new ProcessCapabilityAnalyzer(values, lsl, usl);
+    return analyzer.getSummaryStats();
   }, [tiemposLlenado, usl, lsl]);
 
   // SVG Personalizado para dibujar el BoxPlot
@@ -188,18 +160,13 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
   };
 
   return (
-    <Card className="border-border shadow-sm hover:shadow-lg transition-all duration-300 group mt-6">
-      <CardHeader className="pb-0 pt-5 px-5">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
-              <BarChart2 className="h-5 w-5 text-slate-500" />
-              Box & Whiskers
-              
-            </CardTitle>
-          </div>
-          
-          <div className="flex flex-wrap items-center gap-3">
+    <Card className="dashboard-card">
+      <CardHeader className="dashboard-card-header">
+        <div className="flex flex-col">
+          <CardTitle className="dashboard-title">Box & Whiskers</CardTitle>
+        </div>
+        
+        <div className="dashboard-controls">
             <div className="flex items-center gap-1 shrink-0">
               <span className="text-xs font-medium text-slate-500">LI</span>
               <input 
@@ -221,48 +188,47 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
               />
             </div>
           </div>
-        </div>
       </CardHeader>
       
       <CardContent>
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
+          <div className="dashboard-stat-box-blue">
+            <p className="dashboard-stat-label">Media Global</p>
+            <p className="dashboard-stat-value-blue">{statsGlobales.mean.toFixed(2)}</p>
+          </div>
+          <div className="dashboard-stat-box">
+            <p className="dashboard-stat-label">Mediana</p>
+            <p className="dashboard-stat-value">{statsGlobales.median.toFixed(2)}</p>
+          </div>
+          <div className="dashboard-stat-box">
+            <p className="dashboard-stat-label">Desv. Est</p>
+            <p className="dashboard-stat-value">{statsGlobales.stdDev.toFixed(2)}</p>
+          </div>
+          <div className="dashboard-stat-box">
+            <p className="dashboard-stat-label">N° Datos</p>
+            <p className="dashboard-stat-value">{chartData.length}</p>
+          </div>
+          <div className="dashboard-stat-box">
+            <p className="dashboard-stat-label">Cp Global</p>
+            <p className={`text-xl font-black ${statsGlobales.cp >= 1.33 ? 'dashboard-stat-ok' : statsGlobales.cp >= 1 ? 'dashboard-stat-warn' : 'dashboard-stat-bad'}`}>
+              {statsGlobales.cp.toFixed(2)}
+            </p>
+          </div>
+          <div className="dashboard-stat-box">
+            <p className="dashboard-stat-label">Cpk Global</p>
+            <p className={`text-xl font-black ${statsGlobales.cpk >= 1.33 ? 'dashboard-stat-ok' : statsGlobales.cpk >= 1 ? 'dashboard-stat-warn' : 'dashboard-stat-bad'}`}>
+              {statsGlobales.cpk.toFixed(2)}
+            </p>
+          </div>
+        </div>
+
         {chartData.length === 0 ? (
-          <div className="h-[300px] flex items-center justify-center text-slate-400">
+          <div className="flex items-center justify-center h-[400px] text-slate-500 font-medium bg-slate-50 rounded-xl border border-dashed border-slate-200">
             No hay datos suficientes de tiempo de llenado con hora de inicio
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
-              <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl text-center shadow-sm">
-                <p className="text-xs text-slate-500 font-medium">Cp (Llenado)</p>
-                <p className={`text-xl font-black ${statsGlobales.cp >= 1.33 ? 'text-green-600' : statsGlobales.cp >= 1 ? 'text-amber-500' : 'text-red-500'}`}>
-                  {statsGlobales.cp.toFixed(2)}
-                </p>
-              </div>
-              <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl text-center shadow-sm">
-                <p className="text-xs text-slate-500 font-medium">Cpk (Llenado)</p>
-                <p className={`text-xl font-black ${statsGlobales.cpk >= 1.33 ? 'text-green-600' : statsGlobales.cpk >= 1 ? 'text-amber-500' : 'text-red-500'}`}>
-                  {statsGlobales.cpk.toFixed(2)}
-                </p>
-              </div>
-              <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl text-center shadow-sm">
-                <p className="text-xs text-slate-500 font-medium">Media Global</p>
-                <p className="text-xl font-black text-slate-700">{statsGlobales.mean.toFixed(1)} min</p>
-              </div>
-              <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl text-center shadow-sm">
-                <p className="text-xs text-slate-500 font-medium">Desviación (σ)</p>
-                <p className="text-xl font-black text-slate-700">{statsGlobales.stdDev.toFixed(1)} min</p>
-              </div>
-              <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl text-center shadow-sm">
-                <p className="text-xs text-slate-500 font-medium">Mediana</p>
-                <p className="text-xl font-black text-slate-700">{statsGlobales.median.toFixed(1)} min</p>
-              </div>
-              <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl text-center shadow-sm">
-                <p className="text-xs text-slate-500 font-medium">Moda</p>
-                <p className="text-xl font-black text-slate-700">{statsGlobales.mode.toFixed(1)} min</p>
-              </div>
-            </div>
-
-            <div className="h-[400px] w-full mt-6 relative">
+          <div className="dashboard-chart-container w-full overflow-x-auto">
+            <div className="min-w-[800px] h-[400px] flex flex-col">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />

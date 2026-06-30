@@ -74,7 +74,10 @@ const PurgaRow = memo(({ r }: { r: PurgaRowType }) => {
       {/* Tanque */}
       <CustomTableCell className="font-black text-sm text-slate-900">{r.tanque}</CustomTableCell>
 
-       {/* Fecha Llenado / Tiempo Llenado */}
+      {/* Purga Inicial */}
+      {r.purgas.length > 0 && renderPurga(r.purgas[0], 0)}
+
+      {/* Fecha Llenado / Tiempo Llenado */}
       <CustomTableCell className="text-sm font-bold tracking-tight text-slate-700 tabular-nums">
         <div className="flex flex-col">
           <span>{formatDate(r.fechaLlenado)}</span>
@@ -84,14 +87,6 @@ const PurgaRow = memo(({ r }: { r: PurgaRowType }) => {
              </span>
           )}
         </div>
-      </CustomTableCell>
-      
-      {/* Purga Inicial */}
-      {r.purgas.length > 0 && renderPurga(r.purgas[0], 0)}
-
-      {/* Fecha Llenado */}
-      <CustomTableCell className="text-sm font-bold tracking-tight text-slate-700 tabular-nums">
-        {formatDate(r.fechaLlenado)}
       </CustomTableCell>
 
       {/* 8 Purgas */}

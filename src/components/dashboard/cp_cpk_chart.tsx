@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PurgaRow } from "@/types/proceso";
 import { parseMexicanDate } from "@/lib/utils";
+import { ProcessCapabilityAnalyzer } from "@/components/core/analisisestaditcio";
+import "@/styles/dashboard.css";
 
 interface CpCpkChartProps {
   purgas: PurgaRow[];
@@ -77,109 +79,20 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
     return data;
   }, [purgas, variable, marcaFiltro]);
 
-  // Cálculos de Cp y Cpk, Mediana y Moda
+  // Cálculos de Cp y Cpk, Mediana y Moda utilizando OOP
   const stats = useMemo(() => {
-    if (chartData.length === 0) return { mean: 0, stdDev: 0, cp: 0, cpk: 0, median: 0, mode: 0, n: 0, minVal: 0, maxVal: 0, numClasses: 0, range: 0, classWidth: 0, histogramData: [] };
+    if (chartData.length === 0) {
+      return { mean: 0, stdDev: 0, cp: 0, cpk: 0, median: 0, mode: 0, n: 0, minVal: 0, maxVal: 0, numClasses: 0, range: 0, classWidth: 0, histogramData: [] };
+    }
+    
     const values = chartData.map(d => d.valor);
+    const analyzer = new ProcessCapabilityAnalyzer(values, lsl, usl);
+    const summary = analyzer.getSummaryStats();
     
-    // Media y Desviación
-    const mean = values.reduce((a, b) => a + b, 0) / values.length;
-    const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (values.length - 1 || 1);
-    const stdDev = Math.sqrt(variance) || 0.001; // Evitar división por 0
-
-    // Cp y Cpk
-    const cpCalc = (usl - lsl) / (6 * stdDev);
-    const cpkUpper = (usl - mean) / (3 * stdDev);
-    const cpkLower = (mean - lsl) / (3 * stdDev);
-    const cpkCalc = Math.min(cpkUpper, cpkLower);
-    
-    // El usuario pidió que el máximo sea 1.33
-    const cp = Math.min(1.33, cpCalc);
-    const cpk = Math.min(1.33, cpkCalc);
-
-    // Mediana
-    const sorted = [...values].sort((a, b) => a - b);
-    const mid = Math.floor(sorted.length / 2);
-    const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-
-    // Moda
-    const freq: Record<number, number> = {};
-    let maxFreq = 0;
-    let mode = sorted[0];
-    for (const v of sorted) {
-      freq[v] = (freq[v] || 0) + 1;
-      if (freq[v] > maxFreq) {
-        maxFreq = freq[v];
-        mode = v;
-      }
-    }
-
-    // Histograma (Regla de Sturges) y Distribución Normal
-    const n = values.length;
-    let minVal = 0;
-    let maxVal = 0;
-    let numClasses = 0;
-    let range = 0;
-    let classWidth = 0;
-    let histogramData: any[] = [];
-
-    if (n > 0) {
-      minVal = Math.min(...values);
-      maxVal = Math.max(...values);
-      const rawClasses = 1 + Math.log2(n);
-      range = maxVal - minVal;
-      classWidth = range / (rawClasses > 0 ? rawClasses : 1);
-      
-      if (classWidth === 0) classWidth = 1; // Seguridad
-
-      numClasses = rawClasses; // Para mostrar en UI el valor exacto como en Excel
-      const numClassesToDraw = Math.ceil(rawClasses);
-
-      const bins = Array.from({ length: numClassesToDraw }, (_, i) => {
-        const binStart = minVal + i * classWidth;
-        const binEnd = minVal + (i + 1) * classWidth;
-        return {
-          binStart,
-          binEnd,
-          label: `[${binStart.toFixed(1)}, ${binEnd.toFixed(1)}]`,
-          count: 0,
-          midPoint: binStart + (classWidth / 2)
-        };
-      });
-
-      values.forEach(v => {
-        for (let i = 0; i < numClassesToDraw; i++) {
-          if (i === numClassesToDraw - 1) { 
-            if (v >= bins[i].binStart && v <= bins[i].binEnd) {
-              bins[i].count++;
-              break;
-            }
-          } else {
-            if (v >= bins[i].binStart && v < bins[i].binEnd) {
-              bins[i].count++;
-              break;
-            }
-          }
-        }
-      });
-
-      const scaleFactor = n * classWidth;
-      histogramData = bins.map(b => {
-        const x = b.midPoint;
-        let normalPdf = 0;
-        if (stdDev > 0) {
-          const exponent = -0.5 * Math.pow((x - mean) / stdDev, 2);
-          const coeff = 1 / (stdDev * Math.sqrt(2 * Math.PI));
-          normalPdf = coeff * Math.exp(exponent);
-        }
-        return {
-          ...b,
-          normalDist: normalPdf * scaleFactor
-        };
-      });
-    }
-
-    return { mean, stdDev, cp, cpk, median, mode, n, minVal, maxVal, numClasses, range, classWidth, histogramData };
+    return {
+      ...summary,
+      n: values.length,
+    };
   }, [chartData, usl, lsl]);
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -205,126 +118,123 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
   const yDomainMax = Math.max(usl + (usl - lsl) * 0.5, Math.max(...chartData.map(d => d.valor), usl * 1.2));
 
   return (
-    <Card className="border-border shadow-sm hover:shadow-lg transition-all duration-300 group">
-      <CardHeader className="pb-0 pt-5 px-5">
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
-          <div>
-            <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
-              <Activity className="h-5 w-5 text-slate-500" />
-              Gráfica de Control e Índices Cp/Cpk
-            </CardTitle>
-            <p className="text-sm text-slate-500 mt-1">Control Estadistico de Proceso</p>
+    <Card className="dashboard-card">
+      <CardHeader className="dashboard-card-header">
+        <div className="flex flex-col">
+          <CardTitle className="dashboard-title">Gráfica de Control</CardTitle>
+          <CardDescription className="dashboard-subtitle">
+            Capacidad del proceso (Cp, Cpk) para {variable === "tiempoPurga" ? "Tiempos de Purga" : "Tiempos de Llenado"}
+          </CardDescription>
+        </div>
+        
+        <div className="dashboard-controls">
+          <select
+            value={variable}
+            onChange={(e) => setVariable(e.target.value as any)}
+            className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+          >
+            <option value="tiempoPurga">Tiempo de Purga</option>
+            <option value="tiempoLlenado">Tiempo de Llenado</option>
+          </select>
+
+          <select
+            value={marcaFiltro}
+            onChange={(e) => setMarcaFiltro(e.target.value)}
+            className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+          >
+            <option value="todas">Todas las marcas</option>
+            {marcasDisponibles.map(m => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-xs font-medium text-slate-500">LI</span>
+            <input 
+              type="number" 
+              min="0"
+              value={lslStr} 
+              onChange={(e) => setLslStr(e.target.value)}
+              className="w-16 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
           </div>
-          
-          <div className="flex flex-wrap items-center gap-3">
-            <select
-              value={variable}
-              onChange={(e) => setVariable(e.target.value as any)}
-              className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
-            >
-              <option value="tiempoPurga">Tiempo de Purga</option>
-              <option value="tiempoLlenado">Tiempo de Llenado</option>
-            </select>
-
-            <select
-              value={marcaFiltro}
-              onChange={(e) => setMarcaFiltro(e.target.value)}
-              className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
-            >
-              <option value="todas">Todas las marcas</option>
-              {marcasDisponibles.map(m => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
-
-            <div className="flex items-center gap-1 shrink-0">
-              <span className="text-xs font-medium text-slate-500">LI</span>
-              <input 
-                type="number" 
-                min="0"
-                value={lslStr} 
-                onChange={(e) => setLslStr(e.target.value)}
-                className="w-16 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
-              />
-            </div>
-            <div className="flex items-center gap-1 shrink-0">
-              <span className="text-xs font-medium text-slate-500">LS</span>
-              <input 
-                type="number" 
-                min="0"
-                value={uslStr} 
-                onChange={(e) => setUslStr(e.target.value)}
-                className="w-16 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
-              />
-            </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-xs font-medium text-slate-500">LS</span>
+            <input 
+              type="number" 
+              min="0"
+              value={uslStr} 
+              onChange={(e) => setUslStr(e.target.value)}
+              className="w-16 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
           </div>
         </div>
       </CardHeader>
       
       <CardContent>
         {chartData.length === 0 ? (
-          <div className="h-[300px] flex items-center justify-center text-slate-400">
-            No hay datos suficientes para la gráfica
+          <div className="flex items-center justify-center h-[400px] text-slate-500 font-medium bg-slate-50 rounded-xl border border-dashed border-slate-200">
+            No hay datos suficientes para calcular Cp/Cpk.
           </div>
         ) : (
           <div className="space-y-4">
             <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
-              <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl text-center">
-                <p className="text-xs text-slate-500 font-medium">Cp</p>
+              <div className="dashboard-stat-box">
+                <p className="dashboard-stat-label">Cp</p>
                 <p className={`text-xl font-black ${stats.cp >= 1.33 ? 'text-green-600' : stats.cp >= 1 ? 'text-amber-500' : 'text-red-500'}`}>
                   {stats.cp.toFixed(2)}
                 </p>
               </div>
-              <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl text-center">
-                <p className="text-xs text-slate-500 font-medium">Cpk</p>
-                <p className={`text-xl font-black ${stats.cpk >= 1.33 ? 'text-green-600' : stats.cpk >= 1 ? 'text-amber-500' : 'text-red-500'}`}>
+              <div className="dashboard-stat-box">
+                <p className="dashboard-stat-label">Cpk</p>
+                <p className={`text-xl font-black ${stats.cpk >= 1.33 ? 'dashboard-stat-ok' : stats.cpk >= 1 ? 'dashboard-stat-warn' : 'dashboard-stat-bad'}`}>
                   {stats.cpk.toFixed(2)}
                 </p>
               </div>
-              <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl text-center">
-                <p className="text-xs text-slate-500 font-medium">Media (μ)</p>
-                <p className="text-xl font-black text-slate-700">{stats.mean.toFixed(2)}</p>
+              <div className="dashboard-stat-box">
+                <p className="dashboard-stat-label">Media (μ)</p>
+                <p className="dashboard-stat-value">{stats.mean.toFixed(2)}</p>
               </div>
-              <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl text-center">
-                <p className="text-xs text-slate-500 font-medium">Desv. Est (σ)</p>
-                <p className="text-xl font-black text-slate-700">{stats.stdDev.toFixed(2)}</p>
+              <div className="dashboard-stat-box">
+                <p className="dashboard-stat-label">Desv. Est (σ)</p>
+                <p className="dashboard-stat-value">{stats.stdDev.toFixed(2)}</p>
               </div>
-              <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl text-center">
-                <p className="text-xs text-slate-500 font-medium">Mediana</p>
-                <p className="text-xl font-black text-slate-700">{stats.median.toFixed(2)}</p>
+              <div className="dashboard-stat-box">
+                <p className="dashboard-stat-label">Mediana</p>
+                <p className="dashboard-stat-value">{stats.median.toFixed(2)}</p>
               </div>
-              <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl text-center">
-                <p className="text-xs text-slate-500 font-medium">Moda</p>
-                <p className="text-xl font-black text-slate-700">{stats.mode.toFixed(2)}</p>
+              <div className="dashboard-stat-box">
+                <p className="dashboard-stat-label">Moda</p>
+                <p className="dashboard-stat-value">{stats.mode.toFixed(2)}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mt-2">
-              <div className="bg-slate-50 border border-slate-100 p-2 rounded-xl text-center">
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">N° Datos </p>
-                <p className="text-lg font-black text-slate-700">{stats.n}</p>
+              <div className="dashboard-stat-box">
+                <p className="dashboard-stat-label">N° Datos </p>
+                <p className="dashboard-stat-value">{stats.n}</p>
               </div>
-              <div className="bg-slate-50 border border-slate-100 p-2 rounded-xl text-center">
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Mín - Máx</p>
-                <p className="text-lg font-black text-slate-700">{stats.minVal.toFixed(1)} - {stats.maxVal.toFixed(1)}</p>
+              <div className="dashboard-stat-box">
+                <p className="dashboard-stat-label">Mín - Máx</p>
+                <p className="dashboard-stat-value">{stats.minVal.toFixed(1)} - {stats.maxVal.toFixed(1)}</p>
               </div>
-              <div className="bg-slate-50 border border-slate-100 p-2 rounded-xl text-center">
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Rango</p>
-                <p className="text-lg font-black text-slate-700">{stats.range.toFixed(1)}</p>
+              <div className="dashboard-stat-box">
+                <p className="dashboard-stat-label">Rango</p>
+                <p className="dashboard-stat-value">{stats.range.toFixed(1)}</p>
               </div>
-              <div className="bg-slate-50 border border-slate-100 p-2 rounded-xl text-center">
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Clases (c) </p>
-                <p className="text-lg font-black text-slate-700">{stats.numClasses.toFixed(2)}</p>
+              <div className="dashboard-stat-box">
+                <p className="dashboard-stat-label">Clases (c) </p>
+                <p className="dashboard-stat-value">{stats.numClasses.toFixed(2)}</p>
               </div>
-              <div className="bg-slate-50 border border-slate-100 p-2 rounded-xl text-center">
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Ancho de Clases </p>
-                <p className="text-lg font-black text-slate-700">{stats.classWidth.toFixed(2)}</p>
+              <div className="dashboard-stat-box">
+                <p className="dashboard-stat-label">Ancho de Clases </p>
+                <p className="dashboard-stat-value">{stats.classWidth.toFixed(2)}</p>
               </div>
             </div>
 
-            <div className="h-[350px] w-full mt-6 relative">
-                <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-slate-500" />
+            <div className="dashboard-chart-container mt-6 relative">
+                <CardTitle className="dashboard-chart-title">
+                  <Activity className="dashboard-chart-icon" />
                   Dot Graph
                 </CardTitle>
               <ResponsiveContainer width="100%" height="100%">
@@ -373,11 +283,11 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
             </div>
 
             {/* Histograma */}
-            <div className="h-[350px] w-full mt-10 relative">
-              <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                  <BarChart4 className="h-5 w-5 text-slate-500" />
+            <div className="dashboard-chart-container mt-10 relative">
+              <CardTitle className="dashboard-chart-title">
+                  <BarChart4 className="dashboard-chart-icon" />
                   Histograma
-              </CardTitle>
+                </CardTitle>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats.histogramData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
@@ -409,9 +319,9 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
             </div>
 
             {/* Distribución Normal */}
-            <div className="h-[350px] w-full mt-10 relative">
-              <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                  <LineChartIcon className="h-5 w-5 text-slate-500" />
+            <div className="dashboard-chart-container mt-10 relative">
+              <CardTitle className="dashboard-chart-title">
+                  <LineChartIcon className="dashboard-chart-icon" />
                   Distribución Normal
                 </CardTitle>
               <ResponsiveContainer width="100%" height="100%">
