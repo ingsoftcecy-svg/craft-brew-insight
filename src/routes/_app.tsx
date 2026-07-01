@@ -4,7 +4,7 @@ import { AppSidebar } from "@/components/layout/app_sidebar";
 import { AppHeader } from "@/components/layout/app_header";
 import { useEffect } from "react";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
-import '../lib/firebase';
+import "../lib/firebase";
 
 import { redirect } from "@tanstack/react-router";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -42,18 +42,23 @@ function AppLayout() {
                 <div>
                   <h3 className="font-bold text-amber-800">Verificación de Correo Requerida</h3>
                   <p className="text-sm text-amber-700">
-                    Firebase requiere que verifiques tu correo electrónico antes de poder activar la Autenticación en 2 Pasos (MFA).
+                    Firebase requiere que verifiques tu correo electrónico antes de poder activar la
+                    Autenticación en 2 Pasos (MFA).
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={async () => {
                     const { sendEmailVerification } = await import("firebase/auth");
                     try {
                       await sendEmailVerification(user);
-                      alert("¡Correo enviado! Revisa tu bandeja de entrada (y la carpeta de spam), haz clic en el enlace y luego recarga esta página.");
+                      alert(
+                        "¡Correo enviado! Revisa tu bandeja de entrada (y la carpeta de spam), haz clic en el enlace y luego recarga esta página.",
+                      );
                     } catch (err) {
                       console.error(err);
-                      alert("Error al enviar el correo. Espera unos minutos y vuelve a intentarlo.");
+                      alert(
+                        "Error al enviar el correo. Espera unos minutos y vuelve a intentarlo.",
+                      );
                     }
                   }}
                   className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-bold text-white hover:bg-amber-600 transition-colors"

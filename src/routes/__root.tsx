@@ -1,10 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  Outlet,
-  createRootRouteWithContext,
-  HeadContent,
-  Scripts,
-} from "@tanstack/react-router";
+import { Outlet, createRootRouteWithContext, HeadContent, Scripts } from "@tanstack/react-router";
 import { type ReactNode } from "react";
 
 import appCss from "../styles/global.css?url";
@@ -18,13 +13,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Craft Brew Insight" },
+      { title: "Agenda de Control" },
       { name: "description", content: "Craft Brew Insight App" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" },
+      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap",
+      },
       {
         rel: "stylesheet",
         href: appCss,
@@ -64,7 +63,7 @@ function RootComponent() {
   useEffect(() => {
     // Si no hay usuario, o si es el superusuario, no aplicar bloqueos
     const superUserEmail = "cecilialopezsolis1122@gmail.com";
-    
+
     if (!user || user.email === superUserEmail) {
       document.body.classList.remove("dlp-active");
       return;
@@ -79,7 +78,7 @@ function RootComponent() {
 
     const preventKeys = (e: KeyboardEvent) => {
       // Bloquear Ctrl+P, Ctrl+C, Ctrl+X, Ctrl+S
-      if ((e.ctrlKey || e.metaKey) && ['p', 'c', 'x', 's'].includes(e.key.toLowerCase())) {
+      if ((e.ctrlKey || e.metaKey) && ["p", "c", "x", "s"].includes(e.key.toLowerCase())) {
         e.preventDefault();
       }
     };

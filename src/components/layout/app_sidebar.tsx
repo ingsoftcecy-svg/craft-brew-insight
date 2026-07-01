@@ -1,5 +1,15 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { Home, Calendar, Beaker, ClipboardList, CalendarDays, Clock, LogOut, Printer, TrendingUp } from "lucide-react";
+import {
+  Home,
+  Calendar,
+  Beaker,
+  ClipboardList,
+  CalendarDays,
+  Clock,
+  LogOut,
+  Printer,
+  TrendingUp,
+} from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
   Sidebar,
@@ -16,12 +26,12 @@ import {
 } from "@/components/ui/sidebar";
 
 const items = [
-  { title: "Dashboard",              url: "/",           icon: Home          },
-  { title: "Gráficos",               url: "/graficos",   icon: TrendingUp    },
-  { title: "Agenda",                 url: "/agenda",     icon: Calendar      },
-  { title: "Chequeo de Platos",    url: "/extracto",   icon: Beaker        },
-  { title: "Purgas de Trub",         url: "/purgas",     icon: ClipboardList },
-  { title: "QR de Unitanques",           url: "/admin/qr-print", icon: Printer },
+  { title: "Dashboard", url: "/", icon: Home },
+  { title: "Gráficos", url: "/graficos", icon: TrendingUp },
+  { title: "Agenda", url: "/agenda", icon: Calendar },
+  { title: "Chequeo de Platos", url: "/extracto", icon: Beaker },
+  { title: "Purgas de Trub", url: "/purgas", icon: ClipboardList },
+  { title: "QR de Unitanques", url: "/admin/qr-print", icon: Printer },
 ];
 
 export function AppSidebar() {
@@ -37,7 +47,10 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-slate-200/50 shadow-sm overflow-hidden bg-white/70 backdrop-blur-xl">
+    <Sidebar
+      collapsible="icon"
+      className="border-r border-slate-200/50 shadow-sm overflow-hidden bg-white/70 backdrop-blur-xl"
+    >
       {/* Brand */}
       <SidebarHeader className="border-b border-slate-100 bg-transparent pt-6 pb-5 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:pt-6 group-data-[collapsible=icon]:pb-5">
         <div className="flex items-center justify-center md:justify-start gap-3 px-3 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center">
@@ -50,9 +63,12 @@ export function AppSidebar() {
               <span className="text-[15px] font-black text-slate-800 tracking-tight whitespace-nowrap">
                 Cold Block
               </span>
-              <span className="text-xs font-medium text-slate-500 mt-0.5 whitespace-nowrap">Control De Purgas</span>
-              <span className="text-xs font-medium text-slate-500 mt-0.5 whitespace-nowrap">En Fermentación</span>
-
+              <span className="text-xs font-medium text-slate-500 mt-0.5 whitespace-nowrap">
+                Control De Purgas
+              </span>
+              <span className="text-xs font-medium text-slate-500 mt-0.5 whitespace-nowrap">
+                En Fermentación
+              </span>
             </div>
           )}
         </div>
@@ -60,7 +76,6 @@ export function AppSidebar() {
 
       <SidebarContent className="bg-transparent px-3 py-6 group-data-[collapsible=icon]:px-0">
         <SidebarGroup>
-          
           <SidebarGroupContent>
             <SidebarMenu className="gap-1.5">
               {items.map((item) => {
@@ -73,29 +88,37 @@ export function AppSidebar() {
                       tooltip={item.title}
                       className={`
                         group relative h-11 w-full rounded-xl transition-all duration-300 ease-out overflow-hidden group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:mx-auto
-                        ${active
-                          ? "bg-amber-50 shadow-sm ring-1 ring-amber-100/50"
-                          : "hover:bg-slate-50 hover:shadow-sm"
+                        ${
+                          active
+                            ? "bg-amber-50 shadow-sm ring-1 ring-amber-100/50"
+                            : "hover:bg-slate-50 hover:shadow-sm"
                         }
                       `}
                     >
-                      <Link to={item.url} className="flex items-center gap-3 px-3 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center z-10 w-full h-full">
+                      <Link
+                        to={item.url}
+                        className="flex items-center gap-3 px-3 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center z-10 w-full h-full"
+                      >
                         {/* Indicador de activo */}
                         {active && (
                           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-amber-500 rounded-r-full shadow-sm group-data-[collapsible=icon]:hidden" />
                         )}
-                        
-                        <div className={`
+
+                        <div
+                          className={`
                           flex items-center justify-center transition-all duration-300 shrink-0
                           ${active ? "text-amber-600 scale-110" : "text-slate-400 group-hover:text-slate-700 group-hover:scale-110"}
-                        `}>
+                        `}
+                        >
                           <item.icon className="h-[18px] w-[18px]" strokeWidth={active ? 2.5 : 2} />
                         </div>
-                        
-                        <span className={`
+
+                        <span
+                          className={`
                           text-sm transition-colors duration-300 font-medium whitespace-nowrap group-data-[collapsible=icon]:hidden
                           ${active ? "text-amber-900 font-bold" : "text-slate-600 group-hover:text-slate-900"}
-                        `}>
+                        `}
+                        >
                           {item.title}
                         </span>
                       </Link>

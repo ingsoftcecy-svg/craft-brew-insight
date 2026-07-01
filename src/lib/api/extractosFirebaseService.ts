@@ -1,11 +1,4 @@
-import {
-  collection,
-  doc,
-  writeBatch,
-  getDocs,
-  setDoc,
-  Timestamp,
-} from "firebase/firestore";
+import { collection, doc, writeBatch, getDocs, setDoc, Timestamp } from "firebase/firestore";
 import { firestore } from "../firebase";
 import type { ExtractoRow } from "@/types/proceso";
 import { obtenerPeriodo, type UploadProgress } from "./purgasFirebaseService";
@@ -16,7 +9,7 @@ const COLECCION_EXTRACTOS = "extractos_historico";
 export async function guardarExtractosEnFirestore(
   filas: ExtractoRow[],
   periodo: string,
-  onProgress?: (p: UploadProgress) => void
+  onProgress?: (p: UploadProgress) => void,
 ): Promise<{ exito: boolean; total: number; mensaje: string }> {
   const total = filas.length;
 
@@ -98,7 +91,7 @@ export async function guardarExtractosEnFirestore(
         fechaSubida: Timestamp.now(),
         actualizadoEn: Timestamp.now(),
       },
-      { merge: true }
+      { merge: true },
     );
 
     onProgress?.({
@@ -131,9 +124,7 @@ export async function guardarExtractosEnFirestore(
   }
 }
 
-export async function obtenerExtractosPorPeriodo(
-  periodo: string
-): Promise<ExtractoRow[]> {
+export async function obtenerExtractosPorPeriodo(periodo: string): Promise<ExtractoRow[]> {
   const periodoDocRef = doc(firestore, COLECCION_EXTRACTOS, periodo);
   const registrosRef = collection(periodoDocRef, "registros");
 
@@ -166,7 +157,7 @@ export async function obtenerExtractosPorPeriodo(
 
 export async function obtenerTodosLosExtractos(): Promise<ExtractoRow[]> {
   const periodos = await listarPeriodosExtractos();
-  const promesas = periodos.map(p => obtenerExtractosPorPeriodo(p.periodo));
+  const promesas = periodos.map((p) => obtenerExtractosPorPeriodo(p.periodo));
   const resultados = await Promise.all(promesas);
   return resultados.flat();
 }
@@ -196,7 +187,7 @@ export async function listarPeriodosExtractos(): Promise<PeriodoResumenExtracto[
 export async function actualizarExtractoEnFirestore(
   periodo: string,
   id: string,
-  data: Partial<ExtractoRow>
+  data: Partial<ExtractoRow>,
 ): Promise<void> {
   const docRef = doc(firestore, COLECCION_EXTRACTOS, periodo, "registros", id);
   await setDoc(docRef, { ...data, actualizadoEn: Timestamp.now() }, { merge: true });

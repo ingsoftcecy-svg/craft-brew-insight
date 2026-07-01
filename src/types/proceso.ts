@@ -25,7 +25,6 @@ export type MarcaCerveza =
   | "Busch"
   | "Budweiser";
 
-
 export type EventType = "Turno1" | "Turno2" | "Turno3";
 
 export interface AgendaEvent {
@@ -56,7 +55,7 @@ export interface ExtractoRow {
   h144: string | null;
   estado24h?: "Pendiente" | "Completado";
   estado48h?: "Pendiente" | "Completado";
-  estado72h?: "Pendiente" | "Completado"; 
+  estado72h?: "Pendiente" | "Completado";
   estado96h?: "Pendiente" | "Completado";
   estado120h?: "Pendiente" | "Completado";
   estado144h?: "Pendiente" | "Completado";

@@ -1,6 +1,12 @@
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { BRANDS } from "@/data/brands";
 
 interface TableFiltersProps {
@@ -26,7 +32,7 @@ export function TableFilters({
   setMarca,
   turno,
   setTurno,
-  resetPage
+  resetPage,
 }: TableFiltersProps) {
   const handleChange = (handler: (val: string) => void) => (val: string) => {
     handler(val);
@@ -39,12 +45,15 @@ export function TableFilters({
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={query}
-          onChange={(e) => { setQuery(e.target.value); if (resetPage) resetPage(); }}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            if (resetPage) resetPage();
+          }}
           placeholder="Buscar por tanque..."
           className="pl-9 bg-slate-50 border-slate-200 rounded-xl h-10 font-medium"
         />
       </div>
-      
+
       <Select value={periodoActual} onValueChange={handleChange(setPeriodo)}>
         <SelectTrigger className="w-36 bg-slate-50 border-slate-200 rounded-xl h-10 font-medium">
           <SelectValue placeholder="Mes" />
@@ -69,8 +78,10 @@ export function TableFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Todas las marcas</SelectItem>
-          {BRANDS.map(b => (
-            <SelectItem key={b} value={b}>{b}</SelectItem>
+          {BRANDS.map((b) => (
+            <SelectItem key={b} value={b}>
+              {b}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>

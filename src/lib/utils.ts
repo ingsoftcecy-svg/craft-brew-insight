@@ -8,17 +8,17 @@ export function cn(...inputs: ClassValue[]) {
 export function parseMexicanDate(dateString: string | Date | null | undefined): Date | null {
   if (!dateString) return null;
   if (dateString instanceof Date) return dateString;
-  
+
   const str = String(dateString).trim();
   const match = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
-  
+
   if (match) {
     let part1 = parseInt(match[1], 10);
     let part2 = parseInt(match[2], 10);
     const year = parseInt(match[3], 10);
     let hour = match[4] ? parseInt(match[4], 10) : 0;
     const minute = match[5] ? parseInt(match[5], 10) : 0;
-    
+
     if (str.toLowerCase().includes("pm") && hour < 12) hour += 12;
     if (str.toLowerCase().includes("am") && hour === 12) hour = 0;
 
@@ -31,7 +31,7 @@ export function parseMexicanDate(dateString: string | Date | null | undefined): 
     const parsed = new Date(year, month, day, hour, minute);
     if (!isNaN(parsed.getTime())) return parsed;
   }
-  
+
   const fallback = new Date(str);
   return isNaN(fallback.getTime()) ? null : fallback;
 }
@@ -79,8 +79,13 @@ export function parseDateToMexico(dateString: string | Date | null | undefined):
     const mexicoMs = utcMs + MEXICO_OFFSET_MS;
     const mx = new Date(mexicoMs);
     return new Date(
-      mx.getUTCFullYear(), mx.getUTCMonth(), mx.getUTCDate(),
-      mx.getUTCHours(), mx.getUTCMinutes(), mx.getUTCSeconds(), mx.getUTCMilliseconds()
+      mx.getUTCFullYear(),
+      mx.getUTCMonth(),
+      mx.getUTCDate(),
+      mx.getUTCHours(),
+      mx.getUTCMinutes(),
+      mx.getUTCSeconds(),
+      mx.getUTCMilliseconds(),
     );
   }
 
@@ -95,7 +100,12 @@ export function parseDateToMexico(dateString: string | Date | null | undefined):
 
   // Devolver un Date local con las componentes de hora de México
   return new Date(
-    mx.getUTCFullYear(), mx.getUTCMonth(), mx.getUTCDate(),
-    mx.getUTCHours(), mx.getUTCMinutes(), mx.getUTCSeconds(), mx.getUTCMilliseconds()
+    mx.getUTCFullYear(),
+    mx.getUTCMonth(),
+    mx.getUTCDate(),
+    mx.getUTCHours(),
+    mx.getUTCMinutes(),
+    mx.getUTCSeconds(),
+    mx.getUTCMilliseconds(),
   );
 }

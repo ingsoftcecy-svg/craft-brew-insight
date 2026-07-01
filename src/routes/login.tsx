@@ -1,8 +1,17 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { signInWithEmailAndPassword, getMultiFactorResolver, PhoneAuthProvider, PhoneMultiFactorGenerator, RecaptchaVerifier, MultiFactorResolver, setPersistence, browserLocalPersistence } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  getMultiFactorResolver,
+  PhoneAuthProvider,
+  PhoneMultiFactorGenerator,
+  RecaptchaVerifier,
+  MultiFactorResolver,
+  setPersistence,
+  browserLocalPersistence,
+} from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -17,8 +26,8 @@ declare global {
 export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>): { redirect?: string } => {
     return {
-      redirect: typeof search.redirect === 'string' ? search.redirect : undefined,
-    }
+      redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+    };
   },
   beforeLoad: () => {
     const { isAuthenticated } = useAuthStore.getState();
@@ -65,17 +74,19 @@ function LoginPage() {
       if (err.code === "auth/multi-factor-auth-required") {
         const resolver = getMultiFactorResolver(auth, err);
         setMfaResolver(resolver);
-        
+
         // Limpiar y recrear reCAPTCHA para SMS
         try {
           if (window.recaptchaVerifier) {
             window.recaptchaVerifier.clear();
             window.recaptchaVerifier = null;
           }
-        } catch (_) {}
-        
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          size: 'invisible'
+        } catch (ignored) {
+          // Ignorar error al limpiar recaptcha
+        }
+
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+          size: "invisible",
         });
       } else {
         setError("Credenciales incorrectas. Verifica tu correo y contraseña.");
@@ -93,22 +104,22 @@ function LoginPage() {
     try {
       // Asegurar que el reCAPTCHA esté listo
       if (!window.recaptchaVerifier) {
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          size: 'invisible'
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+          size: "invisible",
         });
       }
 
       const phoneInfoOptions = {
         multiFactorHint: mfaResolver.hints[selectedHintIndex],
-        session: mfaResolver.session
+        session: mfaResolver.session,
       };
-      
+
       const phoneAuthProvider = new PhoneAuthProvider(auth);
       const verId = await phoneAuthProvider.verifyPhoneNumber(
-        phoneInfoOptions, 
-        window.recaptchaVerifier
+        phoneInfoOptions,
+        window.recaptchaVerifier,
       );
-      
+
       setVerificationId(verId);
       setShowSmsInput(true);
     } catch (err: any) {
@@ -119,7 +130,9 @@ function LoginPage() {
           window.recaptchaVerifier.clear();
           window.recaptchaVerifier = null;
         }
-      } catch (_) {}
+      } catch (ignored) {
+        // Ignorar error al limpiar recaptcha
+      }
       setError(`Error al enviar SMS: ${err.code || err.message}`);
     } finally {
       setIsLoading(false);
@@ -129,7 +142,7 @@ function LoginPage() {
   const handleVerifySMS = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!mfaResolver || !verificationId || !smsCode) return;
-    
+
     setIsLoading(true);
     setError("");
 
@@ -162,25 +175,28 @@ function LoginPage() {
       <Card className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-white/80 bg-white/70 p-2 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-500">
         {/* Shimmer Effect Border */}
         <div className="absolute inset-0 -z-10 bg-gradient-to-br from-amber-50/50 via-transparent to-transparent pointer-events-none" />
-        
+
         <CardHeader className="space-y-4 pb-8 text-center pt-8">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-500/30 transition-transform duration-500 hover:scale-105 group">
-            <div className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <CalendarDays className="h-10 w-10 text-white drop-shadow-md animate-in slide-in-from-bottom-2 duration-700" />
+          <div className="mx-auto flex h-32 w-32 items-center justify-center rounded-2xl shadow-lg shadow-black/20 transition-transform duration-500 hover:scale-105 group overflow-hidden">
+            <img
+              src="/BREWMAN.jpeg"
+              alt="Brewman Logo"
+              className="w-full h-full object-cover animate-in slide-in-from-bottom-2 duration-700"
+            />
           </div>
           <div className="space-y-1 animate-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-backwards">
             <CardTitle className="text-3xl font-black tracking-tight text-slate-900 drop-shadow-sm">
-              Cold Block
+              Agenda de Control
             </CardTitle>
             <CardDescription className="text-slate-500 font-medium">
-              Control de Purgas en Fermentación
+              Purgas y Chequeo de Platos
             </CardDescription>
           </div>
         </CardHeader>
-        
+
         <CardContent className="px-6 pb-8 animate-in slide-in-from-bottom-6 duration-700 delay-300 fill-mode-backwards">
           <div id="recaptcha-container"></div>
-          
+
           {!mfaResolver ? (
             <form onSubmit={handleLogin} className="space-y-5">
               {error && (
@@ -203,7 +219,10 @@ function LoginPage() {
                 />
               </div>
               <div className="space-y-2.5 relative">
-                <label className="text-sm font-bold tracking-wide text-slate-700" htmlFor="password">
+                <label
+                  className="text-sm font-bold tracking-wide text-slate-700"
+                  htmlFor="password"
+                >
                   Contraseña
                 </label>
                 <div className="relative">
@@ -221,11 +240,7 @@ function LoginPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
                   >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
               </div>
@@ -236,16 +251,14 @@ function LoginPage() {
                   disabled={isLoading}
                 >
                   <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-1000 ease-in-out group-hover:translate-x-full" />
-                  
+
                   {isLoading ? (
                     <div className="flex items-center gap-3">
                       <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                       <span className="animate-pulse">Autenticando...</span>
                     </div>
                   ) : (
-                    <span className="flex items-center gap-2 drop-shadow-sm">
-                      Iniciar Sesión
-                    </span>
+                    <span className="flex items-center gap-2 drop-shadow-sm">Iniciar Sesión</span>
                   )}
                 </Button>
               </div>
@@ -269,7 +282,10 @@ function LoginPage() {
                 <div className="pt-2">
                   {mfaResolver.hints.length > 1 && (
                     <div className="space-y-2.5 mb-4 text-left">
-                      <label className="text-sm font-bold tracking-wide text-slate-700" htmlFor="phoneSelect">
+                      <label
+                        className="text-sm font-bold tracking-wide text-slate-700"
+                        htmlFor="phoneSelect"
+                      >
                         Selecciona tu número celular:
                       </label>
                       <select
@@ -305,7 +321,10 @@ function LoginPage() {
               ) : (
                 <form onSubmit={handleVerifySMS} className="space-y-4 pt-2">
                   <div className="space-y-2.5 relative">
-                    <label className="text-sm font-bold tracking-wide text-slate-700" htmlFor="smsCode">
+                    <label
+                      className="text-sm font-bold tracking-wide text-slate-700"
+                      htmlFor="smsCode"
+                    >
                       Código SMS (6 dígitos)
                     </label>
                     <Input
@@ -313,7 +332,7 @@ function LoginPage() {
                       type="text"
                       placeholder="123456"
                       value={smsCode}
-                      onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                       required
                       className="h-12 text-center text-xl tracking-[0.25em] font-mono rounded-xl border-slate-200 bg-white/50 text-slate-900 focus-visible:border-amber-500 focus-visible:ring-amber-500"
                     />

@@ -16,21 +16,21 @@ function QRPrintPage() {
   const qrContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       setBaseUrl(window.location.origin);
     }
   }, []);
 
   const handlePrint = () => {
     // Abrir ventana limpia solo con los QR
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    const printWindow = window.open("", "_blank", "width=800,height=600");
     if (!printWindow) return;
 
     // Recopilar todos los SVG de los QR
-    const cards = qrContainerRef.current?.querySelectorAll('.qr-card');
+    const cards = qrContainerRef.current?.querySelectorAll(".qr-card");
     if (!cards) return;
 
-    let cardsHtml = '';
+    let cardsHtml = "";
     cards.forEach((card) => {
       cardsHtml += `<div class="qr-card">${card.innerHTML}</div>`;
     });
@@ -39,7 +39,7 @@ function QRPrintPage() {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>QR Unitanques - Imprimir</title>
+        <title>Agenda de Control</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { font-family: system-ui, -apple-system, sans-serif; }
@@ -129,7 +129,9 @@ function QRPrintPage() {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-800">Generador de Códigos QR</h1>
-          <p className="text-slate-500">Imprime estas etiquetas para pegarlas en los tanques físicos.</p>
+          <p className="text-slate-500">
+            Imprime estas etiquetas para pegarlas en los tanques físicos.
+          </p>
         </div>
         <Button onClick={handlePrint} className="gap-2">
           <Printer className="w-4 h-4" />
@@ -140,21 +142,24 @@ function QRPrintPage() {
       <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-xl">
         <div className="max-w-md space-y-2">
           <Label htmlFor="baseurl">Enlace Base de los QR</Label>
-          <Input 
+          <Input
             id="baseurl"
-            value={baseUrl} 
+            value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
             className="bg-white"
           />
         </div>
       </div>
 
-      <div ref={qrContainerRef} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+      <div
+        ref={qrContainerRef}
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5"
+      >
         {tanques.map((tanque) => {
           const scanUrl = `${baseUrl}/scan/${tanque}`;
           return (
-            <div 
-              key={tanque} 
+            <div
+              key={tanque}
               className="qr-card flex flex-col items-center overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow"
             >
               {/* Header con color */}
@@ -168,12 +173,7 @@ function QRPrintPage() {
               </div>
               {/* QR */}
               <div className="flex-1 flex items-center justify-center py-4 px-3">
-                <QRCodeSVG 
-                  value={scanUrl} 
-                  size={140}
-                  level="H"
-                  includeMargin={false}
-                />
+                <QRCodeSVG value={scanUrl} size={140} level="H" includeMargin={false} />
               </div>
               {/* Footer */}
               <div className="w-full py-2 bg-slate-50 border-t border-slate-100 text-center">

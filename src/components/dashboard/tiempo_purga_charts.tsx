@@ -1,5 +1,14 @@
 import { useMemo, useState } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceArea } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceArea,
+} from "recharts";
 import { PurgaRow } from "@/types/proceso";
 import { format, parseISO, isValid } from "date-fns";
 import { es } from "date-fns/locale";
@@ -15,34 +24,42 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
   const [filtroMarca, setFiltroMarca] = useState<string>("todas");
 
   // Obtener opciones únicas
-  const tanquesUnicos = useMemo(() => Array.from(new Set(purgas.map(p => p.tanque))).sort(), [purgas]);
-  const marcasUnicas = useMemo(() => Array.from(new Set(purgas.map(p => p.marca))).sort(), [purgas]);
+  const tanquesUnicos = useMemo(
+    () => Array.from(new Set(purgas.map((p) => p.tanque))).sort(),
+    [purgas],
+  );
+  const marcasUnicas = useMemo(
+    () => Array.from(new Set(purgas.map((p) => p.marca))).sort(),
+    [purgas],
+  );
 
   const { porDia, porSemana, porMes } = useMemo(() => {
     // Filtrar purgas según los selectores
-    const purgasFiltradas = purgas.filter(p => {
+    const purgasFiltradas = purgas.filter((p) => {
       const cumpleTanque = filtroTanque === "todos" || p.tanque === filtroTanque;
       const cumpleMarca = filtroMarca === "todas" || p.marca === filtroMarca;
       return cumpleTanque && cumpleMarca;
     });
 
     // 1. Extraer todos los tiempos de purga válidos
-    const todosTiempos = purgasFiltradas.flatMap((p) =>
-      p.purgas
-        .filter((purge) => purge.tiempo != null && purge.tiempo > 0 && purge.fechaHora)
-        .map((purge) => ({
-          tiempo: purge.tiempo!,
-          fecha: parseISO(purge.fechaHora!),
-        }))
-    ).filter((p) => isValid(p.fecha));
+    const todosTiempos = purgasFiltradas
+      .flatMap((p) =>
+        p.purgas
+          .filter((purge) => purge.tiempo != null && purge.tiempo > 0 && purge.fechaHora)
+          .map((purge) => ({
+            tiempo: purge.tiempo!,
+            fecha: parseISO(purge.fechaHora!),
+          })),
+      )
+      .filter((p) => isValid(p.fecha));
 
     // Función auxiliar para agrupar y promediar
     const agruparYPromediar = (
       agrupador: (fecha: Date) => string,
-      formateadorEtiqueta: (key: string) => string
+      formateadorEtiqueta: (key: string) => string,
     ) => {
       const grupos: Record<string, number[]> = {};
-      
+
       todosTiempos.forEach(({ tiempo, fecha }) => {
         const key = agrupador(fecha);
         if (!grupos[key]) grupos[key] = [];
@@ -67,7 +84,7 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
       (k) => {
         const d = parseISO(k);
         return format(d, "dd/MM/yyyy"); // ej. 17/04/2026
-      }
+      },
     );
 
     // Agrupación por Semana (ej. 2026-W16)
@@ -75,8 +92,8 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
       (f) => format(f, "yyyy-II"), // ISO week year - ISO week (e.g. 2026-16)
       (k) => {
         const [, week] = k.split("-");
-        return week.replace(/^0/, ''); // Remover 0 a la izquierda, ej. "16"
-      }
+        return week.replace(/^0/, ""); // Remover 0 a la izquierda, ej. "16"
+      },
     );
 
     // Agrupación por Mes (ej. 2026-06)
@@ -85,7 +102,7 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
       (k) => {
         const d = parseISO(`${k}-01`);
         return format(d, "MMMM yyyy", { locale: es }).toUpperCase();
-      }
+      },
     );
 
     return { porDia, porSemana, porMes };
@@ -99,7 +116,7 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
           <h3 className="text-sm font-bold text-slate-700 capitalize">{title.toLowerCase()}</h3>
           <p className="text-xs text-slate-500">Promedio en minutos</p>
         </div>
-        
+
         {/* Gráfica */}
         <div className="flex-1 w-full relative">
           {data.length === 0 ? (
@@ -110,37 +127,41 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis 
-                  dataKey="etiqueta" 
+                <XAxis
+                  dataKey="etiqueta"
                   tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
-                  axisLine={{ stroke: "#e2e8f0" }} 
+                  axisLine={{ stroke: "#e2e8f0" }}
                   tickLine={false}
                   dy={10}
                 />
-                <YAxis 
-                  domain={[0, 15]} 
+                <YAxis
+                  domain={[0, 15]}
                   tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
-                  axisLine={{ stroke: "#e2e8f0" }} 
-                  tickLine={false} 
+                  axisLine={{ stroke: "#e2e8f0" }}
+                  tickLine={false}
                 />
-                
+
                 {/* Zonas de control */}
                 <ReferenceArea y1={1} y2={7} fill="#bbf7d0" fillOpacity={0.6} />
                 <ReferenceArea y1={7} y2={15} fill="#fecaca" fillOpacity={0.6} />
                 <ReferenceArea y1={0} y2={1} fill="#fecaca" fillOpacity={0.6} />
-                
-                <Tooltip 
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: "8px",
+                    border: "none",
+                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                  }}
                   formatter={(value: number) => [`${value} min`, "Promedio"]}
                 />
-                
-                <Line 
-                  type="monotone" 
-                  dataKey="promedio" 
-                  stroke="#334155" 
-                  strokeWidth={2} 
+
+                <Line
+                  type="monotone"
+                  dataKey="promedio"
+                  stroke="#334155"
+                  strokeWidth={2}
                   isAnimationActive={false}
-                  dot={{ r: 4, fill: "#7b98d5", strokeWidth: 2, stroke: "#ffffff" }} 
+                  dot={{ r: 4, fill: "#7b98d5", strokeWidth: 2, stroke: "#ffffff" }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -158,11 +179,12 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
             <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
               <Clock className="h-5 w-5 text-slate-500" />
               Tiempos de Purga de Trub
-              
             </CardTitle>
-            <p className="text-sm text-slate-500 mt-1">Análisis de tendencia por día, semana y mes</p>
+            <p className="text-sm text-slate-500 mt-1">
+              Análisis de tendencia por día, semana y mes
+            </p>
           </div>
-          
+
           <div className="flex flex-wrap items-center gap-3">
             <select
               value={filtroTanque}
@@ -170,25 +192,29 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
               className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
             >
               <option value="todos">Todos los tanques</option>
-              {tanquesUnicos.map(t => (
-                <option key={t} value={t}>T-{t}</option>
+              {tanquesUnicos.map((t) => (
+                <option key={t} value={t}>
+                  T-{t}
+                </option>
               ))}
             </select>
-            
+
             <select
               value={filtroMarca}
               onChange={(e) => setFiltroMarca(e.target.value)}
               className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
             >
               <option value="todas">Todas las marcas</option>
-              {marcasUnicas.map(m => (
-                <option key={m} value={m} className="capitalize">{m}</option>
+              {marcasUnicas.map((m) => (
+                <option key={m} value={m} className="capitalize">
+                  {m}
+                </option>
               ))}
             </select>
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent>
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           <ChartPanel title="PURGADO DE TRUB POR DÍA" data={porDia} />

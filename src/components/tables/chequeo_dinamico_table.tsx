@@ -22,7 +22,7 @@ function formatDate(isoString?: string | null) {
 }
 
 export function ChequeoDinamicoTable({ rows, horaLabel }: ChequeoDinamicoTableProps) {
-  const toggleEstadoChequeo = useOperacionesStore(s => s.toggleEstadoChequeo);
+  const toggleEstadoChequeo = useOperacionesStore((s) => s.toggleEstadoChequeo);
 
   return (
     <div className="w-full overflow-x-auto">
@@ -32,27 +32,35 @@ export function ChequeoDinamicoTable({ rows, horaLabel }: ChequeoDinamicoTablePr
             <CustomTableHead>Marca</CustomTableHead>
             <CustomTableHead className="text-center">Tanque</CustomTableHead>
             <CustomTableHead className="text-center">Fecha Llenado</CustomTableHead>
-            <CustomTableHead className="text-center">Fecha y Hora Chequeo {horaLabel}</CustomTableHead>
+            <CustomTableHead className="text-center">
+              Fecha y Hora Chequeo {horaLabel}
+            </CustomTableHead>
             <CustomTableHead className="border-r-0 text-center">Estado</CustomTableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.map((r) => {
             const propNameEstado = `estado${horaLabel}` as keyof ExtractoRow;
-            const propNameFecha = `h${horaLabel.replace('h', '')}` as keyof ExtractoRow;
-            
+            const propNameFecha = `h${horaLabel.replace("h", "")}` as keyof ExtractoRow;
+
             const isCompletado = r[propNameEstado] === "Completado";
             const fechaChequeo = r[propNameFecha] as string | null;
 
             return (
-              <TableRow key={r.id} className={`hover:bg-amber-50/60 transition-colors border-b border-slate-100 group ${isCompletado ? "opacity-75 bg-slate-50/40 hover:bg-slate-50/60" : ""}`}>
-                
+              <TableRow
+                key={r.id}
+                className={`hover:bg-amber-50/60 transition-colors border-b border-slate-100 group ${isCompletado ? "opacity-75 bg-slate-50/40 hover:bg-slate-50/60" : ""}`}
+              >
                 <CustomTableCell className="py-3">
                   <span className="inline-flex items-center rounded-lg bg-blue-100 px-3 py-1 text-sm font-black text-blue-800 border border-blue-200 shadow-sm">
                     {r.marca}
                   </span>
                 </CustomTableCell>
-                <CustomTableCell className={`font-black text-sm text-slate-900 text-center ${isCompletado ? "line-through opacity-50" : ""}`}>{r.tanque}</CustomTableCell>
+                <CustomTableCell
+                  className={`font-black text-sm text-slate-900 text-center ${isCompletado ? "line-through opacity-50" : ""}`}
+                >
+                  {r.tanque}
+                </CustomTableCell>
                 <CustomTableCell className="text-sm font-bold tracking-tight text-slate-700 tabular-nums text-center">
                   {formatDate(r.fechaLlenado)}
                 </CustomTableCell>
@@ -66,9 +74,10 @@ export function ChequeoDinamicoTable({ rows, horaLabel }: ChequeoDinamicoTablePr
                       disabled={isCompletado}
                       className={`
                         relative flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-300
-                        ${isCompletado 
-                          ? 'bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-default' 
-                          : 'bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200 hover:shadow-sm cursor-pointer hover:scale-105 active:scale-95'
+                        ${
+                          isCompletado
+                            ? "bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-default"
+                            : "bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200 hover:shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                         }
                       `}
                     >

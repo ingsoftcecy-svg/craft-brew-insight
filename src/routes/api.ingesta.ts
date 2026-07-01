@@ -2,12 +2,21 @@ import { createFileRoute } from "@tanstack/react-router";
 import { guardarExtractosEnFirestore } from "@/lib/api/extractosFirebaseService";
 import { guardarPurgasEnFirestore, obtenerPeriodo } from "@/lib/api/purgasFirebaseService";
 import { toMexicoISOString } from "@/lib/utils";
-import type { ExtractoRow, PurgaRow, PurgaEntry, MarcaCerveza, ExtractoEstado } from "@/types/proceso";
+import type {
+  ExtractoRow,
+  PurgaRow,
+  PurgaEntry,
+  MarcaCerveza,
+  ExtractoEstado,
+} from "@/types/proceso";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
 // API Key de seguridad (Se debe configurar en las variables de entorno del servidor o en .env)
-const API_KEY_SECRETA = process.env.API_KEY_SECRETA || process.env.VITE_API_KEY_SECRETA || "brew-insight-secure-token-2026";
+const API_KEY_SECRETA =
+  process.env.API_KEY_SECRETA ||
+  process.env.VITE_API_KEY_SECRETA ||
+  "brew-insight-secure-token-2026";
 
 export const Route = createFileRoute("/api/ingesta")({
   server: {
@@ -25,20 +34,29 @@ export const Route = createFileRoute("/api/ingesta")({
 
           // 1.5. Autenticarse en Firebase para tener permisos de escritura
           const apiEmail = process.env.API_FIREBASE_EMAIL || process.env.VITE_API_FIREBASE_EMAIL;
-          const apiPassword = process.env.API_FIREBASE_PASSWORD || process.env.VITE_API_FIREBASE_PASSWORD;
+          const apiPassword =
+            process.env.API_FIREBASE_PASSWORD || process.env.VITE_API_FIREBASE_PASSWORD;
 
           if (apiEmail && apiPassword) {
             try {
               await signInWithEmailAndPassword(auth, apiEmail, apiPassword);
             } catch (authError: any) {
               console.error("Error autenticando a la API en Firebase:", authError);
-              return new Response(JSON.stringify({ error: "Error de autenticación interna de la API en Firebase. " + authError.message }), {
-                status: 500,
-                headers: { "Content-Type": "application/json" },
-              });
+              return new Response(
+                JSON.stringify({
+                  error:
+                    "Error de autenticación interna de la API en Firebase. " + authError.message,
+                }),
+                {
+                  status: 500,
+                  headers: { "Content-Type": "application/json" },
+                },
+              );
             }
           } else {
-            console.warn("⚠️ API_FIREBASE_EMAIL y/o API_FIREBASE_PASSWORD no configurados en las variables de entorno. Podría fallar por falta de permisos.");
+            console.warn(
+              "⚠️ API_FIREBASE_EMAIL y/o API_FIREBASE_PASSWORD no configurados en las variables de entorno. Podría fallar por falta de permisos.",
+            );
           }
 
           // 2. Extraer datos del body enviado
@@ -49,18 +67,24 @@ export const Route = createFileRoute("/api/ingesta")({
           } catch (err: any) {
             console.error("Error al parsear JSON:", err.message);
             console.error("Snippet del body:", rawBody.substring(0, 500));
-            return new Response(JSON.stringify({ 
-              error: `JSON inválido: ${err.message}`, 
-              snippet: rawBody.substring(0, 200) 
-            }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
+            return new Response(
+              JSON.stringify({
+                error: `JSON inválido: ${err.message}`,
+                snippet: rawBody.substring(0, 200),
+              }),
+              {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+              },
+            );
           }
 
-          console.log("📥 [API Ingesta Batch] Petición recibida. Tipo de datos:", Array.isArray(payload) ? `Array (${payload.length} items)` : typeof payload);
+          console.log(
+            "📥 [API Ingesta Batch] Petición recibida. Tipo de datos:",
+            Array.isArray(payload) ? `Array (${payload.length} items)` : typeof payload,
+          );
           console.log("🔍 Snippet del cuerpo:", rawBody.substring(0, 300));
-          
+
           let rowsToProcess: any[] = [];
           if (Array.isArray(payload)) {
             rowsToProcess = payload;
@@ -69,13 +93,17 @@ export const Route = createFileRoute("/api/ingesta")({
           }
 
           if (rowsToProcess.length === 0) {
-            return new Response(JSON.stringify({ error: "Cuerpo de solicitud vacío o no es un array válido" }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
+            return new Response(
+              JSON.stringify({ error: "Cuerpo de solicitud vacío o no es un array válido" }),
+              {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+              },
+            );
           }
 
-          const { doc, setDoc, Timestamp, getDocs, collection, writeBatch } = await import("firebase/firestore");
+          const { doc, setDoc, Timestamp, getDocs, collection, writeBatch } =
+            await import("firebase/firestore");
           const { firestore } = await import("@/lib/firebase");
 
           // Helper de parsing robusto de fecha
@@ -83,14 +111,16 @@ export const Route = createFileRoute("/api/ingesta")({
             if (!rawFecha) return null;
             let fechaBase: Date;
             const strFecha = String(rawFecha).trim();
-            const matchDmy = strFecha.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
+            const matchDmy = strFecha.match(
+              /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/,
+            );
             if (matchDmy) {
               let part1 = parseInt(matchDmy[1], 10);
               let part2 = parseInt(matchDmy[2], 10);
               const year = parseInt(matchDmy[3], 10);
               let hour = matchDmy[4] ? parseInt(matchDmy[4], 10) : 0;
               const minute = matchDmy[5] ? parseInt(matchDmy[5], 10) : 0;
-              
+
               // Detectar AM/PM
               if (strFecha.toLowerCase().includes("pm") && hour < 12) hour += 12;
               if (strFecha.toLowerCase().includes("am") && hour === 12) hour = 0;
@@ -111,27 +141,45 @@ export const Route = createFileRoute("/api/ingesta")({
             return isNaN(fechaBase.getTime()) ? null : fechaBase;
           };
 
-          const addHours = (d: Date, h: number) => toMexicoISOString(new Date(d.getTime() + h * 60 * 60 * 1000));
+          const addHours = (d: Date, h: number) =>
+            toMexicoISOString(new Date(d.getTime() + h * 60 * 60 * 1000));
 
           // Agrupar filas mapeadas por periodo
-          const filasPorPeriodo: Record<string, { extracto: ExtractoRow; purga: PurgaRow; eventosAgenda?: any[] }[]> = {};
+          const filasPorPeriodo: Record<
+            string,
+            { extracto: ExtractoRow; purga: PurgaRow; eventosAgenda?: any[] }[]
+          > = {};
 
           for (const [index, rawRow] of rowsToProcess.entries()) {
-            let tanque: any, marca: any, rawFechaLlenado: any, rawFecha: any, h24: any, h48: any, h72: any, h96: any, h120: any, h144: any;
+            let tanque: any,
+              marca: any,
+              rawFechaLlenado: any,
+              rawFecha: any,
+              h24: any,
+              h48: any,
+              h72: any,
+              h96: any,
+              h120: any,
+              h144: any;
 
             if (Array.isArray(rawRow)) {
               // Si es un Array de Arrays (formato ExcelData crudo de Power Automate)
               // Omitir cabeceras si la primera fila las contiene
-              if (index === 0 && (String(rawRow[0]).toLowerCase().includes("marca") || String(rawRow[1]).toLowerCase().includes("tanque") || String(rawRow[1]).toLowerCase().includes("fermentador"))) {
+              if (
+                index === 0 &&
+                (String(rawRow[0]).toLowerCase().includes("marca") ||
+                  String(rawRow[1]).toLowerCase().includes("tanque") ||
+                  String(rawRow[1]).toLowerCase().includes("fermentador"))
+              ) {
                 continue;
               }
               marca = rawRow[0] || rawRow[9];
               tanque = rawRow[1] || rawRow[10];
               // rawRow[5] (A a F), rawRow[3] (C a F), rawRow[2] (A a C o limpio)
               rawFecha = rawRow[5] || rawRow[3] || rawRow[2] || rawRow[11];
-              h24 = (rawRow[3] !== rawFecha) ? (rawRow[3] || rawRow[12]) : rawRow[12];
+              h24 = rawRow[3] !== rawFecha ? rawRow[3] || rawRow[12] : rawRow[12];
               h48 = rawRow[4] || rawRow[13];
-              h72 = (rawRow[5] !== rawFecha) ? (rawRow[5] || rawRow[14]) : rawRow[14];
+              h72 = rawRow[5] !== rawFecha ? rawRow[5] || rawRow[14] : rawRow[14];
               h96 = rawRow[6] || rawRow[15];
               h120 = rawRow[7] || rawRow[16];
               h144 = rawRow[8] || rawRow[17];
@@ -139,16 +187,33 @@ export const Route = createFileRoute("/api/ingesta")({
             } else if (rawRow && typeof rawRow === "object") {
               // Buscar keys sin importar mayúsculas/minúsculas ni espacios exactos
               const findKey = (searchStrings: string[]) => {
-                const searchLower = searchStrings.map(s => s.toLowerCase());
-                const key = Object.keys(rawRow).find(k => searchLower.includes(k.toLowerCase().trim()));
+                const searchLower = searchStrings.map((s) => s.toLowerCase());
+                const key = Object.keys(rawRow).find((k) =>
+                  searchLower.includes(k.toLowerCase().trim()),
+                );
                 return key ? rawRow[key] : undefined;
               };
 
               marca = String(findKey(["marca", "Column1"]) || "").trim();
+              if (/^pac.?fico$/i.test(marca)) {
+                marca = "Pacifico";
+              }
               tanque = String(findKey(["tanque", "fermentador", "Column2"]) || "").trim();
-              rawFechaLlenado = findKey (["fecha inicio llenado", "fechainiciollenado", "fecha_inicio_llenado","Column F"])
-              rawFecha = findKey(["fecha fin llenado", "fechafinllenado", "fecha_llenado", "Column3", "Column6", "Column G"]);
-              
+              rawFechaLlenado = findKey([
+                "fecha inicio llenado",
+                "fechainiciollenado",
+                "fecha_inicio_llenado",
+                "Column F",
+              ]);
+              rawFecha = findKey([
+                "fecha fin llenado",
+                "fechafinllenado",
+                "fecha_llenado",
+                "Column3",
+                "Column6",
+                "Column G",
+              ]);
+
               h24 = String(findKey(["h24", "Column4"]) || "").trim();
               h48 = String(findKey(["h48", "Column5"]) || "").trim();
               h72 = String(findKey(["h72", "Column6"]) || "").trim();
@@ -163,7 +228,7 @@ export const Route = createFileRoute("/api/ingesta")({
 
             const fechaFinObj = parseFecha(rawFecha);
             const fechaInicioObj = parseFecha(rawFechaLlenado);
-            
+
             if (!fechaFinObj || fechaFinObj.getFullYear() < 2000) continue;
             if (!fechaInicioObj || fechaInicioObj.getFullYear() < 2000) continue;
 
@@ -173,7 +238,8 @@ export const Route = createFileRoute("/api/ingesta")({
 
             const sanitizeDate = (val: string | undefined, hoursToAdd: number) => {
               if (!val || val.trim() === "") return addHours(fechaBase, hoursToAdd);
-              if (val.includes("1900") || val.includes("1899")) return addHours(fechaBase, hoursToAdd);
+              if (val.includes("1900") || val.includes("1899"))
+                return addHours(fechaBase, hoursToAdd);
               return String(val).trim();
             };
 
@@ -221,7 +287,7 @@ export const Route = createFileRoute("/api/ingesta")({
                 tiempo: null,
                 realiza: null,
               });
-              
+
               eventosAgenda.push({
                 id: `ev-auto-${tanque || fechaBase.getTime()}-p${i}`,
                 titulo: `Purga ${i} - Tanque ${tanque || "S/N"}`,
@@ -233,7 +299,9 @@ export const Route = createFileRoute("/api/ingesta")({
               });
             }
 
-            const fechaEvento72 = h72 ? parseFecha(h72) : new Date(fechaBase.getTime() + 72 * 3600000);
+            const fechaEvento72 = h72
+              ? parseFecha(h72)
+              : new Date(fechaBase.getTime() + 72 * 3600000);
             if (fechaEvento72) {
               eventosAgenda.push({
                 id: `ev-auto-ext-72-h72-${tanque || fechaBase.getTime()}`,
@@ -252,7 +320,7 @@ export const Route = createFileRoute("/api/ingesta")({
               fecha: toMexicoISOString(fechaBase),
               marca: marca as MarcaCerveza,
               fechaInicioLlenado: toMexicoISOString(fechaInicioObj),
-              
+
               fechaLlenado: toMexicoISOString(fechaFinObj),
               horas: "0",
               historicas: "0",
@@ -262,7 +330,11 @@ export const Route = createFileRoute("/api/ingesta")({
             if (!filasPorPeriodo[periodo]) {
               filasPorPeriodo[periodo] = [];
             }
-            filasPorPeriodo[periodo].push({ extracto: filaExtracto, purga: filaPurga, eventosAgenda });
+            filasPorPeriodo[periodo].push({
+              extracto: filaExtracto,
+              purga: filaPurga,
+              eventosAgenda,
+            });
           }
 
           let totalNuevosGuardados = 0;
@@ -270,11 +342,11 @@ export const Route = createFileRoute("/api/ingesta")({
           // Procesar e insertar en Firestore por periodo para optimizar consultas de existencia
           for (const periodo of Object.keys(filasPorPeriodo)) {
             const items = filasPorPeriodo[periodo];
-            
+
             // Obtener todos los IDs existentes de este periodo para omitir duplicados
             const extColRef = collection(firestore, "extractos_historico", periodo, "registros");
             const snapExt = await getDocs(extColRef);
-            const idsExistentes = new Set(snapExt.docs.map(d => d.id));
+            const idsExistentes = new Set(snapExt.docs.map((d) => d.id));
 
             let batch = writeBatch(firestore);
             let registrosEnBatch = 0;
@@ -282,14 +354,26 @@ export const Route = createFileRoute("/api/ingesta")({
             for (const item of items) {
               if (!idsExistentes.has(item.extracto.id)) {
                 // Guardar extracto
-                const docExtRef = doc(firestore, "extractos_historico", periodo, "registros", item.extracto.id);
+                const docExtRef = doc(
+                  firestore,
+                  "extractos_historico",
+                  periodo,
+                  "registros",
+                  item.extracto.id,
+                );
                 batch.set(docExtRef, {
                   ...item.extracto,
                   creadoEn: Timestamp.now(),
                 });
 
                 // Guardar purga
-                const docPurgaRef = doc(firestore, "purgas_historico", periodo, "registros", item.purga.id);
+                const docPurgaRef = doc(
+                  firestore,
+                  "purgas_historico",
+                  periodo,
+                  "registros",
+                  item.purga.id,
+                );
                 batch.set(docPurgaRef, {
                   ...item.purga,
                   creadoEn: Timestamp.now(),
@@ -302,10 +386,14 @@ export const Route = createFileRoute("/api/ingesta")({
                 if (item.eventosAgenda) {
                   for (const evento of item.eventosAgenda) {
                     const docEventoRef = doc(firestore, "agenda_eventos", evento.id);
-                    batch.set(docEventoRef, {
-                      ...evento,
-                      creadoEn: Timestamp.now(),
-                    }, { merge: true });
+                    batch.set(
+                      docEventoRef,
+                      {
+                        ...evento,
+                        creadoEn: Timestamp.now(),
+                      },
+                      { merge: true },
+                    );
                     registrosEnBatch++;
                   }
                 }
@@ -329,42 +417,58 @@ export const Route = createFileRoute("/api/ingesta")({
               const totalExt = snapExtActualizado.size;
 
               const periodoExtRef = doc(firestore, "extractos_historico", periodo);
-              await setDoc(periodoExtRef, {
-                periodo,
-                totalRegistros: totalExt,
-                fechaSubida: Timestamp.now(),
-                actualizadoEn: Timestamp.now(),
-              }, { merge: true });
+              await setDoc(
+                periodoExtRef,
+                {
+                  periodo,
+                  totalRegistros: totalExt,
+                  fechaSubida: Timestamp.now(),
+                  actualizadoEn: Timestamp.now(),
+                },
+                { merge: true },
+              );
 
               const purgasColRef = collection(firestore, "purgas_historico", periodo, "registros");
               const snapPurgasActualizado = await getDocs(purgasColRef);
               const totalPurgas = snapPurgasActualizado.size;
 
               const periodoPurgasRef = doc(firestore, "purgas_historico", periodo);
-              await setDoc(periodoPurgasRef, {
-                periodo,
-                totalRegistros: totalPurgas,
-                fechaSubida: Timestamp.now(),
-                actualizadoEn: Timestamp.now(),
-              }, { merge: true });
+              await setDoc(
+                periodoPurgasRef,
+                {
+                  periodo,
+                  totalRegistros: totalPurgas,
+                  fechaSubida: Timestamp.now(),
+                  actualizadoEn: Timestamp.now(),
+                },
+                { merge: true },
+              );
             }
           }
 
-          console.log(`🎉 [API Ingesta Batch] Completado con éxito. Nuevos registros insertados: ${totalNuevosGuardados}`);
-          return new Response(JSON.stringify({ 
-            exito: true, 
-            mensaje: `Procesamiento completado. Se insertaron ${totalNuevosGuardados} filas nuevas sin duplicados.`,
-            nuevos: totalNuevosGuardados 
-          }), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
+          console.log(
+            `🎉 [API Ingesta Batch] Completado con éxito. Nuevos registros insertados: ${totalNuevosGuardados}`,
+          );
+          return new Response(
+            JSON.stringify({
+              exito: true,
+              mensaje: `Procesamiento completado. Se insertaron ${totalNuevosGuardados} filas nuevas sin duplicados.`,
+              nuevos: totalNuevosGuardados,
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            },
+          );
         } catch (error: any) {
           console.error("Error en API Ingesta:", error);
-          return new Response(JSON.stringify({ error: error.message || "Error interno del servidor" }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
+          return new Response(
+            JSON.stringify({ error: error.message || "Error interno del servidor" }),
+            {
+              status: 500,
+              headers: { "Content-Type": "application/json" },
+            },
+          );
         }
       },
     },

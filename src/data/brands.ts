@@ -25,7 +25,7 @@ export const BRANDS: MarcaCerveza[] = [
   "Victoria",
   "Modelo Especial",
   "Busch",
-  "Budweiser"
+  "Budweiser",
 ];
 
 export const TANKS = Array.from({ length: 45 }, (_, i) => `TK-${101 + i}`);

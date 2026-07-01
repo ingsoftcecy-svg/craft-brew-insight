@@ -6,10 +6,10 @@ import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 
 export default defineConfig({
   plugins: [
-    tanstackStart({ 
-      server: { 
+    tanstackStart({
+      server: {
         entry: "server",
-      }
+      },
     }),
     tsconfigPaths(),
     react(),
@@ -17,5 +17,5 @@ export default defineConfig({
   ],
   server: {
     port: 8081,
-  }
+  },
 });

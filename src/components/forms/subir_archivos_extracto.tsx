@@ -11,10 +11,8 @@ import {
   Trash2,
   CalendarDays,
 } from "lucide-react";
-import * as XLSX from "xlsx";
-import {
-  guardarExtractosEnFirestore,
-} from "@/lib/api/extractosFirebaseService";
+import ExcelJS from "exceljs";
+import { guardarExtractosEnFirestore } from "@/lib/api/extractosFirebaseService";
 import {
   obtenerPeriodo,
   guardarPurgasEnFirestore,
@@ -46,6 +44,7 @@ function normalizarLlave(raw: string): string {
 }
 
 function parsearFechaExcel(valor: any): Date | null {
+  if (valor instanceof Date) return valor;
   if (valor == null || valor === "") return null;
 
   const str = String(valor).trim();
@@ -71,7 +70,7 @@ function parsearFechaExcel(valor: any): Date | null {
     const parts = str.split(" ");
     const fechaPart = parts[0];
     const horaPart = parts[1];
-    
+
     const isPM = str.toLowerCase().includes("pm");
     const isAM = str.toLowerCase().includes("am");
 
@@ -87,7 +86,7 @@ function parsearFechaExcel(valor: any): Date | null {
       let [hh, mm] = horaPart.split(":").map(Number);
       if (isPM && hh < 12) hh += 12;
       if (isAM && hh === 12) hh = 0;
-      
+
       if (!isNaN(hh)) fecha.setHours(hh);
       if (!isNaN(mm)) fecha.setMinutes(mm);
     }
@@ -161,23 +160,38 @@ function limpiarYMapear(filasJson: any[]): ResultadoLimpieza {
         fila[normalizada] = filaOriginal[llave];
       } else {
         // Mapeo flexible para columnas que puedan llamarse "24 HRS", "CHEQUEO 24 HRS", etc.
-        if (normalizada.includes("24") && normalizada.includes("HRS")) fila["PLATO_24_HRS"] = filaOriginal[llave];
-        else if (normalizada.includes("48") && normalizada.includes("HRS")) fila["PLATO_48_HRS"] = filaOriginal[llave];
-        else if (normalizada.includes("72") && normalizada.includes("HRS")) fila["PLATO_72_HRS"] = filaOriginal[llave];
-        else if (normalizada.includes("96") && normalizada.includes("HRS")) fila["PLATO_96_HRS"] = filaOriginal[llave];
-        else if (normalizada.includes("120") && normalizada.includes("HRS")) fila["PLATO_120_HRS"] = filaOriginal[llave];
-        else if (normalizada.includes("144") && normalizada.includes("HRS")) fila["PLATO_144_HRS"] = filaOriginal[llave];
+        if (normalizada.includes("24") && normalizada.includes("HRS"))
+          fila["PLATO_24_HRS"] = filaOriginal[llave];
+        else if (normalizada.includes("48") && normalizada.includes("HRS"))
+          fila["PLATO_48_HRS"] = filaOriginal[llave];
+        else if (normalizada.includes("72") && normalizada.includes("HRS"))
+          fila["PLATO_72_HRS"] = filaOriginal[llave];
+        else if (normalizada.includes("96") && normalizada.includes("HRS"))
+          fila["PLATO_96_HRS"] = filaOriginal[llave];
+        else if (normalizada.includes("120") && normalizada.includes("HRS"))
+          fila["PLATO_120_HRS"] = filaOriginal[llave];
+        else if (normalizada.includes("144") && normalizada.includes("HRS"))
+          fila["PLATO_144_HRS"] = filaOriginal[llave];
       }
     });
 
-    if (!fila.FERMENTADOR && !fila.TANQUE && String(filaOriginal.FERMENTADOR || filaOriginal.TANQUE || "").trim() === "") {
+    if (
+      !fila.FERMENTADOR &&
+      !fila.TANQUE &&
+      String(filaOriginal.FERMENTADOR || filaOriginal.TANQUE || "").trim() === ""
+    ) {
       descartadas++;
       continue;
     }
-    const fermentadorVal = fila.FERMENTADOR || fila.TANQUE || filaOriginal.FERMENTADOR || filaOriginal.TANQUE;
+    const fermentadorVal =
+      fila.FERMENTADOR || fila.TANQUE || filaOriginal.FERMENTADOR || filaOriginal.TANQUE;
 
-    const fechaParsed = parsearFechaExcel(fila.FECHA_FIN_DE_LLENADO || filaOriginal["FECHA FIN DE LLENADO"] || filaOriginal.FECHA_LLENADO);
-    
+    const fechaParsed = parsearFechaExcel(
+      fila.FECHA_FIN_DE_LLENADO ||
+        filaOriginal["FECHA FIN DE LLENADO"] ||
+        filaOriginal.FECHA_LLENADO,
+    );
+
     // Si no hay fecha de llenado válida, o el año es absurdo (ej. 1900, 2001 por error de Excel), ignoramos la fila
     if (!fechaParsed || fechaParsed.getFullYear() < 2020) {
       descartadas++;
@@ -190,8 +204,21 @@ function limpiarYMapear(filasJson: any[]): ResultadoLimpieza {
       periodoDetectado = obtenerPeriodo(fechaParsed);
     }
 
-    const marcaRaw = String(fila.MARCA || "").trim();
-    const marcaEncontrada = BRANDS.find(b => b.toLowerCase() === marcaRaw.toLowerCase());
+    const normalizeBrand = (b: string) =>
+      b
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+
+    let marcaRaw = String(fila.MARCA || filaOriginal.MARCA || "").trim();
+    if (/^pac.?fico$/i.test(marcaRaw)) {
+      marcaRaw = "Pacifico";
+    }
+    const marcaEncontrada = BRANDS.find(
+      (b) =>
+        normalizeBrand(b) === normalizeBrand(marcaRaw) ||
+        b.toLowerCase() === marcaRaw.toLowerCase(),
+    );
     const marca: MarcaCerveza = marcaEncontrada || "Modelo Especial";
 
     const parseHora = (col: string, horasSumar: number) => {
@@ -199,7 +226,7 @@ function limpiarYMapear(filasJson: any[]): ResultadoLimpieza {
       const v = parsearFechaExcel(fila[col]);
       if (v) return toMexicoISOString(v);
       if (fila[col]) return String(fila[col]);
-      
+
       // 2. Si no viene, lo calculamos automáticamente sumando las horas a la fecha de llenado
       const fechaCalculada = new Date(fechaParsed.getTime() + horasSumar * 60 * 60 * 1000);
       return toMexicoISOString(fechaCalculada);
@@ -234,7 +261,10 @@ export function UploadExtractos() {
   const cargarExtractosDesdeArchivo = useOperacionesStore((s) => s.cargarExtractosDesdeArchivo);
   const fetchData = useOperacionesStore((s) => s.fetchData);
   const [isDragging, setIsDragging] = useState(false);
-  const [status, setStatus] = useState<{ tipo: "exito" | "error" | "leyendo"; mensaje: string } | null>(null);
+  const [status, setStatus] = useState<{
+    tipo: "exito" | "error" | "leyendo";
+    mensaje: string;
+  } | null>(null);
   const [progreso, setProgreso] = useState<UploadProgress | null>(null);
   const [resumenLimpieza, setResumenLimpieza] = useState<{
     totalOriginal: number;
@@ -254,34 +284,51 @@ export function UploadExtractos() {
 
       reader.onload = async (e) => {
         try {
-          const data = e.target?.result;
-          const workbook = XLSX.read(data, { type: "binary" });
-          const firstSheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheetName];
+          const buffer = e.target?.result as ArrayBuffer;
+          const workbook = new ExcelJS.Workbook();
+          await workbook.xlsx.load(buffer);
+          const worksheet = workbook.worksheets[0];
 
           setStatus({ tipo: "leyendo", mensaje: "Procesando y limpiando datos..." });
 
-          // Usamos header: 1 para obtener una matriz (array de arrays) y encontrar la fila de encabezados
-          const aoa = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
-          
           let headerRowIndex = -1;
-          for (let i = 0; i < aoa.length; i++) {
-            const row = aoa[i];
-            if (row && row.some(cell => String(cell).toUpperCase().trim() === "FERMENTADOR")) {
-              headerRowIndex = i;
-              break;
+          worksheet.eachRow((row, rowNumber) => {
+            const rowValues = row.values as any[];
+            if (
+              headerRowIndex === -1 &&
+              rowValues.some((cell) => String(cell).toUpperCase().trim() === "FERMENTADOR")
+            ) {
+              headerRowIndex = rowNumber;
             }
-          }
+          });
 
           if (headerRowIndex === -1) {
             throw new Error("No se encontró la columna 'FERMENTADOR' en el archivo.");
           }
 
-          // Ahora leemos usando la fila encontrada como encabezado
-          const filasJson = XLSX.utils.sheet_to_json(worksheet, { 
-            defval: "", 
-            range: headerRowIndex 
-          }) as any[];
+          const headers = worksheet.getRow(headerRowIndex).values as any[];
+          const filasJson: any[] = [];
+
+          for (let i = headerRowIndex + 1; i <= worksheet.rowCount; i++) {
+            const row = worksheet.getRow(i);
+            const filaObj: any = {};
+            let hasData = false;
+            row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+              const key = headers[colNumber];
+              if (key) {
+                let val = cell.value;
+                if (val && typeof val === "object" && !(val instanceof Date)) {
+                  if ("result" in val) val = (val as any).result;
+                  else if ("richText" in val)
+                    val = (val as any).richText.map((rt: any) => rt.text).join("");
+                  else if ("text" in val) val = (val as any).text;
+                }
+                filaObj[key] = val ?? "";
+                if (String(filaObj[key]).trim() !== "") hasData = true;
+              }
+            });
+            if (hasData) filasJson.push(filaObj);
+          }
 
           if (!filasJson || filasJson.length === 0) {
             throw new Error("El archivo no tiene datos debajo de los encabezados.");
@@ -291,7 +338,7 @@ export function UploadExtractos() {
 
           if (resultado.filas.length === 0) {
             throw new Error(
-              "No se encontraron filas válidas. Revisa que exista la columna 'FERMENTADOR' con datos."
+              "No se encontraron filas válidas. Revisa que exista la columna 'FERMENTADOR' con datos.",
             );
           }
 
@@ -306,7 +353,7 @@ export function UploadExtractos() {
           const filasPurgas: PurgaRow[] = resultado.filas.map((fila) => {
             const dLlenado = new Date(fila.fechaLlenado);
             return {
-              id: fila.id.replace('ext-', 'pur-'),
+              id: fila.id.replace("ext-", "pur-"),
               tanque: fila.tanque,
               fecha: fila.fechaLlenado,
               marca: fila.marca,
@@ -325,18 +372,19 @@ export function UploadExtractos() {
 
           cargarExtractosDesdeArchivo(resultado.filas as any[]);
 
-          setStatus({ tipo: "leyendo", mensaje: "Guardando extractos y purgas en base de datos..." });
+          setStatus({
+            tipo: "leyendo",
+            mensaje: "Guardando extractos y purgas en base de datos...",
+          });
 
           const resExtractos = await guardarExtractosEnFirestore(
             resultado.filas,
             resultado.periodo,
-            (p) => setProgreso({ ...p, mensaje: `Extractos: ${p.mensaje}` })
+            (p) => setProgreso({ ...p, mensaje: `Extractos: ${p.mensaje}` }),
           );
 
-          const resPurgas = await guardarPurgasEnFirestore(
-            filasPurgas,
-            resultado.periodo,
-            (p) => setProgreso({ ...p, mensaje: `Purgas: ${p.mensaje}` })
+          const resPurgas = await guardarPurgasEnFirestore(filasPurgas, resultado.periodo, (p) =>
+            setProgreso({ ...p, mensaje: `Purgas: ${p.mensaje}` }),
           );
 
           if (resExtractos.exito && resPurgas.exito) {
@@ -360,9 +408,9 @@ export function UploadExtractos() {
         setStatus({ tipo: "error", mensaje: "Error físico al abrir el archivo." });
       };
 
-      reader.readAsBinaryString(file);
+      reader.readAsArrayBuffer(file);
     },
-    [cargarExtractosDesdeArchivo]
+    [cargarExtractosDesdeArchivo],
   );
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -446,19 +494,29 @@ export function UploadExtractos() {
         <div className="grid grid-cols-4 gap-2">
           <div className="rounded-lg border border-slate-100 bg-slate-50 p-2 text-center">
             <p className="text-sm font-black text-slate-700">{resumenLimpieza.totalOriginal}</p>
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Filas</p>
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+              Filas
+            </p>
           </div>
           <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-2 text-center">
             <p className="text-sm font-black text-emerald-600">{resumenLimpieza.conservadas}</p>
-            <p className="text-[9px] font-bold text-emerald-500 uppercase tracking-wider mt-0.5">Éxito</p>
+            <p className="text-[9px] font-bold text-emerald-500 uppercase tracking-wider mt-0.5">
+              Éxito
+            </p>
           </div>
           <div className="rounded-lg border border-red-100 bg-red-50 p-2 text-center">
             <p className="text-sm font-black text-red-500">{resumenLimpieza.descartadas}</p>
-            <p className="text-[9px] font-bold text-red-400 uppercase tracking-wider mt-0.5">Desc.</p>
+            <p className="text-[9px] font-bold text-red-400 uppercase tracking-wider mt-0.5">
+              Desc.
+            </p>
           </div>
           <div className="rounded-lg border border-blue-100 bg-blue-50 p-2 text-center">
-            <p className="text-sm font-black text-blue-600">{resumenLimpieza.periodo.split("-")[1]}</p>
-            <p className="text-[9px] font-bold text-blue-500 uppercase tracking-wider mt-0.5">Mes</p>
+            <p className="text-sm font-black text-blue-600">
+              {resumenLimpieza.periodo.split("-")[1]}
+            </p>
+            <p className="text-[9px] font-bold text-blue-500 uppercase tracking-wider mt-0.5">
+              Mes
+            </p>
           </div>
         </div>
       )}

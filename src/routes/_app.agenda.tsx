@@ -3,12 +3,12 @@ import { useMemo, useState } from "react";
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
 import { AgendaCalendar } from "@/components/calendar/agenda_calendar";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
-import { obtenerTurnoPorHora } from "@/data/turno"; 
+import { obtenerTurnoPorHora } from "@/data/turno";
 
 export const Route = createFileRoute("/_app/agenda")({
   head: () => ({
     meta: [
-      { title: "Agenda General" },
+      { title: "Agenda de Control" },
       { name: "description", content: "Purgas y Extractos ." },
     ],
   }),
@@ -19,7 +19,9 @@ function AgendaPage() {
   const { eventosAgenda, extractos } = useOperacionesStore();
   const [cursor, set_cursor] = useState(new Date());
 
-  const [turnoSeleccionado, set_turnoSeleccionado] = useState<string>(() => obtenerTurnoPorHora(new Date().toISOString()) || "TODOS");
+  const [turnoSeleccionado, set_turnoSeleccionado] = useState<string>(
+    () => obtenerTurnoPorHora(new Date().toISOString()) || "TODOS",
+  );
   const [purgaSeleccionada, set_purgaSeleccionada] = useState<number>(8);
 
   const days = useMemo(() => {
@@ -33,18 +35,20 @@ function AgendaPage() {
     const purgasEventos = extractos.flatMap((e) => {
       const fechaBase = e.fechaLlenado ? new Date(e.fechaLlenado) : null;
       if (!fechaBase) return [];
-      
+
       const fechaPurga = new Date(fechaBase.getTime() + purgaSeleccionada * 8 * 60 * 60 * 1000);
-      return [{
-        id: `purga-${e.id}-${purgaSeleccionada}`,
-        titulo: `Purga ${purgaSeleccionada} - Tanque ${e.tanque}`,
-        inicio: fechaPurga.toISOString(),
-        fin: fechaPurga.toISOString(),
-        tipo: "Purga" as const,
-        descripcion: `Marca: ${e.marca}`,
-        turno: obtenerTurnoPorHora(fechaPurga.toISOString()),
-        completado: false,
-      }];
+      return [
+        {
+          id: `purga-${e.id}-${purgaSeleccionada}`,
+          titulo: `Purga ${purgaSeleccionada} - Tanque ${e.tanque}`,
+          inicio: fechaPurga.toISOString(),
+          fin: fechaPurga.toISOString(),
+          tipo: "Purga" as const,
+          descripcion: `Marca: ${e.marca}`,
+          turno: obtenerTurnoPorHora(fechaPurga.toISOString()),
+          completado: false,
+        },
+      ];
     });
 
     // Calcular "completado" para eventosAgenda (Chequeo Plato)
@@ -67,16 +71,17 @@ function AgendaPage() {
       return { ...evento, completado, extractoId };
     });
 
-    const todosLosEventos = [...eventosMapeados.filter(e => !e.titulo?.includes("Purga")), ...purgasEventos];
+    const todosLosEventos = [
+      ...eventosMapeados.filter((e) => !e.titulo?.includes("Purga")),
+      ...purgasEventos,
+    ];
 
     if (turnoSeleccionado === "TODOS") return todosLosEventos;
     return todosLosEventos.filter((evento: any) => evento.turno === turnoSeleccionado);
   }, [eventosAgenda, extractos, turnoSeleccionado, purgaSeleccionada]);
 
-
   return (
     <div className="space-y-6">
-
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Agenda General</h1>
@@ -111,8 +116,10 @@ function AgendaPage() {
               onChange={(e) => set_purgaSeleccionada(Number(e.target.value))}
               className="bg-background border rounded-md px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
-                <option key={num} value={num}>Purga {num}</option>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+                <option key={num} value={num}>
+                  Purga {num}
+                </option>
               ))}
             </select>
           </div>
@@ -121,16 +128,17 @@ function AgendaPage() {
         {/**/}
         {turnoSeleccionado !== "TODOS" && (
           <span className="text-xs text-muted-foreground animate-fade-in bg-secondary px-3 py-1.5 rounded-full font-medium">
-            Purgas y Chequeo de Platos del Turno:  <strong className="text-primary">{turnoSeleccionado}</strong>
+            Purgas y Chequeo de Platos del Turno:{" "}
+            <strong className="text-primary">{turnoSeleccionado}</strong>
           </span>
         )}
       </div>
 
       {/* Calendario con los datos ya filtrados */}
-      <AgendaCalendar 
-        cursor={cursor} 
-        set_cursor={set_cursor} 
-        days={days} 
+      <AgendaCalendar
+        cursor={cursor}
+        set_cursor={set_cursor}
+        days={days}
         events={eventosFiltrados}
       />
     </div>

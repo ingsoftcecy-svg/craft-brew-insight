@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FlaskConical, Clock, CheckCircle2, Droplets, Database, Beaker, Printer } from "lucide-react";
+import { FlaskConical, Clock, Droplets, Database, Beaker, Printer } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
 import { useEffect } from "react";
@@ -9,30 +9,28 @@ import { parseMexicanDate } from "@/lib/utils";
 
 import { KpiCard } from "@/components/dashboard/kpi_card";
 import { TaskListPanel } from "@/components/dashboard/task_list_panel";
-import { DashboardCharts } from "@/components/dashboard/dashboard_charts";
 
 export const Route = createFileRoute("/_app/")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Control de Elaboración" },
-      { name: "description", content: "Resumen operativo del departamento de elaboración cervecera." },
+      { title: "Agenda de Control" },
+      {
+        name: "description",
+        content: "Resumen operativo del departamento de elaboración cervecera.",
+      },
     ],
   }),
   component: Dashboard,
 });
 
 function Dashboard() {
-  const { extractos, purgas, periodosStats, isLoading, fetchData } = useOperacionesStore();
+  const { extractos, purgas, isLoading, fetchData } = useOperacionesStore();
 
-  useEffect(() => { fetchData("todos"); }, [fetchData]);
+  useEffect(() => {
+    fetchData("todos");
+  }, [fetchData]);
 
   const periodoActivo = useOperacionesStore.getState().periodoActual || "2026-06";
-  const extractosPeriodoActivo = extractos.filter(e => {
-    if (!e.fechaLlenado) return false;
-    const date = parseMexicanDate(e.fechaLlenado);
-    if (!date) return false;
-    return format(date, "yyyy-MM") === periodoActivo;
-  });
 
   const ahora = new Date();
   const turnoActual = obtenerTurnoPorHora(ahora.toISOString());
@@ -40,8 +38,10 @@ function Dashboard() {
   const getLimitesTurnoActual = (now: Date) => {
     const start = new Date(now);
     const end = new Date(now);
-    start.setSeconds(0); start.setMilliseconds(0);
-    end.setSeconds(59); end.setMilliseconds(999);
+    start.setSeconds(0);
+    start.setMilliseconds(0);
+    end.setSeconds(59);
+    end.setMilliseconds(999);
     const h = now.getHours();
     const m = now.getMinutes();
     const mins = h * 60 + m;
@@ -92,7 +92,7 @@ function Dashboard() {
     const items = extractos
       .filter((e: any) => e[key] && e[`estado${label}`] !== "Completado")
       .map((e: any) => ({ ...e, date: parseMexicanDate(e[key]) as Date, realId: e.id }))
-      .filter(e => e.date && e.date >= inicioTurno && e.date <= finTurno)
+      .filter((e) => e.date && e.date >= inicioTurno && e.date <= finTurno)
       .sort((a, b) => a.date.getTime() - b.date.getTime())
       .slice(0, 6);
     return { key, label, color, items };
@@ -105,36 +105,34 @@ function Dashboard() {
   limiteViejo.setDate(limiteViejo.getDate() - 7);
 
   const tanquesOcupados = new Set(
-    extractos.filter(e => {
-      if (e.estado144h === "Completado") return false;
-      const h144Date = parseMexicanDate(e.h144);
-      if (!h144Date) return false;
-      return h144Date >= limiteViejo;
-    }).map(e => e.tanque)
+    extractos
+      .filter((e) => {
+        if (e.estado144h === "Completado") return false;
+        const h144Date = parseMexicanDate(e.h144);
+        if (!h144Date) return false;
+        return h144Date >= limiteViejo;
+      })
+      .map((e) => e.tanque),
   );
 
   const fermentando = tanquesOcupados.size;
   const totalChequeosPendientes = chequeosDelTurno.reduce((acc, c) => acc + c.items.length, 0);
-  
+
   // Para completados del turno, necesitamos buscar en extractos los que sí estén completados
   // y su fecha caiga en este turno.
-  const completados72 = extractos
-    .map(e => ({ ...e, date: parseMexicanDate(e.h72) as Date }))
-    .filter(e => e.date && e.date >= inicioTurno && e.date <= finTurno && e.estado72h === "Completado")
-    .length;
 
   // --- PURGAS DE TRUB (Purga Inicial + 1 a 8) ---
   const purgasDelTurno = Array.from({ length: 9 }, (_, i) => {
     const tituloPurga = i === 0 ? "Purga Inicial" : `Purga ${i}`;
     const items = purgas
-      .filter(p => {
+      .filter((p) => {
         const entry = p.purgas?.[i];
         if (!entry?.fechaHora) return false;
         // Solo mostrar si NO tiene tiempo ni realiza (pendiente)
         if (entry.tiempo && entry.realiza) return false;
         return true;
       })
-      .map(p => {
+      .map((p) => {
         const entry = p.purgas[i];
         const date = parseMexicanDate(entry.fechaHora!);
         return {
@@ -146,7 +144,7 @@ function Dashboard() {
           purgaId: p.id,
         };
       })
-      .filter(item => item.date && item.date >= inicioTurno && item.date <= finTurno)
+      .filter((item) => item.date && item.date >= inicioTurno && item.date <= finTurno)
       .sort((a, b) => a.date.getTime() - b.date.getTime())
       .slice(0, 8);
     return { tituloPurga, items, index: i };
@@ -160,7 +158,9 @@ function Dashboard() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white/50 p-6 rounded-2xl border border-slate-100 shadow-sm backdrop-blur-sm print:hidden">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-800">Tablero General</h1>
-          <p className="text-sm text-slate-500 mt-1 font-medium">Monitor de Chequeos de Plato y Purgas de Trub · {turnoActual}</p>
+          <p className="text-sm text-slate-500 mt-1 font-medium">
+            Monitor de Chequeos de Plato y Purgas de Trub · {turnoActual}
+          </p>
         </div>
       </div>
 
@@ -199,7 +199,7 @@ function Dashboard() {
           />
         </div>
       )}
-      
+
       {/* ═══════════════ SECCIÓN: CHEQUEOS DE PLATO ═══════════════ */}
       <div className="print:hidden">
         <div className="flex items-center justify-between mb-4">
@@ -212,7 +212,7 @@ function Dashboard() {
               <p className="text-xs text-slate-500 font-medium">De 24 a 144 hrs · Turno actual</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={handlePrint}
             className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
           >
@@ -247,35 +247,40 @@ function Dashboard() {
             </div>
             <div>
               <h2 className="text-lg font-bold text-slate-800 tracking-tight">Purgas de Trub</h2>
-              <p className="text-xs text-slate-500 font-medium">8 purgas por lote · Turno actual · Ligadas a QR</p>
+              <p className="text-xs text-slate-500 font-medium">
+                8 purgas por lote · Turno actual · Ligadas a QR
+              </p>
             </div>
           </div>
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-              {purgasDelTurno.map(({ tituloPurga, items, index }) => (
-                <TaskListPanel
-                  key={`purga-${index}`}
-                  title={tituloPurga}
-                  subtitle={`Pendientes de este turno`}
-                  icon={Droplets}
-                  emptyMessage="Todo al día"
-                  items={items}
-                  colorTheme="rose"
-                  itemIcon={Droplets}
-                  linkTo="/purgas"
-                />
-              ))}
-            </div>
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+            {purgasDelTurno.map(({ tituloPurga, items, index }) => (
+              <TaskListPanel
+                key={`purga-${index}`}
+                title={tituloPurga}
+                subtitle={`Pendientes de este turno`}
+                icon={Droplets}
+                emptyMessage="Todo al día"
+                items={items}
+                colorTheme="rose"
+                itemIcon={Droplets}
+                linkTo="/purgas"
+              />
+            ))}
+          </div>
         </div>
       </div>
-      
-      
+
       {/* ═══════════════ VISTA DE IMPRESIÓN ═══════════════ */}
       <div className="hidden print:block w-full text-black bg-white">
         <div className="mb-6 border-b pb-4">
-          <h1 className="text-2xl font-bold uppercase">Checklist de Operación - Chequeos de Plato</h1>
-          <p className="text-sm text-gray-600 mt-1">Turno: {turnoActual} | Fecha: {format(ahora, "dd/MM/yyyy HH:mm")}</p>
+          <h1 className="text-2xl font-bold uppercase">
+            Checklist de Operación - Chequeos de Plato
+          </h1>
+          <p className="text-sm text-gray-600 mt-1">
+            Turno: {turnoActual} | Fecha: {format(ahora, "dd/MM/yyyy HH:mm")}
+          </p>
         </div>
-        
+
         <table className="w-full border-collapse border border-black text-left text-sm">
           <thead>
             <tr className="bg-gray-100">
@@ -288,27 +293,37 @@ function Dashboard() {
             </tr>
           </thead>
           <tbody>
-            {chequeosDelTurno.flatMap(c => 
-              c.items.map(item => ({
-                tipo: c.label,
-                tanque: item.tanque,
-                marca: item.marca,
-                date: item.date,
-              }))
-            ).sort((a, b) => a.date.getTime() - b.date.getTime()).map((item, i) => (
-              <tr key={i} className="h-12">
-                <td className="border border-black p-2 text-center font-medium">{format(item.date, "HH:mm")}</td>
-                <td className="border border-black p-2 font-semibold">T-{item.tanque}</td>
-                <td className="border border-black p-2">{item.marca}</td>
-                <td className="border border-black p-2 text-center text-gray-700">{item.tipo}</td>
-                
-                <td className="border border-black p-2"></td>
-                <td className="border border-black p-2"></td>
-              </tr>
-            ))}
-            {chequeosDelTurno.flatMap(c => c.items).length === 0 && (
+            {chequeosDelTurno
+              .flatMap((c) =>
+                c.items.map((item) => ({
+                  tipo: c.label,
+                  tanque: item.tanque,
+                  marca: item.marca,
+                  date: item.date,
+                })),
+              )
+              .sort((a, b) => a.date.getTime() - b.date.getTime())
+              .map((item, i) => (
+                <tr key={i} className="h-12">
+                  <td className="border border-black p-2 text-center font-medium">
+                    {format(item.date, "HH:mm")}
+                  </td>
+                  <td className="border border-black p-2 font-semibold">T-{item.tanque}</td>
+                  <td className="border border-black p-2">{item.marca}</td>
+                  <td className="border border-black p-2 text-center text-gray-700">{item.tipo}</td>
+
+                  <td className="border border-black p-2"></td>
+                  <td className="border border-black p-2"></td>
+                </tr>
+              ))}
+            {chequeosDelTurno.flatMap((c) => c.items).length === 0 && (
               <tr>
-                <td colSpan={7} className="border border-black p-4 text-center text-gray-500 italic">No hay chequeos programados para este turno</td>
+                <td
+                  colSpan={7}
+                  className="border border-black p-4 text-center text-gray-500 italic"
+                >
+                  No hay chequeos programados para este turno
+                </td>
               </tr>
             )}
           </tbody>

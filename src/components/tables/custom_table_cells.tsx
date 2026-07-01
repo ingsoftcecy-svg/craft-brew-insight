@@ -10,7 +10,7 @@ export const CustomTableHead = React.forwardRef<
     ref={ref}
     className={cn(
       "border-r border-slate-200 text-sm font-extrabold tracking-widest text-slate-700 py-4",
-      className
+      className,
     )}
     {...props}
   />
@@ -23,10 +23,7 @@ export const CustomTableCell = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <TableCell
     ref={ref}
-    className={cn(
-      "border-r border-slate-100 whitespace-nowrap",
-      className
-    )}
+    className={cn("border-r border-slate-100 whitespace-nowrap", className)}
     {...props}
   />
 ));

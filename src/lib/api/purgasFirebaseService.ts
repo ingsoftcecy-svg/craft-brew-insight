@@ -19,13 +19,11 @@ const BATCH_SIZE = 500;
 /* Nombre de la colección en Firestore */
 const COLECCION_PURGAS = "purgas_historico";
 
-
 export function obtenerPeriodo(fecha: Date = new Date()): string {
   const y = fecha.getFullYear();
   const m = String(fecha.getMonth() + 1).padStart(2, "0");
   return `${y}-${m}`;
 }
-
 
 export interface UploadProgress {
   total: number;
@@ -44,7 +42,7 @@ export interface UploadProgress {
 export async function guardarPurgasEnFirestore(
   filas: PurgaRow[],
   periodo: string,
-  onProgress?: (p: UploadProgress) => void
+  onProgress?: (p: UploadProgress) => void,
 ): Promise<{ exito: boolean; total: number; mensaje: string }> {
   const total = filas.length;
 
@@ -75,7 +73,7 @@ export async function guardarPurgasEnFirestore(
 
     for (let i = 0; i < total; i++) {
       const fila = filas[i];
-      
+
       // Omitir si ya existe
       if (idsExistentes.has(fila.id)) {
         omitidos++;
@@ -133,7 +131,7 @@ export async function guardarPurgasEnFirestore(
         fechaSubida: Timestamp.now(),
         actualizadoEn: Timestamp.now(),
       },
-      { merge: true }
+      { merge: true },
     );
 
     onProgress?.({
@@ -166,9 +164,7 @@ export async function guardarPurgasEnFirestore(
   }
 }
 
-export async function obtenerPurgasPorPeriodo(
-  periodo: string
-): Promise<PurgaRow[]> {
+export async function obtenerPurgasPorPeriodo(periodo: string): Promise<PurgaRow[]> {
   const periodoDocRef = doc(firestore, COLECCION_PURGAS, periodo);
   const registrosRef = collection(periodoDocRef, "registros");
   const snapshot = await getDocs(registrosRef);
@@ -195,7 +191,7 @@ export async function obtenerPurgasPorPeriodo(
 
 export async function obtenerTodasLasPurgas(): Promise<PurgaRow[]> {
   const periodos = await listarPeriodos();
-  const promesas = periodos.map(p => obtenerPurgasPorPeriodo(p.periodo));
+  const promesas = periodos.map((p) => obtenerPurgasPorPeriodo(p.periodo));
   const resultados = await Promise.all(promesas);
   return resultados.flat();
 }
@@ -232,7 +228,7 @@ export async function listarPeriodos(): Promise<PeriodoResumen[]> {
 export async function actualizarPurgaEnFirestore(
   periodo: string,
   id: string,
-  data: Partial<PurgaRow>
+  data: Partial<PurgaRow>,
 ): Promise<void> {
   const docRef = doc(firestore, COLECCION_PURGAS, periodo, "registros", id);
   await setDoc(docRef, { ...data, actualizadoEn: Timestamp.now() }, { merge: true });

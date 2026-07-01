@@ -26,7 +26,10 @@ interface TaskListPanelProps {
   baseSearchParams?: Record<string, any>;
 }
 
-const colorClasses: Record<ColorTheme, { icon: string; bgGradient: string; itemIcon: string; badge: string }> = {
+const colorClasses: Record<
+  ColorTheme,
+  { icon: string; bgGradient: string; itemIcon: string; badge: string }
+> = {
   sky: {
     icon: "text-sky-500",
     bgGradient: "from-sky-100 to-sky-50 border-sky-100",
@@ -44,10 +47,20 @@ const colorClasses: Record<ColorTheme, { icon: string; bgGradient: string; itemI
     bgGradient: "from-rose-100 to-rose-50 border-rose-100",
     itemIcon: "text-rose-600",
     badge: "bg-rose-100/80 text-rose-700 border-rose-200/50",
-  }
+  },
 };
 
-export function TaskListPanel({ title, subtitle, icon: HeaderIcon, emptyMessage, items, colorTheme, itemIcon: ItemIcon, linkTo, baseSearchParams = {} }: TaskListPanelProps) {
+export function TaskListPanel({
+  title,
+  subtitle,
+  icon: HeaderIcon,
+  emptyMessage,
+  items,
+  colorTheme,
+  itemIcon: ItemIcon,
+  linkTo,
+  baseSearchParams = {},
+}: TaskListPanelProps) {
   const theme = colorClasses[colorTheme];
 
   return (
@@ -57,7 +70,9 @@ export function TaskListPanel({ title, subtitle, icon: HeaderIcon, emptyMessage,
           <HeaderIcon className={`h-4 w-4 mr-2 ${theme.icon}`} />
           <span>{title}</span>
           {items.length > 0 && (
-            <span className={`ml-auto px-2 py-0.5 rounded-md text-xs font-bold border shadow-sm ${theme.badge}`}>
+            <span
+              className={`ml-auto px-2 py-0.5 rounded-md text-xs font-bold border shadow-sm ${theme.badge}`}
+            >
               {items.length}
             </span>
           )}
@@ -73,25 +88,39 @@ export function TaskListPanel({ title, subtitle, icon: HeaderIcon, emptyMessage,
         ) : (
           <div className="flex flex-col gap-1 p-2">
             {items.map((item) => (
-              <Link 
+              <Link
                 // @ts-ignore
-                to={linkTo} 
+                to={linkTo}
                 // @ts-ignore
-                search={{ tanque: item.tanque, targetId: item.realId || item.id, ...baseSearchParams } as any} 
-                key={item.id} 
+                search={
+                  {
+                    tanque: item.tanque,
+                    targetId: item.realId || item.id,
+                    ...baseSearchParams,
+                  } as any
+                }
+                key={item.id}
                 className="group flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 border border-transparent hover:border-border/50 transition-all cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${theme.bgGradient} border flex items-center justify-center shrink-0 shadow-sm`}>
+                  <div
+                    className={`h-10 w-10 rounded-full bg-gradient-to-br ${theme.bgGradient} border flex items-center justify-center shrink-0 shadow-sm`}
+                  >
                     <ItemIcon className={`h-4 w-4 ${theme.itemIcon}`} />
                   </div>
                   <div>
-                    <p className="font-bold text-sm text-foreground tracking-tight">Tanque {item.tanque}</p>
-                    <p className="text-[11px] font-semibold text-muted-foreground mt-0.5 capitalize">{item.marca}</p>
+                    <p className="font-bold text-sm text-foreground tracking-tight">
+                      Tanque {item.tanque}
+                    </p>
+                    <p className="text-[11px] font-semibold text-muted-foreground mt-0.5 capitalize">
+                      {item.marca}
+                    </p>
                   </div>
                 </div>
                 <div className="text-right flex flex-col items-end">
-                  <span className={`px-2.5 py-1 ${theme.badge} rounded-md font-bold text-xs shadow-sm border`}>
+                  <span
+                    className={`px-2.5 py-1 ${theme.badge} rounded-md font-bold text-xs shadow-sm border`}
+                  >
                     {format(item.date, "HH:mm")}
                   </span>
                   <p className="text-[10px] text-muted-foreground/80 mt-1 font-bold">

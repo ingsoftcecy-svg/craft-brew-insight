@@ -53,7 +53,10 @@ export class ProcessCapabilityAnalyzer extends StatisticalAnalyzer {
     return Math.min(1.33, cpkCalc);
   }
 
-  private generateHistogramAndNormalDist(mean: number, stdDev: number): {
+  private generateHistogramAndNormalDist(
+    mean: number,
+    stdDev: number,
+  ): {
     histogramData: HistogramBin[];
     numClasses: number;
     range: number;
@@ -66,12 +69,12 @@ export class ProcessCapabilityAnalyzer extends StatisticalAnalyzer {
 
     const minVal = this.getMin();
     const maxVal = this.getMax();
-    
+
     // Sturges' Rule
     const numClasesCrudo = 1 + Math.log2(totalDatos);
     const range = maxVal - minVal;
     let classWidth = range / (numClasesCrudo > 0 ? numClasesCrudo : 1);
-    
+
     if (classWidth === 0) classWidth = 1;
 
     const numClasses = numClasesCrudo;
@@ -85,12 +88,12 @@ export class ProcessCapabilityAnalyzer extends StatisticalAnalyzer {
         binEnd,
         label: `[${binStart.toFixed(1)}, ${binEnd.toFixed(1)}]`,
         count: 0,
-        midPoint: binStart + (classWidth / 2),
-        normalDist: 0
+        midPoint: binStart + classWidth / 2,
+        normalDist: 0,
       };
     });
 
-    this.values.forEach(valorActual => {
+    this.values.forEach((valorActual) => {
       // For exactly maxVal, put it in the last bin
       if (valorActual === maxVal && bins.length > 0) {
         bins[bins.length - 1].count++;
@@ -106,10 +109,11 @@ export class ProcessCapabilityAnalyzer extends StatisticalAnalyzer {
 
     // Normal distribution calculation
     const areaClases = classWidth * totalDatos;
-    bins.forEach(clase => {
+    bins.forEach((clase) => {
       const valorMedio = clase.midPoint;
       const exponente = -Math.pow(valorMedio - mean, 2) / (2 * Math.pow(stdDev, 2));
-      const funcionDensidadProbabilidad = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(exponente);
+      const funcionDensidadProbabilidad =
+        (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(exponente);
       clase.normalDist = Number((funcionDensidadProbabilidad * areaClases).toFixed(2));
     });
 
@@ -119,7 +123,10 @@ export class ProcessCapabilityAnalyzer extends StatisticalAnalyzer {
   public getSummaryStats(): CapabilityStats {
     const mean = this.getMean();
     const stdDev = this.getStandardDeviation();
-    const { histogramData, numClasses, range, classWidth } = this.generateHistogramAndNormalDist(mean, stdDev);
+    const { histogramData, numClasses, range, classWidth } = this.generateHistogramAndNormalDist(
+      mean,
+      stdDev,
+    );
 
     return {
       mean,
@@ -133,7 +140,7 @@ export class ProcessCapabilityAnalyzer extends StatisticalAnalyzer {
       numClasses,
       range,
       classWidth,
-      histogramData
+      histogramData,
     };
   }
 }

@@ -64,25 +64,25 @@
 
   /* Fondo general — slate claro */
   --background: oklch(0.955 0.008 240);
-  --foreground: oklch(0.20 0.025 240);
+  --foreground: oklch(0.2 0.025 240);
 
   /* Cards — blanco limpio */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.20 0.025 240);
+  --card-foreground: oklch(0.2 0.025 240);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.20 0.025 240);
+  --popover-foreground: oklch(0.2 0.025 240);
 
   /* Acento primario — ámbar (un solo tono vibrante) */
-  --primary: oklch(0.70 0.18 55);
+  --primary: oklch(0.7 0.18 55);
   --primary-foreground: oklch(0.99 0 0);
 
   /* Secundarios — de la misma familia slate */
-  --secondary: oklch(0.92 0.010 240);
+  --secondary: oklch(0.92 0.01 240);
   --secondary-foreground: oklch(0.28 0.025 240);
-  --muted: oklch(0.92 0.010 240);
-  --muted-foreground: oklch(0.50 0.022 240);
-  --accent: oklch(0.94 0.020 55);
-  --accent-foreground: oklch(0.40 0.12 55);
+  --muted: oklch(0.92 0.01 240);
+  --muted-foreground: oklch(0.5 0.022 240);
+  --accent: oklch(0.94 0.02 55);
+  --accent-foreground: oklch(0.4 0.12 55);
 
   --destructive: oklch(0.58 0.22 27);
   --destructive-foreground: oklch(0.99 0 0);
@@ -90,14 +90,14 @@
   /* Bordes — slate suave */
   --border: oklch(0.878 0.012 240);
   --input: oklch(0.878 0.012 240);
-  --ring: oklch(0.70 0.18 55);
+  --ring: oklch(0.7 0.18 55);
 
   --status-ok: oklch(0.58 0.18 145);
-  --status-warn: oklch(0.70 0.18 55);
+  --status-warn: oklch(0.7 0.18 55);
   --status-bad: oklch(0.58 0.22 27);
 
   /* Charts — ámbar + derivados de la misma familia */
-  --chart-1: oklch(0.70 0.18 55);
+  --chart-1: oklch(0.7 0.18 55);
   --chart-2: oklch(0.58 0.16 35);
   --chart-3: oklch(0.55 0.15 200);
   --chart-4: oklch(0.55 0.16 145);
@@ -105,13 +105,13 @@
 
   /* Sidebar - Light Theme */
   --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.20 0.025 240);
-  --sidebar-primary: oklch(0.70 0.18 55);
+  --sidebar-foreground: oklch(0.2 0.025 240);
+  --sidebar-primary: oklch(0.7 0.18 55);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.96 0.05 55);
-  --sidebar-accent-foreground: oklch(0.40 0.12 55);
+  --sidebar-accent-foreground: oklch(0.4 0.12 55);
   --sidebar-border: oklch(0.878 0.012 240);
-  --sidebar-ring: oklch(0.70 0.18 55);
+  --sidebar-ring: oklch(0.7 0.18 55);
 }
 
 @layer base {
@@ -121,7 +121,7 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 }
@@ -143,7 +143,11 @@ body.dlp-active {
   }
 
   /* Asegurar que los contenedores de flexbox y h-screen no corten la impresión */
-  body, html, #root, main, div {
+  body,
+  html,
+  #root,
+  main,
+  div {
     overflow: visible !important;
     height: auto !important;
     min-height: auto !important;

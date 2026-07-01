@@ -1,10 +1,31 @@
 import { useState, useMemo } from "react";
-import { LineChart, BarChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceArea, ReferenceLine, ComposedChart, Bar, Area, Scatter } from "recharts";
+import {
+  LineChart,
+  BarChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceArea,
+  ReferenceLine,
+  ComposedChart,
+  Bar,
+  Area,
+  Scatter,
+} from "recharts";
 import { Activity, BarChart4, LineChart as LineChartIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PurgaRow } from "@/types/proceso";
 import { parseMexicanDate } from "@/lib/utils";
 import { ProcessCapabilityAnalyzer } from "@/components/core/analisisestaditcio";
@@ -25,7 +46,7 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
 
   const marcasDisponibles = useMemo(() => {
     const s = new Set<string>();
-    purgas.forEach(p => {
+    purgas.forEach((p) => {
       if (p.marca) s.add(p.marca);
     });
     return Array.from(s).sort();
@@ -34,10 +55,11 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
   // Procesar datos según la variable elegida
   const chartData = useMemo(() => {
     let data: any[] = [];
-    const purgasFiltradas = marcaFiltro === "todas" ? purgas : purgas.filter(p => p.marca === marcaFiltro);
-    
+    const purgasFiltradas =
+      marcaFiltro === "todas" ? purgas : purgas.filter((p) => p.marca === marcaFiltro);
+
     if (variable === "tiempoPurga") {
-      purgasFiltradas.forEach(p => {
+      purgasFiltradas.forEach((p) => {
         const fechaCorta = p.fechaLlenado ? p.fechaLlenado.split(" ")[0].slice(0, 5) : "";
         p.purgas.forEach((purga, i) => {
           if (purga.tiempo != null && purga.tiempo > 0) {
@@ -54,7 +76,7 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
         });
       });
     } else {
-      purgasFiltradas.forEach(p => {
+      purgasFiltradas.forEach((p) => {
         const fechaCorta = p.fechaLlenado ? p.fechaLlenado.split(" ")[0].slice(0, 5) : "";
         let val = p.tiempoLlenadoHoras;
         if (val == null && p.fechaInicioLlenado && p.fechaLlenado) {
@@ -82,13 +104,27 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
   // Cálculos de Cp y Cpk, Mediana y Moda utilizando OOP
   const stats = useMemo(() => {
     if (chartData.length === 0) {
-      return { mean: 0, stdDev: 0, cp: 0, cpk: 0, median: 0, mode: 0, n: 0, minVal: 0, maxVal: 0, numClasses: 0, range: 0, classWidth: 0, histogramData: [] };
+      return {
+        mean: 0,
+        stdDev: 0,
+        cp: 0,
+        cpk: 0,
+        median: 0,
+        mode: 0,
+        n: 0,
+        minVal: 0,
+        maxVal: 0,
+        numClasses: 0,
+        range: 0,
+        classWidth: 0,
+        histogramData: [],
+      };
     }
-    
-    const values = chartData.map(d => d.valor);
+
+    const values = chartData.map((d) => d.valor);
     const analyzer = new ProcessCapabilityAnalyzer(values, lsl, usl);
     const summary = analyzer.getSummaryStats();
-    
+
     return {
       ...summary,
       n: values.length,
@@ -101,12 +137,26 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
       return (
         <div className="bg-white p-3 border border-slate-200 shadow-xl rounded-xl text-sm z-50 relative">
           <p className="font-bold text-slate-800 border-b pb-1 mb-1">Tanque: {data.tanque}</p>
-          <p className="text-slate-600">Fecha Llenado: <span className="font-semibold text-slate-900">{data.fecha || "-"}</span></p>
-          <p className="text-slate-600">Marca: <span className="font-semibold text-slate-900">{data.marca}</span></p>
+          <p className="text-slate-600">
+            Fecha Llenado: <span className="font-semibold text-slate-900">{data.fecha || "-"}</span>
+          </p>
+          <p className="text-slate-600">
+            Marca: <span className="font-semibold text-slate-900">{data.marca}</span>
+          </p>
           {data.purgaIndex !== undefined && (
-            <p className="text-slate-600">Purga: <span className="font-semibold text-slate-900">{data.purgaIndex === 0 ? "Inicial" : data.purgaIndex}</span></p>
+            <p className="text-slate-600">
+              Purga:{" "}
+              <span className="font-semibold text-slate-900">
+                {data.purgaIndex === 0 ? "Inicial" : data.purgaIndex}
+              </span>
+            </p>
           )}
-          <p className="text-slate-600">Valor: <span className="font-bold text-blue-600">{data.valor.toFixed(1)} {variable === "tiempoPurga" ? "min" : "min"}</span></p>
+          <p className="text-slate-600">
+            Valor:{" "}
+            <span className="font-bold text-blue-600">
+              {data.valor.toFixed(1)} {variable === "tiempoPurga" ? "min" : "min"}
+            </span>
+          </p>
         </div>
       );
     }
@@ -115,7 +165,10 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
 
   // Calcular límites visuales para las bandas (Yellow/Green)
   const yDomainMin = Math.min(lsl - (usl - lsl) * 0.5, 0);
-  const yDomainMax = Math.max(usl + (usl - lsl) * 0.5, Math.max(...chartData.map(d => d.valor), usl * 1.2));
+  const yDomainMax = Math.max(
+    usl + (usl - lsl) * 0.5,
+    Math.max(...chartData.map((d) => d.valor), usl * 1.2),
+  );
 
   return (
     <Card className="dashboard-card">
@@ -123,10 +176,11 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
         <div className="flex flex-col">
           <CardTitle className="dashboard-title">Gráfica de Control</CardTitle>
           <CardDescription className="dashboard-subtitle">
-            Capacidad del proceso (Cp, Cpk) para {variable === "tiempoPurga" ? "Tiempos de Purga" : "Tiempos de Llenado"}
+            Capacidad del proceso (Cp, Cpk) para{" "}
+            {variable === "tiempoPurga" ? "Tiempos de Purga" : "Tiempos de Llenado"}
           </CardDescription>
         </div>
-        
+
         <div className="dashboard-controls">
           <select
             value={variable}
@@ -143,34 +197,36 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
             className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
           >
             <option value="todas">Todas las marcas</option>
-            {marcasDisponibles.map(m => (
-              <option key={m} value={m}>{m}</option>
+            {marcasDisponibles.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
             ))}
           </select>
 
           <div className="flex items-center gap-1 shrink-0">
             <span className="text-xs font-medium text-slate-500">LI</span>
-            <input 
-              type="number" 
+            <input
+              type="number"
               min="0"
-              value={lslStr} 
+              value={lslStr}
               onChange={(e) => setLslStr(e.target.value)}
               className="w-16 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
           </div>
           <div className="flex items-center gap-1 shrink-0">
             <span className="text-xs font-medium text-slate-500">LS</span>
-            <input 
-              type="number" 
+            <input
+              type="number"
               min="0"
-              value={uslStr} 
+              value={uslStr}
               onChange={(e) => setUslStr(e.target.value)}
               className="w-16 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent>
         {chartData.length === 0 ? (
           <div className="flex items-center justify-center h-[400px] text-slate-500 font-medium bg-slate-50 rounded-xl border border-dashed border-slate-200">
@@ -181,13 +237,17 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
             <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
               <div className="dashboard-stat-box">
                 <p className="dashboard-stat-label">Cp</p>
-                <p className={`text-xl font-black ${stats.cp >= 1.33 ? 'text-green-600' : stats.cp >= 1 ? 'text-amber-500' : 'text-red-500'}`}>
+                <p
+                  className={`text-xl font-black ${stats.cp >= 1.33 ? "text-green-600" : stats.cp >= 1 ? "text-amber-500" : "text-red-500"}`}
+                >
                   {stats.cp.toFixed(2)}
                 </p>
               </div>
               <div className="dashboard-stat-box">
                 <p className="dashboard-stat-label">Cpk</p>
-                <p className={`text-xl font-black ${stats.cpk >= 1.33 ? 'dashboard-stat-ok' : stats.cpk >= 1 ? 'dashboard-stat-warn' : 'dashboard-stat-bad'}`}>
+                <p
+                  className={`text-xl font-black ${stats.cpk >= 1.33 ? "dashboard-stat-ok" : stats.cpk >= 1 ? "dashboard-stat-warn" : "dashboard-stat-bad"}`}
+                >
                   {stats.cpk.toFixed(2)}
                 </p>
               </div>
@@ -216,7 +276,9 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
               </div>
               <div className="dashboard-stat-box">
                 <p className="dashboard-stat-label">Mín - Máx</p>
-                <p className="dashboard-stat-value">{stats.minVal.toFixed(1)} - {stats.maxVal.toFixed(1)}</p>
+                <p className="dashboard-stat-value">
+                  {stats.minVal.toFixed(1)} - {stats.maxVal.toFixed(1)}
+                </p>
               </div>
               <div className="dashboard-stat-box">
                 <p className="dashboard-stat-label">Rango</p>
@@ -233,45 +295,92 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
             </div>
 
             <div className="dashboard-chart-container mt-6 relative">
-                <CardTitle className="dashboard-chart-title">
-                  <Activity className="dashboard-chart-icon" />
-                  Dot Graph
-                </CardTitle>
+              <CardTitle className="dashboard-chart-title">
+                <Activity className="dashboard-chart-icon" />
+                Dot Graph
+              </CardTitle>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                  <XAxis 
-                    dataKey="id" 
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="hsl(var(--border))"
+                  />
+                  <XAxis
+                    dataKey="id"
                     tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
                     dy={10}
                   />
-                  <YAxis 
+                  <YAxis
                     domain={[yDomainMin, yDomainMax]}
                     tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
                   />
-                  
+
                   {/* Bandas de Control */}
                   {/* Zona Verde (Dentro de LSL y USL) */}
-                  <ReferenceArea y1={lsl} y2={usl} fill="#bbf7d0" fillOpacity={0.6} strokeOpacity={0} />
-                  
+                  <ReferenceArea
+                    y1={lsl}
+                    y2={usl}
+                    fill="#bbf7d0"
+                    fillOpacity={0.6}
+                    strokeOpacity={0}
+                  />
+
                   {/* Zonas Amarillas (Fuera de especificación) */}
-                  <ReferenceArea y1={yDomainMin} y2={lsl} fill="#eab308" fillOpacity={0.2} strokeOpacity={0} />
-                  <ReferenceArea y1={usl} y2={yDomainMax} fill="#eab308" fillOpacity={0.2} strokeOpacity={0} />
+                  <ReferenceArea
+                    y1={yDomainMin}
+                    y2={lsl}
+                    fill="#eab308"
+                    fillOpacity={0.2}
+                    strokeOpacity={0}
+                  />
+                  <ReferenceArea
+                    y1={usl}
+                    y2={yDomainMax}
+                    fill="#eab308"
+                    fillOpacity={0.2}
+                    strokeOpacity={0}
+                  />
 
                   {/* Líneas límite */}
-                  <ReferenceLine y={usl} stroke="#16a34a" strokeDasharray="3 3" label={{ position: 'top', value: 'LS', fill: '#16a34a', fontSize: 12, fontWeight: 'bold' }} />
-                  <ReferenceLine y={lsl} stroke="#16a34a" strokeDasharray="3 3" label={{ position: 'bottom', value: 'LI', fill: '#16a34a', fontSize: 12, fontWeight: 'bold' }} />
-                  
-                  <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#94a3b8", strokeWidth: 1, strokeDasharray: "3 3" }} />
-                  
-                  <Line 
-                    type="monotone" 
-                    dataKey="valor" 
-                    stroke="transparent" 
+                  <ReferenceLine
+                    y={usl}
+                    stroke="#16a34a"
+                    strokeDasharray="3 3"
+                    label={{
+                      position: "top",
+                      value: "LS",
+                      fill: "#16a34a",
+                      fontSize: 12,
+                      fontWeight: "bold",
+                    }}
+                  />
+                  <ReferenceLine
+                    y={lsl}
+                    stroke="#16a34a"
+                    strokeDasharray="3 3"
+                    label={{
+                      position: "bottom",
+                      value: "LI",
+                      fill: "#16a34a",
+                      fontSize: 12,
+                      fontWeight: "bold",
+                    }}
+                  />
+
+                  <Tooltip
+                    content={<CustomTooltip />}
+                    cursor={{ stroke: "#94a3b8", strokeWidth: 1, strokeDasharray: "3 3" }}
+                  />
+
+                  <Line
+                    type="monotone"
+                    dataKey="valor"
+                    stroke="transparent"
                     strokeWidth={0}
                     dot={{ r: 4, fill: "#0ea5e9", stroke: "#0284c7", strokeWidth: 1 }}
                     activeDot={{ r: 6, fill: "#f59e0b", stroke: "#fff", strokeWidth: 2 }}
@@ -285,32 +394,43 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
             {/* Histograma */}
             <div className="dashboard-chart-container mt-10 relative">
               <CardTitle className="dashboard-chart-title">
-                  <BarChart4 className="dashboard-chart-icon" />
-                  Histograma
-                </CardTitle>
+                <BarChart4 className="dashboard-chart-icon" />
+                Histograma
+              </CardTitle>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.histogramData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                  <XAxis 
-                    dataKey="label" 
+                <BarChart
+                  data={stats.histogramData}
+                  margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="hsl(var(--border))"
+                  />
+                  <XAxis
+                    dataKey="label"
                     tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
                     dy={10}
                   />
-                  <YAxis 
+                  <YAxis
                     tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
                   />
-                  <Tooltip 
-                    cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} 
-                    contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  <Tooltip
+                    cursor={{ fill: "rgba(0, 0, 0, 0.05)" }}
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "1px solid #e2e8f0",
+                      boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+                    }}
                   />
-                  <Bar 
-                    dataKey="count" 
+                  <Bar
+                    dataKey="count"
                     name="Frecuencia"
-                    fill="#f59e0b" 
+                    fill="#f59e0b"
                     radius={[4, 4, 0, 0]}
                     animationDuration={1000}
                   />
@@ -321,33 +441,44 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
             {/* Distribución Normal */}
             <div className="dashboard-chart-container mt-10 relative">
               <CardTitle className="dashboard-chart-title">
-                  <LineChartIcon className="dashboard-chart-icon" />
-                  Distribución Normal
-                </CardTitle>
+                <LineChartIcon className="dashboard-chart-icon" />
+                Distribución Normal
+              </CardTitle>
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={stats.histogramData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                  <XAxis 
-                    dataKey="label" 
+                <LineChart
+                  data={stats.histogramData}
+                  margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="hsl(var(--border))"
+                  />
+                  <XAxis
+                    dataKey="label"
                     tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
                     dy={10}
                   />
-                  <YAxis 
+                  <YAxis
                     tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
                   />
-                  <Tooltip 
-                    cursor={{ stroke: "#94a3b8", strokeWidth: 1, strokeDasharray: "3 3" }} 
-                    contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  <Tooltip
+                    cursor={{ stroke: "#94a3b8", strokeWidth: 1, strokeDasharray: "3 3" }}
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "1px solid #e2e8f0",
+                      boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+                    }}
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="normalDist" 
+                  <Line
+                    type="monotone"
+                    dataKey="normalDist"
                     name="Dist. Normal"
-                    stroke="#0284c7" 
+                    stroke="#0284c7"
                     strokeWidth={3}
                     dot={{ r: 4, fill: "#0284c7", stroke: "#fff", strokeWidth: 2 }}
                     activeDot={{ r: 6, fill: "#0284c7", stroke: "#fff", strokeWidth: 2 }}

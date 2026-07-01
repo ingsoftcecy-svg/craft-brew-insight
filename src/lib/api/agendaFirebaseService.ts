@@ -1,11 +1,4 @@
-import {
-  collection,
-  doc,
-  writeBatch,
-  getDocs,
-  Timestamp,
-  deleteDoc,
-} from "firebase/firestore";
+import { collection, doc, writeBatch, getDocs, Timestamp, deleteDoc } from "firebase/firestore";
 import { firestore } from "../firebase";
 import type { AgendaEvent } from "@/types/proceso";
 
@@ -32,7 +25,7 @@ export async function limpiarEventosAutoGeneradosViejos(): Promise<void> {
 }
 
 export async function guardarEventosEnFirestore(
-  eventos: AgendaEvent[]
+  eventos: AgendaEvent[],
 ): Promise<{ exito: boolean; guardados: number; mensaje: string }> {
   const total = eventos.length;
 
@@ -51,10 +44,14 @@ export async function guardarEventosEnFirestore(
       const evento = eventos[i];
       const docRef = doc(colRef, evento.id); // Usamos el ID generado localmente
 
-      batchEscritura.set(docRef, {
-        ...evento,
-        creadoEn: Timestamp.now(),
-      }, { merge: true }); // Usamos merge para actualizar si ya existe
+      batchEscritura.set(
+        docRef,
+        {
+          ...evento,
+          creadoEn: Timestamp.now(),
+        },
+        { merge: true },
+      ); // Usamos merge para actualizar si ya existe
 
       escritos++;
 

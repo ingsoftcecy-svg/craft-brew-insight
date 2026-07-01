@@ -11,7 +11,7 @@ const firebaseConfig = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 const app = initializeApp(firebaseConfig);
@@ -38,11 +38,11 @@ if (import.meta.env.DEV) {
 //   }
 // }
 
-// Verificar que la bd si este conectada correctamente 
+// Verificar que la bd si este conectada correctamente
 if (typeof window !== "undefined") {
   console.log("⏳ Revisando configuración local de Firebase...");
   const llaves = Object.keys(firebaseConfig);
-  const valoresVacios = llaves.filter(key => !firebaseConfig[key as keyof typeof firebaseConfig]);
+  const valoresVacios = llaves.filter((key) => !firebaseConfig[key as keyof typeof firebaseConfig]);
 
   if (valoresVacios.length > 0) {
     console.error("ERROR: Tienes variables de entorno vacías:", valoresVacios);

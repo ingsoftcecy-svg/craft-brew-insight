@@ -1,12 +1,12 @@
-import { create } from 'zustand';
-import { User, onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { create } from "zustand";
+import { User, onAuthStateChanged, signOut as firebaseSignOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  init: () => import('firebase/auth').Unsubscribe;
+  init: () => import("firebase/auth").Unsubscribe;
   signOut: () => Promise<void>;
 }
 
@@ -23,7 +23,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         isLoading: false,
       });
     });
-    
+
     // Return unsubscribe for cleanup if needed
     return unsubscribe;
   },
@@ -32,7 +32,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       await firebaseSignOut(auth);
       set({ user: null, isAuthenticated: false });
     } catch (error) {
-      console.error('Error signing out', error);
+      console.error("Error signing out", error);
     }
-  }
+  },
 }));

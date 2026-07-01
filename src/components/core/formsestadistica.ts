@@ -45,7 +45,7 @@ export class StatisticalAnalyzer {
     const frecuencias: Record<number, number> = {};
     let frecuenciaMaxima = 0;
     let valorModa = this.sortedValues[0];
-    
+
     for (const valorActual of this.sortedValues) {
       frecuencias[valorActual] = (frecuencias[valorActual] || 0) + 1;
       if (frecuencias[valorActual] > frecuenciaMaxima) {
@@ -59,13 +59,16 @@ export class StatisticalAnalyzer {
   public getVariance(): number {
     if (this.values.length <= 1) return 0;
     const promedio = this.getMean();
-    const sumaDiferenciasCuadradas = this.values.reduce((acumulador, valorActual) => acumulador + Math.pow(valorActual - promedio, 2), 0);
+    const sumaDiferenciasCuadradas = this.values.reduce(
+      (acumulador, valorActual) => acumulador + Math.pow(valorActual - promedio, 2),
+      0,
+    );
     return sumaDiferenciasCuadradas / (this.values.length - 1); // Sample variance
   }
 
   public getStandardDeviation(): number {
     const variance = this.getVariance();
     // Avoid exact 0 to prevent division by zero in Cp/Cpk calculations
-    return Math.sqrt(variance) || 0.001; 
+    return Math.sqrt(variance) || 0.001;
   }
 }
