@@ -63,10 +63,18 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
         const fechaCorta = p.fechaLlenado ? p.fechaLlenado.split(" ")[0].slice(0, 5) : "";
         p.purgas.forEach((purga, i) => {
           if (purga.tiempo != null && purga.tiempo > 0) {
+            let horaExacta = "";
+            if (purga.fechaHora) {
+              const d = new Date(purga.fechaHora);
+              if (!isNaN(d.getTime())) {
+                horaExacta = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+              }
+            }
             data.push({
-              id: `${p.tanque} ${fechaCorta}-P${i}`,
+              id: horaExacta ? `${p.tanque} ${horaExacta}` : `${p.tanque} ${fechaCorta}-P${i}`,
               tanque: p.tanque,
               fecha: p.fechaLlenado,
+              horaPurga: horaExacta,
               marca: p.marca,
               purgaIndex: i,
               valor: purga.tiempo,
@@ -83,7 +91,7 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
           const inicio = parseMexicanDate(p.fechaInicioLlenado);
           const fin = parseMexicanDate(p.fechaLlenado);
           if (inicio && fin) {
-            val = (fin.getTime() - inicio.getTime()) / (1000 * 60);
+            val = (fin.getTime() - inicio.getTime()) / (1000 * 60 * 60);
           }
         }
         if (val != null && val > 0) {
@@ -149,12 +157,17 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
               <span className="font-semibold text-slate-900">
                 {data.purgaIndex === 0 ? "Inicial" : data.purgaIndex}
               </span>
+              {data.horaPurga && (
+                <span className="ml-2 text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-500">
+                  a las {data.horaPurga}
+                </span>
+              )}
             </p>
           )}
           <p className="text-slate-600">
             Valor:{" "}
             <span className="font-bold text-blue-600">
-              {data.valor.toFixed(1)} {variable === "tiempoPurga" ? "min" : "min"}
+              {data.valor.toFixed(1)} {variable === "tiempoPurga" ? "min" : "hrs"}
             </span>
           </p>
         </div>

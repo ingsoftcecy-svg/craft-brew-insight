@@ -274,7 +274,7 @@ function Dashboard() {
       <div className="hidden print:block w-full text-black bg-white">
         <div className="mb-6 border-b pb-4">
           <h1 className="text-2xl font-bold uppercase">
-            Checklist de Operación - Chequeos de Plato
+            Checklist de Operación - Chequeos y Purgas
           </h1>
           <p className="text-sm text-gray-600 mt-1">
             Turno: {turnoActual} | Fecha: {format(ahora, "dd/MM/yyyy HH:mm")}
@@ -287,42 +287,59 @@ function Dashboard() {
               <th className="border border-black p-2 font-bold text-center w-20">Hora</th>
               <th className="border border-black p-2 font-bold w-24">Tanque</th>
               <th className="border border-black p-2 font-bold w-32">Marca</th>
-              <th className="border border-black p-2 font-bold w-24 text-center">Plato</th>
-              <th className="border border-black p-2 font-bold">PH</th>
-              <th className="border border-black p-2 font-bold">Presión</th>
+              <th className="border border-black p-2 font-bold w-32 text-center">Actividad</th>
+              <th className="border border-black p-2 font-bold w-24">PH/Tiempo</th>
+              <th className="border border-black p-2 font-bold w-24">Presión/Op</th>
             </tr>
           </thead>
           <tbody>
-            {chequeosDelTurno
-              .flatMap((c) =>
+            {[
+              ...chequeosDelTurno.flatMap((c) =>
                 c.items.map((item) => ({
                   tipo: c.label,
                   tanque: item.tanque,
                   marca: item.marca,
                   date: item.date,
+                  isPurga: false,
                 })),
-              )
+              ),
+              ...purgasDelTurno.flatMap((p) =>
+                p.items.map((item) => ({
+                  tipo: p.tituloPurga,
+                  tanque: item.tanque,
+                  marca: item.marca,
+                  date: item.date,
+                  isPurga: true,
+                })),
+              ),
+            ]
               .sort((a, b) => a.date.getTime() - b.date.getTime())
               .map((item, i) => (
-                <tr key={i} className="h-12">
+                <tr key={i} className={`h-12 ${item.isPurga ? "bg-red-50/30" : ""}`}>
                   <td className="border border-black p-2 text-center font-medium">
                     {format(item.date, "HH:mm")}
                   </td>
                   <td className="border border-black p-2 font-semibold">T-{item.tanque}</td>
                   <td className="border border-black p-2">{item.marca}</td>
-                  <td className="border border-black p-2 text-center text-gray-700">{item.tipo}</td>
+                  <td className="border border-black p-2 text-center text-gray-700 font-medium">
+                    {item.isPurga ? (
+                      <span className="text-rose-700">{item.tipo}</span>
+                    ) : (
+                      <span>{item.tipo}</span>
+                    )}
+                  </td>
 
                   <td className="border border-black p-2"></td>
                   <td className="border border-black p-2"></td>
                 </tr>
               ))}
-            {chequeosDelTurno.flatMap((c) => c.items).length === 0 && (
+            {chequeosDelTurno.flatMap((c) => c.items).length === 0 && purgasDelTurno.flatMap((p) => p.items).length === 0 && (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={6}
                   className="border border-black p-4 text-center text-gray-500 italic"
                 >
-                  No hay chequeos programados para este turno
+                  No hay chequeos ni purgas programadas para este turno
                 </td>
               </tr>
             )}

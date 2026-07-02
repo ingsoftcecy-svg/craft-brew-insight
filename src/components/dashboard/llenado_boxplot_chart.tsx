@@ -34,26 +34,26 @@ function getPercentile(data: number[], percentile: number) {
 }
 
 export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
-  // LSL y USL en minutos
-  const [uslStr, setUslStr] = useState<string>("120");
-  const [lslStr, setLslStr] = useState<string>("60");
+  // LSL y USL en horas
+  const [uslStr, setUslStr] = useState<string>("12");
+  const [lslStr, setLslStr] = useState<string>("6");
   const usl = Math.max(0, Number(uslStr) || 0);
   const lsl = Math.max(0, Number(lslStr) || 0);
 
-  // 1. Filtrar y calcular tiempo en minutos
+  // 1. Filtrar y calcular tiempo en horas
   const tiemposLlenado = useMemo(() => {
-    const list: { marca: string; minutos: number; tanque: string }[] = [];
+    const list: { marca: string; horas: number; tanque: string }[] = [];
     purgas.forEach((p) => {
       let val = p.tiempoLlenadoHoras;
       if (val == null && p.fechaInicioLlenado && p.fechaLlenado) {
         const inicio = parseMexicanDate(p.fechaInicioLlenado);
         const fin = parseMexicanDate(p.fechaLlenado);
         if (inicio && fin) {
-          val = (fin.getTime() - inicio.getTime()) / 60000;
+          val = (fin.getTime() - inicio.getTime()) / (1000 * 60 * 60);
         }
       }
       if (val != null && val > 0) {
-        list.push({ marca: p.marca, minutos: val, tanque: p.tanque });
+        list.push({ marca: p.marca, horas: val, tanque: p.tanque });
       }
     });
     return list;
@@ -64,7 +64,7 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
     const grupos: Record<string, number[]> = {};
     tiemposLlenado.forEach((t) => {
       if (!grupos[t.marca]) grupos[t.marca] = [];
-      grupos[t.marca].push(t.minutos);
+      grupos[t.marca].push(t.horas);
     });
 
     const data = Object.keys(grupos)
@@ -99,7 +99,7 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
     if (tiemposLlenado.length === 0) {
       return { mean: 0, stdDev: 0, cp: 0, cpk: 0, median: 0, mode: 0 };
     }
-    const values = tiemposLlenado.map((t) => t.minutos);
+    const values = tiemposLlenado.map((t) => t.horas);
     const analyzer = new ProcessCapabilityAnalyzer(values, lsl, usl);
     return analyzer.getSummaryStats();
   }, [tiemposLlenado, usl, lsl]);
@@ -195,8 +195,11 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
           fontSize="11"
           fill="#ef4444"
           fontWeight="bold"
+          stroke="white"
+          strokeWidth="3"
+          paintOrder="stroke"
         >
-          {payload.median}m
+          {payload.median}h
         </text>
       </g>
     );
@@ -214,27 +217,27 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
           <div className="mt-2 space-y-1 text-xs">
             <p className="flex justify-between w-44">
               <span className="text-slate-500">Máx:</span>{" "}
-              <span className="font-semibold">{data.max} m</span>
+              <span className="font-semibold">{data.max} hrs</span>
             </p>
             <p className="flex justify-between w-44">
               <span className="text-slate-500">Percentil 75:</span>{" "}
-              <span className="font-semibold">{data.q3} m</span>
+              <span className="font-semibold">{data.q3} hrs</span>
             </p>
             <p className="flex justify-between w-44">
               <span className="text-red-500 font-bold">Percentil 50 (Mediana):</span>{" "}
-              <span className="text-red-500 font-bold">{data.median} m</span>
+              <span className="text-red-500 font-bold">{data.median} hrs</span>
             </p>
             <p className="flex justify-between w-44">
               <span className="text-blue-600 font-bold">Media (Promedio):</span>{" "}
-              <span className="text-blue-600 font-bold">{data.mean} m</span>
+              <span className="text-blue-600 font-bold">{data.mean} hrs</span>
             </p>
             <p className="flex justify-between w-44">
               <span className="text-slate-500">Percentil 25:</span>{" "}
-              <span className="font-semibold">{data.q1} m</span>
+              <span className="font-semibold">{data.q1} hrs</span>
             </p>
             <p className="flex justify-between w-44">
               <span className="text-slate-500">Mín:</span>{" "}
-              <span className="font-semibold">{data.min} m</span>
+              <span className="font-semibold">{data.min} hrs</span>
             </p>
           </div>
         </div>
@@ -316,7 +319,7 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
           </div>
         ) : (
           <div className="dashboard-chart-container w-full overflow-x-auto">
-            <div className="min-w-[800px] h-[400px] flex flex-col">
+            <div className="min-w-[1200px] h-[400px] flex flex-col">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
                   data={chartData}

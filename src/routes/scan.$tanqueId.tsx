@@ -44,11 +44,11 @@ function ScanPage() {
   }, [fetchData]);
 
   const loteActivo = useMemo(() => {
-    const normalizeTanque = (id: any) =>
-      String(id)
-        .trim()
-        .replace(/^0+(?=\d)/, "")
-        .toLowerCase();
+    const normalizeTanque = (id: any) => {
+      const numMatch = String(id).match(/\d+/);
+      if (numMatch) return parseInt(numMatch[0], 10).toString();
+      return String(id).toLowerCase().trim();
+    };
 
     const purgasDelTanque = purgas.filter(
       (p) => normalizeTanque(p.tanque) === normalizeTanque(tanqueId),
@@ -64,11 +64,9 @@ function ScanPage() {
     })[0];
   }, [purgas, tanqueId]);
 
-  // Encontrar la primera purga pendiente que no haya expirado (15 min de tolerancia)
+  // Encontrar la primera purga pendiente
   const indicePurgaPendiente = useMemo(() => {
     if (!loteActivo) return -1;
-
-    const now = new Date();
 
     const index = loteActivo.purgas.findIndex((p) => {
       const estaIncompleta =
@@ -77,14 +75,8 @@ function ScanPage() {
         p.realiza === null ||
         p.realiza === "" ||
         p.realiza === undefined;
-      if (!estaIncompleta) return false;
 
-      if (!p.fechaHora) return true;
-
-      const programada = new Date(p.fechaHora);
-      const expirada = now.getTime() > programada.getTime() + 15 * 60000;
-
-      return !expirada;
+      return estaIncompleta;
     });
 
     return index;

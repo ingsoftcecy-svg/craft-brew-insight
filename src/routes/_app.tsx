@@ -38,7 +38,7 @@ function AppLayout() {
           <AppHeader />
           <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden min-w-0">
             {user && !user.emailVerified && (
-              <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm flex items-center justify-between animate-in fade-in">
+              <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm flex items-center justify-between animate-in fade-in print:hidden">
                 <div>
                   <h3 className="font-bold text-amber-800">Verificación de Correo Requerida</h3>
                   <p className="text-sm text-amber-700">
