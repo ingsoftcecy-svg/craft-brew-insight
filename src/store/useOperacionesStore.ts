@@ -42,8 +42,15 @@ interface OperacionesState {
   ) => Promise<void>;
 }
 
+const getCurrentPeriod = () => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  return `${y}-${m}`;
+};
+
 export const useOperacionesStore = create<OperacionesState>((set) => ({
-  periodoActual: "2026-06",
+  periodoActual: getCurrentPeriod(),
   periodosDisponibles: [],
   periodosStats: [],
   extractos: [],
@@ -75,7 +82,7 @@ export const useOperacionesStore = create<OperacionesState>((set) => ({
         (periodos.includes(useOperacionesStore.getState().periodoActual)
           ? useOperacionesStore.getState().periodoActual
           : null) ||
-        (periodos.length > 0 ? periodos[0] : "2026-06");
+        (periodos.length > 0 ? periodos[0] : getCurrentPeriod());
 
       const extractosPromise =
         targetPeriodo === "todos"

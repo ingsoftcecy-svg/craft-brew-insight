@@ -40,7 +40,7 @@ function ScanPage() {
 
   // Asegurar que los datos estén cargados (en caso de entrar directo por URL)
   useEffect(() => {
-    fetchData();
+    fetchData("todos");
   }, [fetchData]);
 
   const loteActivo = useMemo(() => {
