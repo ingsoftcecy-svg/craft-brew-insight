@@ -32,11 +32,11 @@ function AppLayout() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-slate-50 selection:bg-amber-100 selection:text-amber-900">
+      <div className="flex min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-slate-50 print:bg-white selection:bg-amber-100 selection:text-amber-900">
         <AppSidebar />
         <SidebarInset className="flex flex-1 flex-col bg-transparent">
           <AppHeader />
-          <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden min-w-0">
+          <main className="flex-1 p-4 md:p-6 lg:p-8 print:p-0 overflow-x-hidden min-w-0">
             {user && !user.emailVerified && (
               <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm flex items-center justify-between animate-in fade-in print:hidden">
                 <div>

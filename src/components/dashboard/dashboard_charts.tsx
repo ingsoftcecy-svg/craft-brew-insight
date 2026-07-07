@@ -60,7 +60,7 @@ export function DashboardCharts({ extractos, periodosStats }: DashboardChartsPro
       if (!seen.has(key)) seen.set(key, label);
     });
     return Array.from(seen.entries())
-      .sort((a, b) => a[0].localeCompare(b[0]))
+      .sort((a, b) => b[0].localeCompare(a[0]))
       .map(([key, label]) => ({ key, label }));
   }, [extractos]);
 
@@ -148,7 +148,7 @@ export function DashboardCharts({ extractos, periodosStats }: DashboardChartsPro
       <CardContent className="pt-6 pb-2 px-2">
         <div className="h-[340px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 60 }}>
+            <BarChart data={chartData} margin={{ top: 10, right: 50, left: -20, bottom: 60 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
               <XAxis
                 dataKey="name"

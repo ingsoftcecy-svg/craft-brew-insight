@@ -1,4 +1,4 @@
-import { collection, doc, writeBatch, getDocs, setDoc, Timestamp } from "firebase/firestore";
+import { collection, doc, writeBatch, getDocs, setDoc, Timestamp, deleteDoc } from "firebase/firestore";
 import { firestore } from "../firebase";
 import type { ExtractoRow } from "@/types/proceso";
 import { obtenerPeriodo, type UploadProgress } from "./purgasFirebaseService";
@@ -191,4 +191,9 @@ export async function actualizarExtractoEnFirestore(
 ): Promise<void> {
   const docRef = doc(firestore, COLECCION_EXTRACTOS, periodo, "registros", id);
   await setDoc(docRef, { ...data, actualizadoEn: Timestamp.now() }, { merge: true });
+}
+
+export async function eliminarExtractoEnFirestore(periodo: string, id: string): Promise<void> {
+  const docRef = doc(firestore, COLECCION_EXTRACTOS, periodo, "registros", id);
+  await deleteDoc(docRef);
 }

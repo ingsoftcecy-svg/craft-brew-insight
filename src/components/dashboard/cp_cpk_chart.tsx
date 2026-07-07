@@ -27,12 +27,28 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PurgaRow } from "@/types/proceso";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import { parseMexicanDate } from "@/lib/utils";
 import { ProcessCapabilityAnalyzer } from "@/components/core/analisisestaditcio";
 import "@/styles/dashboard.css";
 
 interface CpCpkChartProps {
   purgas: PurgaRow[];
+}
+
+// Función auxiliar para determinar el tipo de tanque basado en su número
+function getTipoTanque(tanqueStr: string): string | null {
+  if (!tanqueStr) return null;
+  const numMatch = tanqueStr.match(/\d+/);
+  if (!numMatch) return null;
+  const num = parseInt(numMatch[0], 10);
+  
+  if (num >= 1 && num <= 22) return "C";
+  if (num >= 23 && num <= 38) return "B";
+  if (num >= 39 && num <= 50) return "A";
+  if (num >= 51 && num <= 140) return "A prima";
+  return null;
 }
 
 export function CpCpkChart({ purgas }: CpCpkChartProps) {
@@ -43,6 +59,9 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
   const lsl = Math.max(0, Number(lslStr) || 0);
   const [variable, setVariable] = useState<"tiempoPurga" | "tiempoLlenado">("tiempoPurga");
   const [marcaFiltro, setMarcaFiltro] = useState<string>("todas");
+  const [mesFiltro, setMesFiltro] = useState<string>("todos");
+  const [tanqueFiltro, setTanqueFiltro] = useState<string>("todos");
+  const [tipoTanqueFiltro, setTipoTanqueFiltro] = useState<string>("todos");
 
   const marcasDisponibles = useMemo(() => {
     const s = new Set<string>();
@@ -52,22 +71,60 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
     return Array.from(s).sort();
   }, [purgas]);
 
+  const tanquesDisponibles = useMemo(() => {
+    const s = new Set<string>();
+    purgas.forEach((p) => {
+      if (p.tanque) s.add(p.tanque);
+    });
+    return Array.from(s).sort();
+  }, [purgas]);
+
+  const mesesDisponibles = useMemo(() => {
+    const seen = new Map<string, string>();
+    purgas.forEach((p) => {
+      if (!p.fechaLlenado) return;
+      const d = parseMexicanDate(p.fechaLlenado);
+      if (!d) return;
+      const key = format(d, "yyyy-MM");
+      const label = format(d, "MMMM yyyy", { locale: es });
+      if (!seen.has(key)) seen.set(key, label);
+    });
+    return Array.from(seen.entries())
+      .map(([key, label]) => ({ key, label }))
+      .sort((a, b) => b.key.localeCompare(a.key));
+  }, [purgas]);
+
   // Procesar datos según la variable elegida
   const chartData = useMemo(() => {
     let data: any[] = [];
-    const purgasFiltradas =
-      marcaFiltro === "todas" ? purgas : purgas.filter((p) => p.marca === marcaFiltro);
+    const purgasFiltradas = purgas.filter((p) => {
+      if (marcaFiltro !== "todas" && p.marca !== marcaFiltro) return false;
+      if (tanqueFiltro !== "todos" && p.tanque !== tanqueFiltro) return false;
+      if (tipoTanqueFiltro !== "todos") {
+        const tipo = getTipoTanque(p.tanque || "");
+        if (tipo !== tipoTanqueFiltro) return false;
+      }
+      if (mesFiltro !== "todos") {
+        if (!p.fechaLlenado) return false;
+        const d = parseMexicanDate(p.fechaLlenado);
+        if (!d || format(d, "yyyy-MM") !== mesFiltro) return false;
+      }
+      return true;
+    });
 
     if (variable === "tiempoPurga") {
       purgasFiltradas.forEach((p) => {
-        const fechaCorta = p.fechaLlenado ? p.fechaLlenado.split(" ")[0].slice(0, 5) : "";
+        const dLlenado = p.fechaLlenado ? parseMexicanDate(p.fechaLlenado) : null;
+        const fechaCorta = dLlenado ? format(dLlenado, "dd/MMM") : (p.fechaLlenado ? p.fechaLlenado.split(" ")[0].slice(0, 5) : "");
         p.purgas.forEach((purga, i) => {
           if (purga.tiempo != null && purga.tiempo > 0) {
             let horaExacta = "";
+            let fechaReal = dLlenado;
             if (purga.fechaHora) {
               const d = new Date(purga.fechaHora);
               if (!isNaN(d.getTime())) {
                 horaExacta = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+                fechaReal = d;
               }
             }
             data.push({
@@ -79,13 +136,15 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
               purgaIndex: i,
               valor: purga.tiempo,
               tiempoLlenado: p.tiempoLlenadoHoras,
+              _sortDate: fechaReal ? fechaReal.getTime() : 0,
             });
           }
         });
       });
     } else {
       purgasFiltradas.forEach((p) => {
-        const fechaCorta = p.fechaLlenado ? p.fechaLlenado.split(" ")[0].slice(0, 5) : "";
+        const dLlenado = p.fechaLlenado ? parseMexicanDate(p.fechaLlenado) : null;
+        const fechaCorta = dLlenado ? format(dLlenado, "dd/MMM") : (p.fechaLlenado ? p.fechaLlenado.split(" ")[0].slice(0, 5) : "");
         let val = p.tiempoLlenadoHoras;
         if (val == null && p.fechaInicioLlenado && p.fechaLlenado) {
           const inicio = parseMexicanDate(p.fechaInicioLlenado);
@@ -102,12 +161,17 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
             marca: p.marca,
             valor: val,
             tiempoLlenado: val,
+            _sortDate: dLlenado ? dLlenado.getTime() : 0,
           });
         }
       });
     }
+
+    // Sort ascending (oldest to newest) so newest is on the right of the chart
+    data.sort((a, b) => a._sortDate - b._sortDate);
+
     return data;
-  }, [purgas, variable, marcaFiltro]);
+  }, [purgas, variable, marcaFiltro, tanqueFiltro, mesFiltro, tipoTanqueFiltro]);
 
   // Cálculos de Cp y Cpk, Mediana y Moda utilizando OOP
   const stats = useMemo(() => {
@@ -217,6 +281,44 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
             ))}
           </select>
 
+          <select
+            value={tanqueFiltro}
+            onChange={(e) => setTanqueFiltro(e.target.value)}
+            className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+          >
+            <option value="todos">Todos los tanques</option>
+            {tanquesDisponibles.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={tipoTanqueFiltro}
+            onChange={(e) => setTipoTanqueFiltro(e.target.value)}
+            className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+          >
+            <option value="todos">Todos los tipos</option>
+            <option value="A prima">A prima (51-140)</option>
+            <option value="A">A (39-50)</option>
+            <option value="B">B (23-38)</option>
+            <option value="C">C (1-22)</option>
+          </select>
+
+          <select
+            value={mesFiltro}
+            onChange={(e) => setMesFiltro(e.target.value)}
+            className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+          >
+            <option value="todos">Todos los meses</option>
+            {mesesDisponibles.map((m) => (
+              <option key={m.key} value={m.key} className="capitalize">
+                {m.label}
+              </option>
+            ))}
+          </select>
+
           <div className="flex items-center gap-1 shrink-0">
             <span className="text-xs font-medium text-slate-500">LI</span>
             <input
@@ -313,7 +415,7 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
                 Dot Graph
               </CardTitle>
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+                <LineChart data={chartData} margin={{ top: 20, right: 60, left: 0, bottom: 20 }}>
                   <CartesianGrid
                     strokeDasharray="3 3"
                     vertical={false}
@@ -331,6 +433,7 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
                     tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
+                    tickFormatter={(val: any) => parseFloat(Number(val).toFixed(1)).toString()}
                   />
 
                   {/* Bandas de Control */}
@@ -413,7 +516,7 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={stats.histogramData}
-                  margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
+                  margin={{ top: 20, right: 60, left: 0, bottom: 20 }}
                 >
                   <CartesianGrid
                     strokeDasharray="3 3"
@@ -460,7 +563,7 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={stats.histogramData}
-                  margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
+                  margin={{ top: 20, right: 60, left: 0, bottom: 20 }}
                 >
                   <CartesianGrid
                     strokeDasharray="3 3"

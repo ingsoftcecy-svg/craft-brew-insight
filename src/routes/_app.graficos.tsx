@@ -33,7 +33,7 @@ function GraficosPage() {
         </div>
       </div>
 
-      <div className="grid gap-5 mt-5">
+      <div className="grid gap-5 mt-5 [&>*]:min-w-0">
         <DashboardCharts extractos={extractos} periodosStats={periodosStats} />
         <CpCpkChart purgas={purgas} />
         <LlenadoBoxplotChart purgas={purgas} />

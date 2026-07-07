@@ -17,7 +17,7 @@ interface OperacionesState {
   fetchData: (periodoSeleccionado?: string) => Promise<void>;
   addPurga: (purga: PurgaRow) => void;
   updateExtracto: (id: string, data: Partial<ExtractoRow>) => void;
-  toggleEstadoChequeo: (id: string, label: string) => Promise<void>;
+  toggleEstadoChequeo: (id: string, label: string, forceToggle?: boolean) => Promise<void>;
   addEventoAgenda: (evento: AgendaEvent) => void;
   updatePurgaRow: (
     tanque: string,
@@ -26,6 +26,8 @@ interface OperacionesState {
     tiempo: number,
     realiza: string,
   ) => void;
+  deletePurga: (id: string) => Promise<void>;
+  deleteExtracto: (id: string) => Promise<void>;
   updatePurgaField: (
     id: string,
     numeroPurga: number,
@@ -170,9 +172,9 @@ export const useOperacionesStore = create<OperacionesState>((set) => ({
         if (!newPurgas[numeroPurga - 1])
           newPurgas[numeroPurga - 1] = { fechaHora: null, tiempo: null, realiza: null };
         if (campo === "tiempo") {
-          newPurgas[numeroPurga - 1].tiempo = Number(valor);
+          newPurgas[numeroPurga - 1].tiempo = valor === "" ? null : Number(valor);
         } else {
-          newPurgas[numeroPurga - 1].realiza = String(valor);
+          newPurgas[numeroPurga - 1].realiza = valor === "" ? null : String(valor);
         }
         updatedRow = { ...r, purgas: newPurgas };
         return updatedRow;
@@ -316,17 +318,54 @@ export const useOperacionesStore = create<OperacionesState>((set) => ({
       extractos: state.extractos.map((e) => (e.id === id ? { ...e, ...data } : e)),
     })),
 
-  toggleEstadoChequeo: async (id: string, label: string) => {
+  deletePurga: async (id) => {
+    const estado = useOperacionesStore.getState();
+    const periodo = estado.periodoActual;
+    
+    // Optimistic update
+    set((state) => ({
+      purgas: state.purgas.filter(p => p.id !== id),
+    }));
+
+    try {
+      const { eliminarPurgaEnFirestore } = await import("@/lib/api/purgasFirebaseService");
+      await eliminarPurgaEnFirestore(periodo, id);
+    } catch (err) {
+      console.error("Error al eliminar purga:", err);
+      estado.fetchData(periodo); // Revert on failure
+    }
+  },
+
+  deleteExtracto: async (id) => {
+    const estado = useOperacionesStore.getState();
+    const periodo = estado.periodoActual;
+    
+    // Optimistic update
+    set((state) => ({
+      extractos: state.extractos.filter(e => e.id !== id),
+    }));
+
+    try {
+      const { eliminarExtractoEnFirestore } = await import("@/lib/api/extractosFirebaseService");
+      await eliminarExtractoEnFirestore(periodo, id);
+    } catch (err) {
+      console.error("Error al eliminar extracto:", err);
+      estado.fetchData(periodo); // Revert on failure
+    }
+  },
+
+  toggleEstadoChequeo: async (id: string, label: string, forceToggle: boolean = false) => {
     const state = useOperacionesStore.getState();
     const target = state.extractos.find((e) => e.id === id);
     if (!target) return;
 
     const propName = `estado${label}` as keyof typeof target;
+    const currentState = target[propName];
 
-    // Si ya está completado, no permitir regresarlo a pendiente
-    if (target[propName] === "Completado") return;
+    // Si ya está completado y no tenemos forceToggle (superuser), no permitir regresarlo a pendiente
+    if (currentState === "Completado" && !forceToggle) return;
 
-    const nuevoEstado = "Completado";
+    const nuevoEstado = currentState === "Completado" ? "Pendiente" : "Completado";
     const periodo = state.periodoActual;
 
     set((s) => ({

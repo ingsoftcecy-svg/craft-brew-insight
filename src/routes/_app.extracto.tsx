@@ -48,6 +48,8 @@ function ExtractoPage() {
     setTargetId("");
   };
 
+
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);

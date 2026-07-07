@@ -15,8 +15,24 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label";
 import { PurgaRow } from "@/types/proceso";
 import { parseMexicanDate } from "@/lib/utils";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import { ProcessCapabilityAnalyzer } from "@/components/core/analisisestaditcio";
 import "@/styles/dashboard.css";
+
+// Función auxiliar para determinar el tipo de tanque basado en su número
+function getTipoTanque(tanqueStr: string): string | null {
+  if (!tanqueStr) return null;
+  const numMatch = String(tanqueStr).match(/\d+/);
+  if (!numMatch) return null;
+  const num = parseInt(numMatch[0], 10);
+  
+  if (num >= 1 && num <= 22) return "C";
+  if (num >= 23 && num <= 38) return "B";
+  if (num >= 39 && num <= 50) return "A";
+  if (num >= 51 && num <= 140) return "A prima";
+  return null;
+}
 
 interface BoxPlotChartProps {
   purgas: PurgaRow[];
@@ -40,10 +56,48 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
   const usl = Math.max(0, Number(uslStr) || 0);
   const lsl = Math.max(0, Number(lslStr) || 0);
 
+  const [mesFiltro, setMesFiltro] = useState<string>("todos");
+  const [tanqueFiltro, setTanqueFiltro] = useState<string>("todos");
+  const [tipoTanqueFiltro, setTipoTanqueFiltro] = useState<string>("todos");
+
+  const tanquesDisponibles = useMemo(() => {
+    const s = new Set<string>();
+    purgas.forEach((p) => {
+      if (p.tanque) s.add(p.tanque);
+    });
+    return Array.from(s).sort();
+  }, [purgas]);
+
+  const mesesDisponibles = useMemo(() => {
+    const seen = new Map<string, string>();
+    purgas.forEach((p) => {
+      if (!p.fechaLlenado) return;
+      const d = parseMexicanDate(p.fechaLlenado);
+      if (!d) return;
+      const key = format(d, "yyyy-MM");
+      const label = format(d, "MMMM yyyy", { locale: es });
+      if (!seen.has(key)) seen.set(key, label);
+    });
+    return Array.from(seen.entries())
+      .map(([key, label]) => ({ key, label }))
+      .sort((a, b) => b.key.localeCompare(a.key));
+  }, [purgas]);
+
   // 1. Filtrar y calcular tiempo en horas
   const tiemposLlenado = useMemo(() => {
     const list: { marca: string; horas: number; tanque: string }[] = [];
     purgas.forEach((p) => {
+      if (tanqueFiltro !== "todos" && p.tanque !== tanqueFiltro) return;
+      if (tipoTanqueFiltro !== "todos") {
+        const tipo = getTipoTanque(p.tanque || "");
+        if (tipo !== tipoTanqueFiltro) return;
+      }
+      if (mesFiltro !== "todos") {
+        if (!p.fechaLlenado) return;
+        const d = parseMexicanDate(p.fechaLlenado);
+        if (!d || format(d, "yyyy-MM") !== mesFiltro) return;
+      }
+
       let val = p.tiempoLlenadoHoras;
       if (val == null && p.fechaInicioLlenado && p.fechaLlenado) {
         const inicio = parseMexicanDate(p.fechaInicioLlenado);
@@ -57,7 +111,7 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
       }
     });
     return list;
-  }, [purgas]);
+  }, [purgas, mesFiltro, tanqueFiltro, tipoTanqueFiltro]);
 
   // 2. Agrupar por Marca y calcular BoxPlot Stats
   const chartData = useMemo(() => {
@@ -254,6 +308,44 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
         </div>
 
         <div className="dashboard-controls">
+          <select
+            value={tanqueFiltro}
+            onChange={(e) => setTanqueFiltro(e.target.value)}
+            className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+          >
+            <option value="todos">Todos los tanques</option>
+            {tanquesDisponibles.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={tipoTanqueFiltro}
+            onChange={(e) => setTipoTanqueFiltro(e.target.value)}
+            className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+          >
+            <option value="todos">Todos los tipos</option>
+            <option value="A prima">A prima (51-140)</option>
+            <option value="A">A (39-50)</option>
+            <option value="B">B (23-38)</option>
+            <option value="C">C (1-22)</option>
+          </select>
+
+          <select
+            value={mesFiltro}
+            onChange={(e) => setMesFiltro(e.target.value)}
+            className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+          >
+            <option value="todos">Todos los meses</option>
+            {mesesDisponibles.map((m) => (
+              <option key={m.key} value={m.key} className="capitalize">
+                {m.label}
+              </option>
+            ))}
+          </select>
+
           <div className="flex items-center gap-1 shrink-0">
             <span className="text-xs font-medium text-slate-500">LI</span>
             <input
@@ -323,7 +415,7 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
                   data={chartData}
-                  margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
+                  margin={{ top: 20, right: 60, left: 0, bottom: 20 }}
                 >
                   <CartesianGrid
                     strokeDasharray="3 3"
@@ -346,6 +438,7 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
                     tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
+                    tickFormatter={(val: any) => parseFloat(Number(val).toFixed(1)).toString()}
                   />
 
                   <ReferenceArea y1={lsl} y2={usl} fill="#22c55e" fillOpacity={0.15} />

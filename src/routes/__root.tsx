@@ -62,7 +62,7 @@ function RootComponent() {
   // Prevención de Fuga de Datos (DLP)
   useEffect(() => {
     // Si no hay usuario, o si es el superusuario, no aplicar bloqueos
-    const superUserEmail = "cecilialopezsolis1122@gmail.com";
+    const superUserEmail = "adminelaboracion@gmail.com";
 
     if (!user || user.email === superUserEmail) {
       document.body.classList.remove("dlp-active");

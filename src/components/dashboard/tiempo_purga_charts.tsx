@@ -19,9 +19,23 @@ interface TiempoPurgaChartsProps {
   purgas: PurgaRow[];
 }
 
+function getTipoTanque(tanqueStr: string): string | null {
+  if (!tanqueStr) return null;
+  const numMatch = tanqueStr.match(/\d+/);
+  if (!numMatch) return null;
+  const num = parseInt(numMatch[0], 10);
+  if (num >= 1 && num <= 22) return "C";
+  if (num >= 23 && num <= 38) return "B";
+  if (num >= 39 && num <= 50) return "A";
+  if (num >= 51 && num <= 140) return "A prima";
+  return null;
+}
+
 export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
   const [filtroTanque, setFiltroTanque] = useState<string>("todos");
   const [filtroMarca, setFiltroMarca] = useState<string>("todas");
+  const [filtroTipoTanque, setFiltroTipoTanque] = useState<string>("todos");
+  const [mesFiltro, setMesFiltro] = useState<string>("todos");
 
   // Obtener opciones únicas
   const tanquesUnicos = useMemo(
@@ -33,12 +47,30 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
     [purgas],
   );
 
+  const mesesDisponibles = useMemo(() => {
+    const todosTiempos = purgas
+      .flatMap((p) => p.purgas.map((purge) => purge.fechaHora))
+      .filter(Boolean) as string[];
+    const setMeses = new Set<string>();
+    todosTiempos.forEach((t) => {
+      const d = parseISO(t);
+      if (isValid(d)) setMeses.add(format(d, "yyyy-MM"));
+    });
+    return Array.from(setMeses)
+      .sort((a, b) => b.localeCompare(a))
+      .map((m) => {
+        const d = parseISO(`${m}-01`);
+        return { key: m, label: format(d, "MMMM yyyy", { locale: es }) };
+      });
+  }, [purgas]);
+
   const { porDia, porSemana, porMes } = useMemo(() => {
     // Filtrar purgas según los selectores
     const purgasFiltradas = purgas.filter((p) => {
       const cumpleTanque = filtroTanque === "todos" || p.tanque === filtroTanque;
       const cumpleMarca = filtroMarca === "todas" || p.marca === filtroMarca;
-      return cumpleTanque && cumpleMarca;
+      const cumpleTipo = filtroTipoTanque === "todos" || getTipoTanque(p.tanque) === filtroTipoTanque;
+      return cumpleTanque && cumpleMarca && cumpleTipo;
     });
 
     // 1. Extraer todos los tiempos de purga válidos
@@ -51,7 +83,7 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
             fecha: parseISO(purge.fechaHora!),
           })),
       )
-      .filter((p) => isValid(p.fecha));
+      .filter((p) => isValid(p.fecha) && (mesFiltro === "todos" || format(p.fecha, "yyyy-MM") === mesFiltro));
 
     // Función auxiliar para agrupar y promediar
     const agruparYPromediar = (
@@ -106,7 +138,7 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
     );
 
     return { porDia, porSemana, porMes };
-  }, [purgas, filtroTanque, filtroMarca]);
+  }, [purgas, filtroTanque, filtroMarca, filtroTipoTanque, mesFiltro]);
 
   // Componente interno para evitar repetir el JSX del estilo de gráfica
   const ChartPanel = ({ title, data }: { title: string; data: any[] }) => {
@@ -125,7 +157,7 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
+              <LineChart data={data} margin={{ top: 10, right: 40, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis
                   dataKey="etiqueta"
@@ -194,9 +226,21 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
               <option value="todos">Todos los tanques</option>
               {tanquesUnicos.map((t) => (
                 <option key={t} value={t}>
-                  T-{t}
+                  {t.replace("T-", "")}
                 </option>
               ))}
+            </select>
+
+            <select
+              value={filtroTipoTanque}
+              onChange={(e) => setFiltroTipoTanque(e.target.value)}
+              className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+            >
+              <option value="todos">Todos los tipos</option>
+              <option value="A prima">A prima (51-140)</option>
+              <option value="A">A (39-50)</option>
+              <option value="B">B (23-38)</option>
+              <option value="C">C (1-22)</option>
             </select>
 
             <select
@@ -208,6 +252,19 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
               {marcasUnicas.map((m) => (
                 <option key={m} value={m} className="capitalize">
                   {m}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={mesFiltro}
+              onChange={(e) => setMesFiltro(e.target.value)}
+              className="shrink-0 h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+            >
+              <option value="todos">Todos los meses</option>
+              {mesesDisponibles.map((m) => (
+                <option key={m.key} value={m.key} className="capitalize">
+                  {m.label}
                 </option>
               ))}
             </select>

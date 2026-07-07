@@ -233,3 +233,8 @@ export async function actualizarPurgaEnFirestore(
   const docRef = doc(firestore, COLECCION_PURGAS, periodo, "registros", id);
   await setDoc(docRef, { ...data, actualizadoEn: Timestamp.now() }, { merge: true });
 }
+
+export async function eliminarPurgaEnFirestore(periodo: string, id: string): Promise<void> {
+  const docRef = doc(firestore, COLECCION_PURGAS, periodo, "registros", id);
+  await deleteDoc(docRef);
+}

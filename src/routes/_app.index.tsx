@@ -174,10 +174,10 @@ function Dashboard() {
       ) : (
         <div className="grid gap-4 grid-cols-3 print:hidden">
           <KpiCard
-            label="Tanques en Fermentación"
+            label="Lotes Activos (Global)"
             value={fermentando}
             icon={FlaskConical}
-            sub="Registros Activos"
+            sub="Ciclos sin finalizar (0 a 144h)"
             color="text-amber-600"
             bg="bg-gradient-to-br from-amber-100 to-amber-50 border-amber-200"
           />
@@ -271,25 +271,32 @@ function Dashboard() {
       </div>
 
       {/* ═══════════════ VISTA DE IMPRESIÓN ═══════════════ */}
-      <div className="hidden print:block w-full text-black bg-white">
-        <div className="mb-6 border-b pb-4">
-          <h1 className="text-2xl font-bold uppercase">
-            Checklist de Operación - Chequeos y Purgas
+      <div className="hidden print:block w-full text-black bg-white print:p-2">
+        <style type="text/css" media="print">
+          {`
+            @page { size: portrait; margin: 0; }
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          `}
+        </style>
+        <div className="mb-3 border-b pb-2">
+          <h1 className="text-xl font-bold uppercase">
+            Checklist de Verificación de Fermentación
           </h1>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-xs text-gray-600 mt-1">
             Turno: {turnoActual} | Fecha: {format(ahora, "dd/MM/yyyy HH:mm")}
           </p>
         </div>
 
-        <table className="w-full border-collapse border border-black text-left text-sm">
+        <table className="w-full border-collapse border border-black text-left text-[11px]">
           <thead>
             <tr className="bg-gray-100">
-              <th className="border border-black p-2 font-bold text-center w-20">Hora</th>
-              <th className="border border-black p-2 font-bold w-24">Tanque</th>
-              <th className="border border-black p-2 font-bold w-32">Marca</th>
-              <th className="border border-black p-2 font-bold w-32 text-center">Actividad</th>
-              <th className="border border-black p-2 font-bold w-24">PH/Tiempo</th>
-              <th className="border border-black p-2 font-bold w-24">Presión/Op</th>
+              <th className="border border-black p-1 font-bold text-center w-[40px]">Hora</th>
+              <th className="border border-black p-1 font-bold text-left w-[50px]">Tanque</th>
+              <th className="border border-black p-1 font-bold text-left w-[120px]">Marca</th>
+              <th className="border border-black p-1 font-bold text-left w-[60px]">Actividad</th>
+              <th className="border border-black p-1 font-bold text-left w-[25%]">Ph/Tiempo de purga</th>
+              <th className="border border-black p-1 font-bold text-left w-[25%]">Chequeo Presión</th>
+              <th className="border border-black p-1 font-bold text-left w-[25%]">°P</th>
             </tr>
           </thead>
           <tbody>
@@ -315,13 +322,13 @@ function Dashboard() {
             ]
               .sort((a, b) => a.date.getTime() - b.date.getTime())
               .map((item, i) => (
-                <tr key={i} className={`h-12 ${item.isPurga ? "bg-red-50/30" : ""}`}>
-                  <td className="border border-black p-2 text-center font-medium">
+                <tr key={i} className={item.isPurga ? "bg-red-50/30" : ""}>
+                  <td className="border border-black p-1 text-center font-medium whitespace-nowrap">
                     {format(item.date, "HH:mm")}
                   </td>
-                  <td className="border border-black p-2 font-semibold">T-{item.tanque}</td>
-                  <td className="border border-black p-2">{item.marca}</td>
-                  <td className="border border-black p-2 text-center text-gray-700 font-medium">
+                  <td className="border border-black p-1 font-semibold text-left whitespace-nowrap">T-{item.tanque}</td>
+                  <td className="border border-black p-1 text-left truncate max-w-[120px]">{item.marca}</td>
+                  <td className="border border-black p-1 text-left text-gray-700 font-medium whitespace-nowrap">
                     {item.isPurga ? (
                       <span className="text-rose-700">{item.tipo}</span>
                     ) : (
@@ -329,15 +336,16 @@ function Dashboard() {
                     )}
                   </td>
 
-                  <td className="border border-black p-2"></td>
-                  <td className="border border-black p-2"></td>
+                  <td className="border border-black p-1"></td>
+                  <td className="border border-black p-1"></td>
+                  <td className="border border-black p-1"></td>
                 </tr>
               ))}
             {chequeosDelTurno.flatMap((c) => c.items).length === 0 && purgasDelTurno.flatMap((p) => p.items).length === 0 && (
               <tr>
                 <td
-                  colSpan={6}
-                  className="border border-black p-4 text-center text-gray-500 italic"
+                  colSpan={7}
+                  className="border border-black p-2 text-center text-gray-500 italic"
                 >
                   No hay chequeos ni purgas programadas para este turno
                 </td>

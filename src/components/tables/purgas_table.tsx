@@ -11,7 +11,8 @@ import {
 import { CustomTableHead, CustomTableCell } from "@/components/tables/custom_table_cells";
 import { type PurgaRow as PurgaRowType } from "@/types/proceso";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
-import { Circle, CheckCircle2 } from "lucide-react";
+import { useAuthStore } from "@/store/useAuthStore";
+import { Circle, CheckCircle2, Trash2, Eye, EyeOff } from "lucide-react";
 
 const EMPLEADOS = ["LAMD", "MJFA", "VHAL", "OEVM", "ORC", "PLRG"];
 const TIEMPOS = ["1", "2", "3", "4", "5", "6", "7"];
@@ -28,11 +29,15 @@ function formatDate(isoString?: string | null) {
   }
 }
 
-const PurgaRow = memo(({ r }: { r: PurgaRowType }) => {
+const PurgaRow = memo(({ r, hiddenColumns }: { r: PurgaRowType; hiddenColumns: string[] }) => {
   const updatePurgaField = useOperacionesStore((s) => s.updatePurgaField);
+  const deletePurga = useOperacionesStore((s) => s.deletePurga);
+  const user = useAuthStore((s) => s.user);
+  const superUserEmail = import.meta.env.VITE_API_FIREBASE_EMAIL || "cecilialopezsolis1122@gmail.com";
+  const isSuperUser = user?.email === superUserEmail;
 
   const renderPurga = (p: any, i: number) => {
-    const completada = p.tiempo && p.realiza;
+    const completada = Boolean(p.tiempo && p.realiza);
     return (
       <Fragment key={i}>
         <CustomTableCell
@@ -53,7 +58,7 @@ const PurgaRow = memo(({ r }: { r: PurgaRowType }) => {
                 : "border-transparent text-slate-400"
             }`}
           >
-            <option value="" disabled className="text-slate-300 font-medium">
+            <option value="" disabled={!isSuperUser} className="text-slate-300 font-medium">
               —
             </option>
             {TIEMPOS.map((t) => (
@@ -73,7 +78,7 @@ const PurgaRow = memo(({ r }: { r: PurgaRowType }) => {
                 : "border-transparent text-slate-400"
             }`}
           >
-            <option value="" disabled className="text-slate-300 font-medium">
+            <option value="" disabled={!isSuperUser} className="text-slate-300 font-medium">
               —
             </option>
             {EMPLEADOS.map((emp) => (
@@ -100,22 +105,42 @@ const PurgaRow = memo(({ r }: { r: PurgaRowType }) => {
       <CustomTableCell className="font-black text-sm text-slate-900">{r.tanque}</CustomTableCell>
 
       {/* Purga Inicial */}
-      {r.purgas.length > 0 && renderPurga(r.purgas[0], 0)}
+      {!hiddenColumns.includes("p0") && r.purgas.length > 0 && renderPurga(r.purgas[0], 0)}
 
       {/* Fecha Llenado / Tiempo Llenado */}
-      <CustomTableCell className="text-sm font-bold tracking-tight text-slate-700 tabular-nums">
-        <div className="flex flex-col">
-          <span>{formatDate(r.fechaLlenado)}</span>
-          {r.tiempoLlenadoHoras !== undefined && (
-            <span className="text-xs text-blue-600 bg-blue-50 px-1 py-0.5 rounded w-fit mt-0.5 border border-blue-100">
-              {r.tiempoLlenadoHoras} hrs llenado
-            </span>
-          )}
-        </div>
-      </CustomTableCell>
+      {!hiddenColumns.includes("fecha") && (
+        <CustomTableCell className="text-sm font-bold tracking-tight text-slate-700 tabular-nums">
+          <div className="flex flex-col">
+            <span>{formatDate(r.fechaLlenado)}</span>
+            {r.tiempoLlenadoHoras !== undefined && (
+              <span className="text-xs text-blue-600 bg-blue-50 px-1 py-0.5 rounded w-fit mt-0.5 border border-blue-100">
+                {r.tiempoLlenadoHoras} hrs llenado
+              </span>
+            )}
+          </div>
+        </CustomTableCell>
+      )}
 
       {/* 8 Purgas */}
-      {r.purgas.slice(1).map((p, index) => renderPurga(p, index + 1))}
+      {r.purgas.slice(1).map((p, index) => {
+        if (hiddenColumns.includes(`p${index + 1}`)) return null;
+        return renderPurga(p, index + 1);
+      })}
+
+      {isSuperUser && (
+        <CustomTableCell className="border-r-0 text-center p-1 align-middle">
+          <button
+            onClick={() => {
+              if (window.confirm("¿Estás seguro de eliminar este registro completo?")) {
+                deletePurga(r.id);
+              }
+            }}
+            className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </CustomTableCell>
+      )}
     </TableRow>
   );
 });
@@ -126,12 +151,34 @@ const ITEMS_PER_PAGE = 20;
 
 export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
   const [page, setPage] = useState(1);
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
+  const user = useAuthStore((s) => s.user);
+  const superUserEmail = import.meta.env.VITE_API_FIREBASE_EMAIL || "cecilialopezsolis1122@gmail.com";
+  const isSuperUser = user?.email === superUserEmail;
+
   const totalPages = Math.max(1, Math.ceil(rows.length / ITEMS_PER_PAGE));
   const paginatedRows = rows.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+  const toggleColumn = (colId: string) => {
+    setHiddenColumns((prev) =>
+      prev.includes(colId) ? prev.filter((c) => c !== colId) : [...prev, colId]
+    );
+  };
 
   return (
     <div className="space-y-4">
       <div className="w-full overflow-x-auto">
+        {isSuperUser && hiddenColumns.length > 0 && (
+          <div className="mb-2 flex justify-end">
+            <button
+              onClick={() => setHiddenColumns([])}
+              className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              Mostrar columnas ocultas ({hiddenColumns.length})
+            </button>
+          </div>
+        )}
         <Table className="w-max min-w-full text-sm">
           <TableHeader className="bg-slate-100/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-20 shadow-sm">
             <TableRow className="border-b border-slate-200 hover:bg-transparent">
@@ -141,21 +188,57 @@ export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
               <CustomTableHead rowSpan={2} className="align-middle min-w-[80px]">
                 Tanque
               </CustomTableHead>
-              <CustomTableHead colSpan={3} className="text-center">
-                Purga Inicial
-              </CustomTableHead>
-              <CustomTableHead rowSpan={2} className="align-middle min-w-[150px]">
-                Fecha Fin Llenado
-              </CustomTableHead>
-              {Array.from({ length: 8 }, (_, i) => (
-                <CustomTableHead key={i} colSpan={3} className="text-center">
-                  {`Purga ${i + 1}`}
+              {!hiddenColumns.includes("p0") && (
+                <CustomTableHead colSpan={3} className="text-center group relative">
+                  Purga Inicial
+                  {isSuperUser && (
+                    <button
+                      onClick={() => toggleColumn("p0")}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-200 rounded"
+                    >
+                      <EyeOff className="w-3 h-3 text-slate-500" />
+                    </button>
+                  )}
                 </CustomTableHead>
-              ))}
+              )}
+              {!hiddenColumns.includes("fecha") && (
+                <CustomTableHead rowSpan={2} className="align-middle min-w-[150px] group relative">
+                  Fecha Fin Llenado
+                  {isSuperUser && (
+                    <button
+                      onClick={() => toggleColumn("fecha")}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-200 rounded"
+                    >
+                      <EyeOff className="w-3 h-3 text-slate-500" />
+                    </button>
+                  )}
+                </CustomTableHead>
+              )}
+              {Array.from({ length: 8 }, (_, i) => {
+                const colId = `p${i + 1}`;
+                if (hiddenColumns.includes(colId)) return null;
+                return (
+                  <CustomTableHead key={i} colSpan={3} className={`text-center group relative ${i === 7 && !isSuperUser ? "border-r-0" : ""}`}>
+                    {`Purga ${i + 1}`}
+                    {isSuperUser && (
+                      <button
+                        onClick={() => toggleColumn(colId)}
+                        className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-200 rounded"
+                      >
+                        <EyeOff className="w-3 h-3 text-slate-500" />
+                      </button>
+                    )}
+                  </CustomTableHead>
+                );
+              })}
+              {isSuperUser && <CustomTableHead className="border-r-0 w-10"></CustomTableHead>}
             </TableRow>
             <TableRow className="border-b-0 hover:bg-transparent">
-              {Array.from({ length: 9 }, (_, i) => (
-                <Fragment key={i}>
+              {Array.from({ length: 9 }, (_, i) => {
+                const colId = `p${i}`;
+                if (hiddenColumns.includes(colId)) return null;
+                return (
+                  <Fragment key={i}>
                   <TableHead className="text-sm font-bold tracking-wider text-slate-500 text-center border-l border-slate-200 min-w-[130px]">
                     Fecha / Hora
                   </TableHead>
@@ -166,7 +249,8 @@ export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
                     Realiza
                   </CustomTableHead>
                 </Fragment>
-              ))}
+                );
+              })}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -182,7 +266,7 @@ export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedRows.map((r) => <PurgaRow key={r.id} r={r} />)
+              paginatedRows.map((r) => <PurgaRow key={r.id} r={r} hiddenColumns={hiddenColumns} />)
             )}
           </TableBody>
         </Table>

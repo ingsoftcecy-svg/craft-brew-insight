@@ -28,10 +28,10 @@ import {
 const items = [
   { title: "Dashboard", url: "/", icon: Home },
   { title: "Gráficos", url: "/graficos", icon: TrendingUp },
-  { title: "Agenda", url: "/agenda", icon: Calendar },
   { title: "Chequeo de Platos", url: "/extracto", icon: Beaker },
   { title: "Purgas de Trub", url: "/purgas", icon: ClipboardList },
   { title: "QR de Unitanques", url: "/admin/qr-print", icon: Printer },
+   { title: "Agenda", url: "/agenda", icon: Calendar },
 ];
 
 export function AppSidebar() {
@@ -49,7 +49,7 @@ export function AppSidebar() {
   return (
     <Sidebar
       collapsible="icon"
-      className="border-r border-slate-200/50 shadow-sm overflow-hidden bg-white/70 backdrop-blur-xl"
+      className="print:hidden border-r border-slate-200/50 shadow-sm overflow-hidden bg-white/70 backdrop-blur-xl"
     >
       {/* Brand */}
       <SidebarHeader className="border-b border-slate-100 bg-transparent pt-6 pb-5 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:pt-6 group-data-[collapsible=icon]:pb-5">
