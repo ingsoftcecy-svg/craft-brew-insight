@@ -115,8 +115,8 @@ export const Route = createFileRoute("/api/ingesta")({
               /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/,
             );
             if (matchDmy) {
-              let part1 = parseInt(matchDmy[1], 10);
-              let part2 = parseInt(matchDmy[2], 10);
+              const part1 = parseInt(matchDmy[1], 10);
+              const part2 = parseInt(matchDmy[2], 10);
               const year = parseInt(matchDmy[3], 10);
               let hour = matchDmy[4] ? parseInt(matchDmy[4], 10) : 0;
               const minute = matchDmy[5] ? parseInt(matchDmy[5], 10) : 0;
@@ -254,6 +254,8 @@ export const Route = createFileRoute("/api/ingesta")({
               h72: sanitizeDate(h72, 72),
               h96: sanitizeDate(h96, 96),
               h120: sanitizeDate(h120, 120),
+              h128: sanitizeDate(undefined, 128),
+              h136: sanitizeDate(undefined, 136),
               h144: sanitizeDate(h144, 144),
               estado72h: "Pendiente",
               estado: "En Rango" as ExtractoEstado,

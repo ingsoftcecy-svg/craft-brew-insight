@@ -25,14 +25,14 @@ function formatDate(isoString: string | null | undefined) {
 export function ExtractoTable({ rows }: ExtractoTableProps) {
   const toggleEstadoChequeo = useOperacionesStore((s) => s.toggleEstadoChequeo);
   const deleteExtracto = useOperacionesStore((s) => s.deleteExtracto);
-  const user = useAuthStore((s) => s.user);
-  const superUserEmail = import.meta.env.VITE_API_FIREBASE_EMAIL || "cecilialopezsolis1122@gmail.com";
-  const isSuperUser = user?.email === superUserEmail;
+  const isSuperUser = useAuthStore((s) => s.isSuperUser);
   const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
+
+  const HORAS = [24, 48, 72, 96, 120, 128, 136, 144] as const;
 
   const toggleColumn = (colId: string) => {
     setHiddenColumns((prev) =>
-      prev.includes(colId) ? prev.filter((c) => c !== colId) : [...prev, colId]
+      prev.includes(colId) ? prev.filter((c) => c !== colId) : [...prev, colId],
     );
   };
 
@@ -72,13 +72,15 @@ export function ExtractoTable({ rows }: ExtractoTableProps) {
           <TableRow className="border-b-0 hover:bg-transparent">
             {renderHeader("Marca", "marca")}
             {renderHeader("Tanque", "tanque")}
+            {renderHeader("Fecha Inicio Llenado", "fechaInicio")}
             {renderHeader("Fecha Fin Llenado", "fecha")}
-            {renderHeader("24 Hrs", "24h", "text-center")}
-            {renderHeader("48 Hrs", "48h", "text-center")}
-            {renderHeader("72 Hrs", "72h", "text-center")}
-            {renderHeader("96 Hrs", "96h", "text-center")}
-            {renderHeader("120 Hrs", "120h", "text-center")}
-            {renderHeader("144 Hrs", "144h", `text-center ${!isSuperUser ? "border-r-0" : ""}`)}
+            {HORAS.map((h) =>
+              renderHeader(
+                `${h} Hrs`,
+                `${h}h`,
+                `text-center ${h === 144 && !isSuperUser ? "border-r-0" : ""}`,
+              ),
+            )}
             {isSuperUser && <CustomTableHead className="border-r-0 w-10"></CustomTableHead>}
           </TableRow>
         </TableHeader>
@@ -100,94 +102,46 @@ export function ExtractoTable({ rows }: ExtractoTableProps) {
                   {r.tanque}
                 </CustomTableCell>
               )}
+              {!hiddenColumns.includes("fechaInicio") && (
+                <CustomTableCell className="text-sm font-bold tracking-tight text-slate-700 tabular-nums">
+                  <div className="flex flex-col">
+                    <span>{formatDate(r.fechaInicioLlenado)}</span>
+                  </div>
+                </CustomTableCell>
+              )}
               {!hiddenColumns.includes("fecha") && (
                 <CustomTableCell className="text-sm font-bold tracking-tight text-slate-700 tabular-nums">
                   {formatDate(r.fechaLlenado)}
                 </CustomTableCell>
               )}
-              {!hiddenColumns.includes("24h") && (
-                <CustomTableCell
-                  onClick={() => isSuperUser && r.h24 && toggleEstadoChequeo(r.id, "24h", isSuperUser)}
-                  className={`text-sm tabular-nums text-center ${!r.h24 ? "text-slate-300" : r.estado24h === "Completado" ? "text-emerald-600 font-bold bg-emerald-50/50" : "text-slate-500 font-medium"} ${isSuperUser && r.h24 ? "cursor-pointer hover:bg-emerald-50" : ""}`}
-                >
-                  <div className="flex items-center justify-center gap-1.5">
-                    {r.estado24h === "Completado" && (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    )}
-                    {formatDate(r.h24)}
-                  </div>
-                </CustomTableCell>
-              )}
-              {!hiddenColumns.includes("48h") && (
-                <CustomTableCell
-                  onClick={() => isSuperUser && r.h48 && toggleEstadoChequeo(r.id, "48h", isSuperUser)}
-                  className={`text-sm tabular-nums text-center ${!r.h48 ? "text-slate-300" : r.estado48h === "Completado" ? "text-emerald-600 font-bold bg-emerald-50/50" : "text-slate-500 font-medium"} ${isSuperUser && r.h48 ? "cursor-pointer hover:bg-emerald-50" : ""}`}
-                >
-                  <div className="flex items-center justify-center gap-1.5">
-                    {r.estado48h === "Completado" && (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    )}
-                    {formatDate(r.h48)}
-                  </div>
-                </CustomTableCell>
-              )}
-              {!hiddenColumns.includes("72h") && (
-                <CustomTableCell
-                  onClick={() => isSuperUser && r.h72 && toggleEstadoChequeo(r.id, "72h", isSuperUser)}
-                  className={`text-sm tabular-nums text-center ${!r.h72 ? "text-slate-300" : r.estado72h === "Completado" ? "text-emerald-600 font-bold bg-emerald-50/50" : "text-slate-500 font-medium"} ${isSuperUser && r.h72 ? "cursor-pointer hover:bg-emerald-50" : ""}`}
-                >
-                  <div className="flex items-center justify-center gap-1.5">
-                    {r.estado72h === "Completado" && (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    )}
-                    {formatDate(r.h72)}
-                  </div>
-                </CustomTableCell>
-              )}
-              {!hiddenColumns.includes("96h") && (
-                <CustomTableCell
-                  onClick={() => isSuperUser && r.h96 && toggleEstadoChequeo(r.id, "96h", isSuperUser)}
-                  className={`text-sm tabular-nums text-center ${!r.h96 ? "text-slate-300" : r.estado96h === "Completado" ? "text-emerald-600 font-bold bg-emerald-50/50" : "text-slate-500 font-medium"} ${isSuperUser && r.h96 ? "cursor-pointer hover:bg-emerald-50" : ""}`}
-                >
-                  <div className="flex items-center justify-center gap-1.5">
-                    {r.estado96h === "Completado" && (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    )}
-                    {formatDate(r.h96)}
-                  </div>
-                </CustomTableCell>
-              )}
-              {!hiddenColumns.includes("120h") && (
-                <CustomTableCell
-                  onClick={() => isSuperUser && r.h120 && toggleEstadoChequeo(r.id, "120h", isSuperUser)}
-                  className={`text-sm tabular-nums text-center ${!r.h120 ? "text-slate-300" : r.estado120h === "Completado" ? "text-emerald-600 font-bold bg-emerald-50/50" : "text-slate-500 font-medium"} ${isSuperUser && r.h120 ? "cursor-pointer hover:bg-emerald-50" : ""}`}
-                >
-                  <div className="flex items-center justify-center gap-1.5">
-                    {r.estado120h === "Completado" && (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    )}
-                    {formatDate(r.h120)}
-                  </div>
-                </CustomTableCell>
-              )}
-              {!hiddenColumns.includes("144h") && (
-                <CustomTableCell
-                  onClick={() => isSuperUser && r.h144 && toggleEstadoChequeo(r.id, "144h", isSuperUser)}
-                  className={`text-sm tabular-nums text-center ${!isSuperUser ? "border-r-0" : ""} ${!r.h144 ? "text-slate-300" : r.estado144h === "Completado" ? "text-emerald-600 font-bold bg-emerald-50/50" : "text-slate-500 font-medium"} ${isSuperUser && r.h144 ? "cursor-pointer hover:bg-emerald-50" : ""}`}
-                >
-                  <div className="flex items-center justify-center gap-1.5">
-                    {r.estado144h === "Completado" && (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    )}
-                    {formatDate(r.h144)}
-                  </div>
-                </CustomTableCell>
-              )}
+              {HORAS.map((h) => {
+                const key = `${h}h`;
+                const val = r[`h${h}`];
+                const estado = r[`estado${h}h`];
+                if (hiddenColumns.includes(key)) return null;
+
+                return (
+                  <CustomTableCell
+                    key={h}
+                    onClick={() =>
+                      isSuperUser && val && toggleEstadoChequeo(r.id, key, isSuperUser)
+                    }
+                    className={`text-sm tabular-nums text-center ${h === 144 && !isSuperUser ? "border-r-0" : ""} ${!val ? "text-slate-300" : estado === "Completado" ? "text-emerald-600 font-bold bg-emerald-50/50" : "text-slate-500 font-medium"} ${isSuperUser && val ? "cursor-pointer hover:bg-emerald-50" : ""}`}
+                  >
+                    <div className="flex items-center justify-center gap-1.5">
+                      {estado === "Completado" && (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                      )}
+                      {formatDate(val)}
+                    </div>
+                  </CustomTableCell>
+                );
+              })}
               {isSuperUser && (
                 <CustomTableCell className="border-r-0 text-center">
                   <button
                     onClick={() => {
-                      if(window.confirm("¿Estás seguro de eliminar este registro completo?")) {
+                      if (window.confirm("¿Estás seguro de eliminar este registro completo?")) {
                         deleteExtracto(r.id);
                       }
                     }}

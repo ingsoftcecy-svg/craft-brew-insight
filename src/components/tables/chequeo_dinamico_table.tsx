@@ -28,13 +28,14 @@ export function ChequeoDinamicoTable({ rows, horaLabel }: ChequeoDinamicoTablePr
   const toggleEstadoChequeo = useOperacionesStore((s) => s.toggleEstadoChequeo);
   const deleteExtracto = useOperacionesStore((s) => s.deleteExtracto);
   const user = useAuthStore((s) => s.user);
-  const superUserEmail = import.meta.env.VITE_API_FIREBASE_EMAIL || "cecilialopezsolis1122@gmail.com";
+  const superUserEmail =
+    import.meta.env.VITE_API_FIREBASE_EMAIL || "cecilialopezsolis1122@gmail.com";
   const isSuperUser = user?.email === superUserEmail;
   const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
 
   const toggleColumn = (colId: string) => {
     setHiddenColumns((prev) =>
-      prev.includes(colId) ? prev.filter((c) => c !== colId) : [...prev, colId]
+      prev.includes(colId) ? prev.filter((c) => c !== colId) : [...prev, colId],
     );
   };
 
@@ -121,7 +122,10 @@ export function ChequeoDinamicoTable({ rows, horaLabel }: ChequeoDinamicoTablePr
                   <CustomTableCell className={`text-center ${!isSuperUser ? "border-r-0" : ""}`}>
                     <div className="flex justify-center">
                       <button
-                        onClick={() => (!isCompletado || isSuperUser) && toggleEstadoChequeo(r.id, horaLabel, isSuperUser)}
+                        onClick={() =>
+                          (!isCompletado || isSuperUser) &&
+                          toggleEstadoChequeo(r.id, horaLabel, isSuperUser)
+                        }
                         disabled={isCompletado && !isSuperUser}
                         className={`
                           relative flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-300

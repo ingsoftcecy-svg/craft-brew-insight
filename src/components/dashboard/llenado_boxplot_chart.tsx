@@ -26,7 +26,7 @@ function getTipoTanque(tanqueStr: string): string | null {
   const numMatch = String(tanqueStr).match(/\d+/);
   if (!numMatch) return null;
   const num = parseInt(numMatch[0], 10);
-  
+
   if (num >= 1 && num <= 22) return "C";
   if (num >= 23 && num <= 38) return "B";
   if (num >= 39 && num <= 50) return "A";

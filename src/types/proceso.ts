@@ -52,12 +52,16 @@ export interface ExtractoRow {
   h72: string | null;
   h96: string | null;
   h120: string | null;
+  h128: string | null;
+  h136: string | null;
   h144: string | null;
   estado24h?: "Pendiente" | "Completado";
   estado48h?: "Pendiente" | "Completado";
   estado72h?: "Pendiente" | "Completado";
   estado96h?: "Pendiente" | "Completado";
   estado120h?: "Pendiente" | "Completado";
+  estado128h?: "Pendiente" | "Completado";
+  estado136h?: "Pendiente" | "Completado";
   estado144h?: "Pendiente" | "Completado";
   estado: ExtractoEstado;
 }

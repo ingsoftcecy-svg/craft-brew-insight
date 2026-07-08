@@ -22,7 +22,7 @@
 }
 
 .dashboard-controls {
-  @apply flex items-center gap-4 bg-slate-50 p-2 rounded-lg border border-slate-100;
+  @apply flex flex-wrap items-center gap-2 md:gap-4 bg-slate-50 p-2 rounded-lg border border-slate-100;
 }
 
 .dashboard-control-group {

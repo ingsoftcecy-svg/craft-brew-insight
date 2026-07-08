@@ -41,7 +41,7 @@ export function TableFilters({
 
   return (
     <>
-      <div className="relative w-56 shrink-0">
+      <div className="relative w-full md:w-56 shrink-0">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={query}
@@ -55,7 +55,7 @@ export function TableFilters({
       </div>
 
       <Select value={periodoActual} onValueChange={handleChange(setPeriodo)}>
-        <SelectTrigger className="w-36 bg-slate-50 border-slate-200 rounded-xl h-10 font-medium">
+        <SelectTrigger className="w-full md:w-36 bg-slate-50 border-slate-200 rounded-xl h-10 font-medium">
           <SelectValue placeholder="Mes" />
         </SelectTrigger>
         <SelectContent>
@@ -73,7 +73,7 @@ export function TableFilters({
       </Select>
 
       <Select value={marca} onValueChange={handleChange(setMarca)}>
-        <SelectTrigger className="w-40 bg-slate-50 border-slate-200 rounded-xl h-10 font-medium">
+        <SelectTrigger className="w-full md:w-40 bg-slate-50 border-slate-200 rounded-xl h-10 font-medium">
           <SelectValue placeholder="Marca" />
         </SelectTrigger>
         <SelectContent>
@@ -87,7 +87,7 @@ export function TableFilters({
       </Select>
 
       <Select value={turno} onValueChange={handleChange(setTurno)}>
-        <SelectTrigger className="w-40 bg-slate-50 border-slate-200 rounded-xl h-10 font-medium">
+        <SelectTrigger className="w-full md:w-40 bg-slate-50 border-slate-200 rounded-xl h-10 font-medium">
           <SelectValue placeholder="Turno" />
         </SelectTrigger>
         <SelectContent>

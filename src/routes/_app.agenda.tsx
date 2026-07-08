@@ -51,28 +51,41 @@ function AgendaPage() {
       ];
     });
 
-    // Calcular "completado" para eventosAgenda (Chequeo Plato)
-    const eventosMapeados = eventosAgenda.map((evento: any) => {
-      let completado = false;
-      let extractoId: string | undefined = undefined;
-      if (evento.titulo?.includes("Chequeo Plato 72h")) {
-        const match = evento.titulo.match(/Tanque\s+([\w-]+)/i);
-        if (match) {
-          const tanque = match[1];
-          const extracto = extractos.find((e) => e.tanque === tanque);
-          if (extracto) {
-            extractoId = extracto.id;
-            if (extracto.estado72h === "Completado") {
-              completado = true;
-            }
-          }
-        }
-      }
-      return { ...evento, completado, extractoId };
+    // 1. Generar Chequeos Dinámicamente
+    const chequeosEventos = extractos.flatMap((e) => {
+      const horas = [24, 48, 72, 96, 120, 128, 136, 144];
+      return horas.flatMap((h) => {
+        const key = `h${h}` as keyof typeof e;
+        const estadoKey = `estado${h}h` as keyof typeof e;
+        const horaStr = e[key];
+        if (!horaStr) return [];
+        const dateObj = new Date(horaStr as string);
+        if (isNaN(dateObj.getTime())) return [];
+
+        return [
+          {
+            id: `chequeo-${e.id}-${h}`,
+            titulo: `Chequeo Plato ${h}h - Tanque ${e.tanque}`,
+            inicio: dateObj.toISOString(),
+            fin: dateObj.toISOString(),
+            tipo: "Turno" as const,
+            descripcion: `Marca: ${e.marca}`,
+            turno: obtenerTurnoPorHora(dateObj.toISOString()),
+            completado: e[estadoKey] === "Completado",
+            extractoId: e.id,
+          },
+        ];
+      });
     });
 
+    // 2. Mantener eventos manuales de Firestore (ignorando Purgas y Chequeos viejos)
+    const eventosManuales = eventosAgenda.filter(
+      (e) => !e.titulo?.includes("Purga") && !e.titulo?.includes("Chequeo Plato")
+    );
+
     const todosLosEventos = [
-      ...eventosMapeados.filter((e) => !e.titulo?.includes("Purga")),
+      ...eventosManuales,
+      ...chequeosEventos,
       ...purgasEventos,
     ];
 
@@ -116,9 +129,9 @@ function AgendaPage() {
               onChange={(e) => set_purgaSeleccionada(Number(e.target.value))}
               className="bg-background border rounded-md px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
                 <option key={num} value={num}>
-                  Purga {num}
+                  {num === 0 ? "Purga Inicial" : `Purga ${num}`}
                 </option>
               ))}
             </select>

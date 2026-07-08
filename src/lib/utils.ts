@@ -13,8 +13,8 @@ export function parseMexicanDate(dateString: string | Date | null | undefined): 
   const match = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
 
   if (match) {
-    let part1 = parseInt(match[1], 10);
-    let part2 = parseInt(match[2], 10);
+    const part1 = parseInt(match[1], 10);
+    const part2 = parseInt(match[2], 10);
     const year = parseInt(match[3], 10);
     let hour = match[4] ? parseInt(match[4], 10) : 0;
     const minute = match[5] ? parseInt(match[5], 10) : 0;

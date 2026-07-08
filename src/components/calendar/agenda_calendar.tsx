@@ -20,7 +20,7 @@ const getEventColorClass = (e: any, isDot = false) => {
       ? "bg-rose-500"
       : "bg-rose-50/80 text-rose-700 border-l-[3px] border-rose-500 hover:bg-rose-100/80 transition-colors";
   }
-  if (e.titulo && e.titulo.includes("Chequeo Plato 72h")) {
+  if (e.titulo && e.titulo.includes("Chequeo Plato")) {
     return isDot
       ? "bg-indigo-500"
       : "bg-indigo-50/80 text-indigo-700 border-l-[3px] border-indigo-500 hover:bg-indigo-100/80 transition-colors";
@@ -38,8 +38,6 @@ export function AgendaCalendar({ cursor, set_cursor, days, events }: AgendaCalen
   const events_by_day = (d: Date) =>
     events.filter((e) => {
       if (!isSameDay(new Date(e.inicio), d)) return false;
-      // Filtrar eventos de Plato que NO sean de 72h
-      if (e.titulo.includes("Medir Plato") && !e.titulo.includes("72h")) return false;
       return true;
     });
 
@@ -87,7 +85,7 @@ export function AgendaCalendar({ cursor, set_cursor, days, events }: AgendaCalen
         {/* Leyenda superior */}
         <div className="mb-4 flex flex-wrap gap-4 text-xs font-semibold">
           {[
-            { label: "Chequeo Plato 72h", tipo: "Turno", titulo: "Chequeo Plato 72h" },
+            { label: "Chequeo Plato", tipo: "Turno", titulo: "Chequeo Plato" },
             { label: "Purga de Trub", tipo: "Purga", titulo: "Purga" },
           ].map((item) => (
             <div

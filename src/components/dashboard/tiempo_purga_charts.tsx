@@ -69,7 +69,8 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
     const purgasFiltradas = purgas.filter((p) => {
       const cumpleTanque = filtroTanque === "todos" || p.tanque === filtroTanque;
       const cumpleMarca = filtroMarca === "todas" || p.marca === filtroMarca;
-      const cumpleTipo = filtroTipoTanque === "todos" || getTipoTanque(p.tanque) === filtroTipoTanque;
+      const cumpleTipo =
+        filtroTipoTanque === "todos" || getTipoTanque(p.tanque) === filtroTipoTanque;
       return cumpleTanque && cumpleMarca && cumpleTipo;
     });
 
@@ -83,7 +84,10 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
             fecha: parseISO(purge.fechaHora!),
           })),
       )
-      .filter((p) => isValid(p.fecha) && (mesFiltro === "todos" || format(p.fecha, "yyyy-MM") === mesFiltro));
+      .filter(
+        (p) =>
+          isValid(p.fecha) && (mesFiltro === "todos" || format(p.fecha, "yyyy-MM") === mesFiltro),
+      );
 
     // Función auxiliar para agrupar y promediar
     const agruparYPromediar = (

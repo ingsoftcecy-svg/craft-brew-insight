@@ -243,6 +243,8 @@ function limpiarYMapear(filasJson: any[]): ResultadoLimpieza {
       h72: parseHora("PLATO_72_HRS", 72),
       h96: parseHora("PLATO_96_HRS", 96),
       h120: parseHora("PLATO_120_HRS", 120),
+      h128: parseHora("PLATO_128_HRS", 128),
+      h136: parseHora("PLATO_136_HRS", 136),
       h144: parseHora("PLATO_144_HRS", 144),
       estado: "En Rango",
     });

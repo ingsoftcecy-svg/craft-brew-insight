@@ -13,6 +13,7 @@ import { type PurgaRow as PurgaRowType } from "@/types/proceso";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Circle, CheckCircle2, Trash2, Eye, EyeOff } from "lucide-react";
+import { TablePagination } from "@/components/ui/table_pagination";
 
 const EMPLEADOS = ["LAMD", "MJFA", "VHAL", "OEVM", "ORC", "PLRG"];
 const TIEMPOS = ["1", "2", "3", "4", "5", "6", "7"];
@@ -32,20 +33,26 @@ function formatDate(isoString?: string | null) {
 const PurgaRow = memo(({ r, hiddenColumns }: { r: PurgaRowType; hiddenColumns: string[] }) => {
   const updatePurgaField = useOperacionesStore((s) => s.updatePurgaField);
   const deletePurga = useOperacionesStore((s) => s.deletePurga);
-  const user = useAuthStore((s) => s.user);
-  const superUserEmail = import.meta.env.VITE_API_FIREBASE_EMAIL || "cecilialopezsolis1122@gmail.com";
-  const isSuperUser = user?.email === superUserEmail;
+  const isSuperUser = useAuthStore((s) => s.isSuperUser);
 
-  const renderPurga = (p: any, i: number) => {
+  const renderPurga = (p: any, i: number, isInitial: boolean = false) => {
     const completada = Boolean(p.tiempo && p.realiza);
+    const dateToShow = isInitial ? r.fechaLlenado : p.fechaHora;
     return (
       <Fragment key={i}>
         <CustomTableCell
           className={`text-sm font-bold tabular-nums text-center ${completada ? "text-green-600 bg-green-50/30" : "text-slate-500"}`}
         >
-          <div className="flex items-center justify-center gap-1.5">
-            {completada && <CheckCircle2 className="w-4 h-4 text-green-500" />}
-            {formatDate(p.fechaHora)}
+          <div className="flex flex-col items-center justify-center">
+            <div className="flex items-center justify-center gap-1.5">
+              {completada && <CheckCircle2 className="w-4 h-4 text-green-500" />}
+              {formatDate(dateToShow)}
+            </div>
+            {isInitial && r.tiempoLlenadoHoras !== undefined && (
+              <span className="text-[10px] text-blue-600 bg-blue-50 px-1 py-0.5 rounded w-fit mt-0.5 border border-blue-100">
+                {r.tiempoLlenadoHoras}h llenado
+              </span>
+            )}
           </div>
         </CustomTableCell>
         <TableCell className="text-center p-1 border-b border-slate-100">
@@ -104,27 +111,22 @@ const PurgaRow = memo(({ r, hiddenColumns }: { r: PurgaRowType; hiddenColumns: s
       {/* Tanque */}
       <CustomTableCell className="font-black text-sm text-slate-900">{r.tanque}</CustomTableCell>
 
-      {/* Purga Inicial */}
-      {!hiddenColumns.includes("p0") && r.purgas.length > 0 && renderPurga(r.purgas[0], 0)}
-
-      {/* Fecha Llenado / Tiempo Llenado */}
+      {/* Fecha Inicio Llenado */}
       {!hiddenColumns.includes("fecha") && (
         <CustomTableCell className="text-sm font-bold tracking-tight text-slate-700 tabular-nums">
           <div className="flex flex-col">
-            <span>{formatDate(r.fechaLlenado)}</span>
-            {r.tiempoLlenadoHoras !== undefined && (
-              <span className="text-xs text-blue-600 bg-blue-50 px-1 py-0.5 rounded w-fit mt-0.5 border border-blue-100">
-                {r.tiempoLlenadoHoras} hrs llenado
-              </span>
-            )}
+            <span>{formatDate(r.fechaInicioLlenado)}</span>
           </div>
         </CustomTableCell>
       )}
 
+      {/* Purga Inicial */}
+      {!hiddenColumns.includes("p0") && r.purgas.length > 0 && renderPurga(r.purgas[0], 0, true)}
+
       {/* 8 Purgas */}
       {r.purgas.slice(1).map((p, index) => {
         if (hiddenColumns.includes(`p${index + 1}`)) return null;
-        return renderPurga(p, index + 1);
+        return renderPurga(p, index + 1, false);
       })}
 
       {isSuperUser && (
@@ -152,16 +154,13 @@ const ITEMS_PER_PAGE = 20;
 export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
   const [page, setPage] = useState(1);
   const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
-  const user = useAuthStore((s) => s.user);
-  const superUserEmail = import.meta.env.VITE_API_FIREBASE_EMAIL || "cecilialopezsolis1122@gmail.com";
-  const isSuperUser = user?.email === superUserEmail;
+  const isSuperUser = useAuthStore((s) => s.isSuperUser);
 
-  const totalPages = Math.max(1, Math.ceil(rows.length / ITEMS_PER_PAGE));
   const paginatedRows = rows.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   const toggleColumn = (colId: string) => {
     setHiddenColumns((prev) =>
-      prev.includes(colId) ? prev.filter((c) => c !== colId) : [...prev, colId]
+      prev.includes(colId) ? prev.filter((c) => c !== colId) : [...prev, colId],
     );
   };
 
@@ -188,6 +187,19 @@ export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
               <CustomTableHead rowSpan={2} className="align-middle min-w-[80px]">
                 Tanque
               </CustomTableHead>
+              {!hiddenColumns.includes("fecha") && (
+                <CustomTableHead rowSpan={2} className="align-middle min-w-[150px] group relative">
+                  Fecha Inicio Llenado
+                  {isSuperUser && (
+                    <button
+                      onClick={() => toggleColumn("fecha")}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-200 rounded"
+                    >
+                      <EyeOff className="w-3 h-3 text-slate-500" />
+                    </button>
+                  )}
+                </CustomTableHead>
+              )}
               {!hiddenColumns.includes("p0") && (
                 <CustomTableHead colSpan={3} className="text-center group relative">
                   Purga Inicial
@@ -201,24 +213,15 @@ export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
                   )}
                 </CustomTableHead>
               )}
-              {!hiddenColumns.includes("fecha") && (
-                <CustomTableHead rowSpan={2} className="align-middle min-w-[150px] group relative">
-                  Fecha Fin Llenado
-                  {isSuperUser && (
-                    <button
-                      onClick={() => toggleColumn("fecha")}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-200 rounded"
-                    >
-                      <EyeOff className="w-3 h-3 text-slate-500" />
-                    </button>
-                  )}
-                </CustomTableHead>
-              )}
               {Array.from({ length: 8 }, (_, i) => {
                 const colId = `p${i + 1}`;
                 if (hiddenColumns.includes(colId)) return null;
                 return (
-                  <CustomTableHead key={i} colSpan={3} className={`text-center group relative ${i === 7 && !isSuperUser ? "border-r-0" : ""}`}>
+                  <CustomTableHead
+                    key={i}
+                    colSpan={3}
+                    className={`text-center group relative ${i === 7 && !isSuperUser ? "border-r-0" : ""}`}
+                  >
                     {`Purga ${i + 1}`}
                     {isSuperUser && (
                       <button
@@ -239,16 +242,16 @@ export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
                 if (hiddenColumns.includes(colId)) return null;
                 return (
                   <Fragment key={i}>
-                  <TableHead className="text-sm font-bold tracking-wider text-slate-500 text-center border-l border-slate-200 min-w-[130px]">
-                    Fecha / Hora
-                  </TableHead>
-                  <TableHead className="text-sm font-bold tracking-wider text-slate-500 text-center min-w-[60px]">
-                    Tiempo
-                  </TableHead>
-                  <CustomTableHead className="py-2 text-slate-500 min-w-[70px]">
-                    Realiza
-                  </CustomTableHead>
-                </Fragment>
+                    <TableHead className="text-sm font-bold tracking-wider text-slate-500 text-center border-l border-slate-200 min-w-[130px]">
+                      {i === 0 ? "Fecha Fin Llenado" : "Fecha / Hora"}
+                    </TableHead>
+                    <TableHead className="text-sm font-bold tracking-wider text-slate-500 text-center min-w-[60px]">
+                      Tiempo
+                    </TableHead>
+                    <CustomTableHead className="py-2 text-slate-500 min-w-[70px]">
+                      Realiza
+                    </CustomTableHead>
+                  </Fragment>
                 );
               })}
             </TableRow>
@@ -272,33 +275,13 @@ export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
         </Table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between px-2">
-          <p className="text-sm font-bold text-slate-600">
-            Mostrando {(page - 1) * ITEMS_PER_PAGE + 1}–
-            {Math.min(page * ITEMS_PER_PAGE, rows.length)} de {rows.length}
-          </p>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="px-3 py-1 text-sm font-bold border border-slate-200 bg-white rounded hover:bg-slate-100 disabled:opacity-50 transition-colors"
-            >
-              Anterior
-            </button>
-            <span className="text-sm font-bold px-2 text-slate-700">
-              Página {page} de {totalPages}
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="px-3 py-1 text-sm font-bold border border-slate-200 bg-white rounded hover:bg-slate-100 disabled:opacity-50 transition-colors"
-            >
-              Siguiente
-            </button>
-          </div>
-        </div>
-      )}
+      <TablePagination
+        page={page}
+        setPage={setPage}
+        totalItems={rows.length}
+        itemsPerPage={ITEMS_PER_PAGE}
+        isZeroIndexed={false}
+      />
     </div>
   );
 }

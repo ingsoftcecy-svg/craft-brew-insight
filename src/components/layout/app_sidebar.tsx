@@ -31,7 +31,7 @@ const items = [
   { title: "Chequeo de Platos", url: "/extracto", icon: Beaker },
   { title: "Purgas de Trub", url: "/purgas", icon: ClipboardList },
   { title: "QR de Unitanques", url: "/admin/qr-print", icon: Printer },
-   { title: "Agenda", url: "/agenda", icon: Calendar },
+  { title: "Agenda", url: "/agenda", icon: Calendar },
 ];
 
 export function AppSidebar() {

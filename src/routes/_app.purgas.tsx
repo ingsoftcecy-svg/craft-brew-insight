@@ -4,9 +4,10 @@ import { ArrowDownAZ, ArrowUpZA } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { PurgasTable } from "@/components/tables/purgas_table";
+import { TablePageLayout } from "@/components/layout/table_page_layout";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
 
-import { obtenerTurnoPorHora } from "@/data/turno";
+import { obtenerTurnoPorHora, getLimitesParaTurnoString } from "@/data/turno";
 import { parseMexicanDate } from "@/lib/utils";
 import { TableFilters } from "@/components/tables/table_filters";
 
@@ -44,8 +45,18 @@ function PurgasPage() {
       }
       const match_q = !query || r.tanque.toLowerCase().includes(query.toLowerCase());
       const match_m = marca === "all" || r.marca === marca;
-      const turnoCalculado = obtenerTurnoPorHora(r.fechaLlenado);
-      const match_t = turno === "all" || turnoCalculado === turno;
+      let match_t = turno === "all";
+      if (!match_t) {
+        const { end } = getLimitesParaTurnoString(turno, new Date());
+        match_t = r.purgas.some((p) => {
+          if (!p.fechaHora) return false;
+          const isPending = !p.tiempo || !p.realiza;
+          if (!isPending) return false;
+          const taskDate = parseMexicanDate(p.fechaHora);
+          if (!taskDate) return false;
+          return obtenerTurnoPorHora(p.fechaHora) === turno && taskDate <= end;
+        });
+      }
 
       return match_q && match_m && match_t;
     });
@@ -60,54 +71,26 @@ function PurgasPage() {
   }, [purgas, query, targetId, marca, turno, sortOrder]);
 
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
-      <div className="flex flex-col gap-4 bg-white/50 p-6 rounded-2xl border border-slate-100 shadow-sm backdrop-blur-sm">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-800">
-            Control de Purgas de Trub en Frío
-          </h1>
-          <p className="text-sm text-slate-500 mt-1 font-medium">
-            Purga Inicial + 8 purgas cada 8 Hr hasta las 64 Hr
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <TableFilters
-            query={query}
-            setQuery={set_query}
-            periodoActual={periodoActual}
-            setPeriodo={(v) => fetchData(v)}
-            periodosDisponibles={periodosDisponibles}
-            marca={marca}
-            setMarca={set_marca}
-            turno={turno}
-            setTurno={set_turno}
-          />
-          <Button
-            variant="outline"
-            className="gap-2 bg-slate-50 border-slate-200 rounded-xl h-10 font-medium ml-auto"
-            onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
-          >
-            {sortOrder === "desc" ? (
-              <>
-                <ArrowDownAZ className="h-4 w-4" /> Más recientes
-              </>
-            ) : (
-              <>
-                <ArrowUpZA className="h-4 w-4" /> Más antiguos
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mt-4">
-        <div className="p-0">
-          <div className="pt-0">
-            <PurgasTable rows={filtered} />
-          </div>
-        </div>
-      </div>
-    </div>
+    <TablePageLayout
+      title="Control de Purgas de Trub en Frío"
+      subtitle="Purga Inicial + 8 purgas cada 8 Hr hasta las 64 Hr"
+      filters={
+        <TableFilters
+          query={query}
+          setQuery={set_query}
+          periodoActual={periodoActual}
+          setPeriodo={(v) => fetchData(v)}
+          periodosDisponibles={periodosDisponibles}
+          marca={marca}
+          setMarca={set_marca}
+          turno={turno}
+          setTurno={set_turno}
+        />
+      }
+      sortOrder={sortOrder}
+      onSortToggle={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
+    >
+      <PurgasTable rows={filtered} />
+    </TablePageLayout>
   );
 }

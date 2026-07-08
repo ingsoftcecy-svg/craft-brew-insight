@@ -1,4 +1,12 @@
-import { collection, doc, writeBatch, getDocs, setDoc, Timestamp, deleteDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  writeBatch,
+  getDocs,
+  setDoc,
+  Timestamp,
+  deleteDoc,
+} from "firebase/firestore";
 import { firestore } from "../firebase";
 import type { ExtractoRow } from "@/types/proceso";
 import { obtenerPeriodo, type UploadProgress } from "./purgasFirebaseService";
@@ -143,6 +151,8 @@ export async function obtenerExtractosPorPeriodo(periodo: string): Promise<Extra
       h72: data.h72 ?? null,
       h96: data.h96 ?? null,
       h120: data.h120 ?? null,
+      h128: data.h128 ?? null,
+      h136: data.h136 ?? null,
       h144: data.h144 ?? null,
       estado: data.estado ?? "En Rango",
       estado24h: data.estado24h ?? "Pendiente",
@@ -150,6 +160,8 @@ export async function obtenerExtractosPorPeriodo(periodo: string): Promise<Extra
       estado72h: data.estado72h ?? "Pendiente",
       estado96h: data.estado96h ?? "Pendiente",
       estado120h: data.estado120h ?? "Pendiente",
+      estado128h: data.estado128h ?? undefined,
+      estado136h: data.estado136h ?? undefined,
       estado144h: data.estado144h ?? "Pendiente",
     } as ExtractoRow;
   });

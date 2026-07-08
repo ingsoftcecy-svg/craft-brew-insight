@@ -2,6 +2,8 @@ import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
 import { Search, ArrowDownAZ, ArrowUpZA } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TablePageLayout } from "@/components/layout/table_page_layout";
+import { TablePagination } from "@/components/ui/table_pagination";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -15,7 +17,7 @@ import { ExtractoTable } from "@/components/tables/extracto_table";
 import { UploadExtractos } from "@/components/forms/subir_archivos_extracto";
 import { BRANDS } from "@/data/brands";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
-import { obtenerTurnoPorHora } from "@/data/turno";
+import { obtenerTurnoPorHora, getLimitesParaTurnoString } from "@/data/turno";
 import { parseMexicanDate } from "@/lib/utils";
 import { TableFilters } from "@/components/tables/table_filters";
 
@@ -48,8 +50,6 @@ function ExtractoPage() {
     setTargetId("");
   };
 
-
-
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -61,8 +61,27 @@ function ExtractoPage() {
       }
       const match_q = !query || r.tanque.toLowerCase().includes(query.toLowerCase());
       const match_m = marca === "all" || r.marca === marca;
-      const turnoCalculado = r.h72 ? obtenerTurnoPorHora(r.h72) : null;
-      const match_t = turno === "all" || turnoCalculado === turno;
+      let match_t = turno === "all";
+      if (!match_t) {
+        const { end } = getLimitesParaTurnoString(turno, new Date());
+        const chequeos = [
+          { time: r.h24, state: r.estado24h },
+          { time: r.h48, state: r.estado48h },
+          { time: r.h72, state: r.estado72h },
+          { time: r.h96, state: r.estado96h },
+          { time: r.h120, state: r.estado120h },
+          { time: r.h128, state: r.estado128h },
+          { time: r.h136, state: r.estado136h },
+          { time: r.h144, state: r.estado144h },
+        ];
+        match_t = chequeos.some((c) => {
+          if (!c.time || c.state === "Completado") return false;
+          const taskDate = parseMexicanDate(c.time);
+          if (!taskDate) return false;
+          // Pertenece a las horas del turno seleccionado, Y no es de un día en el futuro
+          return obtenerTurnoPorHora(c.time) === turno && taskDate <= end;
+        });
+      }
       return match_q && match_m && match_t;
     });
 
@@ -79,87 +98,40 @@ function ExtractoPage() {
   const rows = filtered.slice(page * page_size, (page + 1) * page_size);
 
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
-      <div className="flex flex-col gap-4 bg-white/50 p-6 rounded-2xl border border-slate-100 shadow-sm backdrop-blur-sm">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-slate-800">
-              Extracto 144 Hrs
-            </h1>
-            <p className="text-sm text-slate-500 mt-1 font-medium">
-              {" "}
-              Purgas desde 24 Hrs hasta 144 Hrs
-            </p>
-          </div>
-          <div className="shrink-0">
-            <UploadExtractos />
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3 mt-2">
-          <TableFilters
-            query={query}
-            setQuery={handleSetQuery}
-            periodoActual={periodoActual}
-            setPeriodo={(v) => fetchData(v)}
-            periodosDisponibles={periodosDisponibles}
-            marca={marca}
-            setMarca={set_marca}
-            turno={turno}
-            setTurno={set_turno}
-            resetPage={() => set_page(0)}
-          />
-          <Button
-            variant="outline"
-            className="gap-2 bg-slate-50 border-slate-200 rounded-xl h-10 font-medium ml-auto"
-            onClick={() => {
-              setSortOrder(sortOrder === "desc" ? "asc" : "desc");
-              set_page(0);
-            }}
-          >
-            {sortOrder === "desc" ? (
-              <>
-                <ArrowDownAZ className="h-4 w-4" /> Más recientes
-              </>
-            ) : (
-              <>
-                <ArrowUpZA className="h-4 w-4" /> Más antiguos
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mt-4">
-        <div className="p-0">
-          <ExtractoTable rows={rows} />
-          <div className="mt-4 flex items-center justify-between text-sm p-4 bg-slate-50/50 border-t border-slate-100">
-            <span className="text-slate-500 font-medium">
-              {filtered.length} registros · Página {page + 1} de {pages}
-            </span>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page === 0}
-                onClick={() => set_page((p) => p - 1)}
-                className="font-semibold text-slate-600 hover:text-slate-800 shadow-sm"
-              >
-                Anterior
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page >= pages - 1}
-                onClick={() => set_page((p) => p + 1)}
-                className="font-semibold text-slate-600 hover:text-slate-800 shadow-sm"
-              >
-                Siguiente
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <TablePageLayout
+      title="Extracto 144 Hrs"
+      subtitle="Purgas desde 24 Hrs hasta 144 Hrs"
+      headerAction={<UploadExtractos />}
+      filters={
+        <TableFilters
+          query={query}
+          setQuery={handleSetQuery}
+          periodoActual={periodoActual}
+          setPeriodo={(v) => fetchData(v)}
+          periodosDisponibles={periodosDisponibles}
+          marca={marca}
+          setMarca={set_marca}
+          turno={turno}
+          setTurno={set_turno}
+          resetPage={() => set_page(0)}
+        />
+      }
+      sortOrder={sortOrder}
+      onSortToggle={() => {
+        setSortOrder(sortOrder === "desc" ? "asc" : "desc");
+        set_page(0);
+      }}
+      pagination={
+        <TablePagination
+          page={page}
+          setPage={set_page}
+          totalItems={filtered.length}
+          itemsPerPage={page_size}
+          isZeroIndexed={true}
+        />
+      }
+    >
+      <ExtractoTable rows={rows} />
+    </TablePageLayout>
   );
 }

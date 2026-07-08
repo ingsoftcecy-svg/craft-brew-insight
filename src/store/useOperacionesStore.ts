@@ -121,7 +121,30 @@ export const useOperacionesStore = create<OperacionesState>((set) => ({
         return marca;
       };
 
-      const extractos = extractosFb.map((e) => ({ ...e, marca: fixMarca(e.marca) as any }));
+      const extractos = extractosFb.map((e) => {
+        const ret = { ...e, marca: fixMarca(e.marca) as any };
+        if (!ret.h128 && ret.fechaLlenado) {
+          const d = new Date(ret.fechaLlenado);
+          const esViejo = !isNaN(d.getTime()) && d.getTime() < new Date("2026-07-01T00:00:00").getTime();
+          const debeEstarCompletado = esViejo || ret.estado144h === "Completado";
+
+          if (!isNaN(d.getTime())) {
+            ret.h128 = new Date(d.getTime() + 128 * 60 * 60 * 1000).toISOString();
+            if (!ret.estado128h) ret.estado128h = debeEstarCompletado ? "Completado" : "Pendiente";
+          }
+        }
+        if (!ret.h136 && ret.fechaLlenado) {
+          const d = new Date(ret.fechaLlenado);
+          const esViejo = !isNaN(d.getTime()) && d.getTime() < new Date("2026-07-01T00:00:00").getTime();
+          const debeEstarCompletado = esViejo || ret.estado144h === "Completado";
+
+          if (!isNaN(d.getTime())) {
+            ret.h136 = new Date(d.getTime() + 136 * 60 * 60 * 1000).toISOString();
+            if (!ret.estado136h) ret.estado136h = debeEstarCompletado ? "Completado" : "Pendiente";
+          }
+        }
+        return ret;
+      });
       const purgas = purgasFb.map((p) => ({ ...p, marca: fixMarca(p.marca) as any }));
       const eventosAgenda = eventosAgendaFb;
 
@@ -321,10 +344,10 @@ export const useOperacionesStore = create<OperacionesState>((set) => ({
   deletePurga: async (id) => {
     const estado = useOperacionesStore.getState();
     const periodo = estado.periodoActual;
-    
+
     // Optimistic update
     set((state) => ({
-      purgas: state.purgas.filter(p => p.id !== id),
+      purgas: state.purgas.filter((p) => p.id !== id),
     }));
 
     try {
@@ -339,10 +362,10 @@ export const useOperacionesStore = create<OperacionesState>((set) => ({
   deleteExtracto: async (id) => {
     const estado = useOperacionesStore.getState();
     const periodo = estado.periodoActual;
-    
+
     // Optimistic update
     set((state) => ({
-      extractos: state.extractos.filter(e => e.id !== id),
+      extractos: state.extractos.filter((e) => e.id !== id),
     }));
 
     try {

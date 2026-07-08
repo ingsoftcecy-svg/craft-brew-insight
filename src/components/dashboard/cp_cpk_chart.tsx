@@ -43,7 +43,7 @@ function getTipoTanque(tanqueStr: string): string | null {
   const numMatch = tanqueStr.match(/\d+/);
   if (!numMatch) return null;
   const num = parseInt(numMatch[0], 10);
-  
+
   if (num >= 1 && num <= 22) return "C";
   if (num >= 23 && num <= 38) return "B";
   if (num >= 39 && num <= 50) return "A";
@@ -96,7 +96,7 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
 
   // Procesar datos según la variable elegida
   const chartData = useMemo(() => {
-    let data: any[] = [];
+    const data: any[] = [];
     const purgasFiltradas = purgas.filter((p) => {
       if (marcaFiltro !== "todas" && p.marca !== marcaFiltro) return false;
       if (tanqueFiltro !== "todos" && p.tanque !== tanqueFiltro) return false;
@@ -115,7 +115,11 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
     if (variable === "tiempoPurga") {
       purgasFiltradas.forEach((p) => {
         const dLlenado = p.fechaLlenado ? parseMexicanDate(p.fechaLlenado) : null;
-        const fechaCorta = dLlenado ? format(dLlenado, "dd/MMM") : (p.fechaLlenado ? p.fechaLlenado.split(" ")[0].slice(0, 5) : "");
+        const fechaCorta = dLlenado
+          ? format(dLlenado, "dd/MMM")
+          : p.fechaLlenado
+            ? p.fechaLlenado.split(" ")[0].slice(0, 5)
+            : "";
         p.purgas.forEach((purga, i) => {
           if (purga.tiempo != null && purga.tiempo > 0) {
             let horaExacta = "";
@@ -144,7 +148,11 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
     } else {
       purgasFiltradas.forEach((p) => {
         const dLlenado = p.fechaLlenado ? parseMexicanDate(p.fechaLlenado) : null;
-        const fechaCorta = dLlenado ? format(dLlenado, "dd/MMM") : (p.fechaLlenado ? p.fechaLlenado.split(" ")[0].slice(0, 5) : "");
+        const fechaCorta = dLlenado
+          ? format(dLlenado, "dd/MMM")
+          : p.fechaLlenado
+            ? p.fechaLlenado.split(" ")[0].slice(0, 5)
+            : "";
         let val = p.tiempoLlenadoHoras;
         if (val == null && p.fechaInicioLlenado && p.fechaLlenado) {
           const inicio = parseMexicanDate(p.fechaInicioLlenado);
