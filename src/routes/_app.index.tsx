@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { FlaskConical, Clock, Droplets, Database, Beaker, Printer } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { KpiCard } from "@/components/dashboard/kpi_card";
 import { TaskListPanel } from "@/components/dashboard/task_list_panel";
 import { DashboardPrintView } from "@/components/dashboard/dashboard_print_view";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export const Route = createFileRoute("/_app/")({
   head: () => ({
@@ -21,6 +23,25 @@ export const Route = createFileRoute("/_app/")({
 });
 
 function Dashboard() {
+  const { isSuperUser } = useAuthStore();
+  const [selectedTurnoId, setSelectedTurnoId] = useState<string | null>(null);
+  const [selectedDateStr, setSelectedDateStr] = useState<string>("");
+
+  const baseDate = React.useMemo(() => {
+    if (!selectedDateStr) return undefined;
+    const parts = selectedDateStr.split("-");
+    if (parts.length === 3) {
+      const d = new Date();
+      d.setFullYear(parseInt(parts[0], 10));
+      d.setMonth(parseInt(parts[1], 10) - 1);
+      d.setDate(parseInt(parts[2], 10));
+      // Fijamos a mediodía para que las funciones de turno.ts no resten 1 día si es de madrugada
+      d.setHours(12, 0, 0, 0);
+      return d;
+    }
+    return undefined;
+  }, [selectedDateStr]);
+
   const {
     isLoading,
     ahora,
@@ -30,7 +51,7 @@ function Dashboard() {
     totalChequeosPendientes,
     purgasDelTurno,
     totalPurgasPendientes,
-  } = useDashboardData();
+  } = useDashboardData(selectedTurnoId, baseDate);
 
   const handlePrint = () => {
     document.body.classList.remove("dlp-active");
@@ -48,9 +69,47 @@ function Dashboard() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white/50 p-6 rounded-2xl border border-slate-100 shadow-sm backdrop-blur-sm print:hidden">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-800">Tablero General</h1>
-          <p className="text-sm text-slate-500 mt-1 font-medium">
-            Monitor de Chequeos de Plato y Purgas de Trub · {turnoActual}
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-1">
+            <p className="text-sm text-slate-500 font-medium">
+              Monitor de Chequeos de Plato y Purgas de Trub · {turnoActual}
+            </p>
+            {isSuperUser && (
+              <div className="flex flex-col sm:flex-row gap-2 mt-2 sm:mt-0">
+                <input 
+                  type="date"
+                  value={selectedDateStr}
+                  onChange={(e) => setSelectedDateStr(e.target.value)}
+                  className="text-xs px-2 py-1 rounded-md border border-slate-200 text-slate-700 bg-white"
+                />
+                <div className="flex gap-2">
+                  <button
+                  onClick={() => setSelectedTurnoId(null)}
+                  className={`text-xs px-2.5 py-1 font-semibold rounded-md transition-colors ${!selectedTurnoId ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                >
+                  Actual
+                </button>
+                <button
+                  onClick={() => setSelectedTurnoId("Turno 1")}
+                  className={`text-xs px-2.5 py-1 font-semibold rounded-md transition-colors ${selectedTurnoId === "Turno 1" ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                >
+                  T1
+                </button>
+                <button
+                  onClick={() => setSelectedTurnoId("Turno 2")}
+                  className={`text-xs px-2.5 py-1 font-semibold rounded-md transition-colors ${selectedTurnoId === "Turno 2" ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                >
+                  T2
+                </button>
+                <button
+                  onClick={() => setSelectedTurnoId("Turno 3")}
+                  className={`text-xs px-2.5 py-1 font-semibold rounded-md transition-colors ${selectedTurnoId === "Turno 3" ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                >
+                  T3
+                </button>
+              </div>
+            </div>
+            )}
+          </div>
         </div>
       </div>
 

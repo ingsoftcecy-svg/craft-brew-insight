@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
-import { obtenerTurnoPorHora, getLimitesTurnoActual } from "@/data/turno";
+import { obtenerTurnoPorHora, getLimitesTurnoActual, getLimitesParaTurnoString } from "@/data/turno";
 import { parseMexicanDate } from "@/lib/utils";
 
 export interface ChequeoItem {
@@ -34,23 +34,24 @@ export interface PurgaGrupo {
   index: number;
 }
 
-export function useDashboardData() {
+export function useDashboardData(selectedTurnoId?: string | null, baseDate?: Date) {
   const { extractos, purgas, isLoading, fetchData } = useOperacionesStore();
 
   useEffect(() => {
     fetchData("todos");
   }, [fetchData]);
 
-  const [ahora] = useState(() => new Date());
+  const [ahoraState] = useState(() => new Date());
+  const ahora = baseDate || ahoraState;
 
-  const turnoActual = useMemo(() => obtenerTurnoPorHora(ahora.toISOString()), [ahora]);
+  const turnoActual = useMemo(() => selectedTurnoId || obtenerTurnoPorHora(ahora.toISOString()), [ahora, selectedTurnoId]);
   const { start: inicioTurno, end: finTurno } = useMemo(
-    () => getLimitesTurnoActual(ahora),
-    [ahora],
+    () => selectedTurnoId ? getLimitesParaTurnoString(selectedTurnoId, ahora) : getLimitesTurnoActual(ahora),
+    [ahora, selectedTurnoId],
   );
 
-  const horasChequeo = useMemo(
-    () => [
+  const horasChequeo = useMemo(() => {
+    const base = [
       { key: "h24", label: "24h", color: "sky" as const },
       { key: "h48", label: "48h", color: "sky" as const },
       { key: "h72", label: "72h", color: "indigo" as const },
@@ -59,9 +60,32 @@ export function useDashboardData() {
       { key: "h128", label: "128h", color: "indigo" as const },
       { key: "h136", label: "136h", color: "sky" as const },
       { key: "h144", label: "144h", color: "indigo" as const },
-    ],
-    [],
-  );
+    ];
+    
+    const baseKeys = base.map(b => b.key);
+    const dynamicHours = new Set<number>();
+    
+    extractos.forEach(e => {
+      Object.keys(e).forEach(k => {
+        const match = k.match(/^h(\d+)$/);
+        if (match && !baseKeys.includes(k)) {
+          dynamicHours.add(parseInt(match[1]));
+        }
+      });
+    });
+
+    const extra = Array.from(dynamicHours).sort((a,b) => a - b).map(h => ({
+      key: `h${h}`,
+      label: `${h}h`,
+      color: (h % 2 === 0 ? "sky" : "indigo") as "sky" | "indigo"
+    }));
+
+    return [...base, ...extra].sort((a,b) => {
+      const hA = parseInt(a.key.substring(1));
+      const hB = parseInt(b.key.substring(1));
+      return hA - hB;
+    });
+  }, [extractos]);
 
   const chequeosDelTurno: ChequeoGrupo[] = useMemo(() => {
     return horasChequeo.map(({ key, label, color }) => {
@@ -102,18 +126,23 @@ export function useDashboardData() {
   }, [chequeosDelTurno]);
 
   const purgasDelTurno: PurgaGrupo[] = useMemo(() => {
-    return Array.from({ length: 9 }, (_, i) => {
+    const maxPurgas = purgas.reduce((max, p) => Math.max(max, p.purgas.length), 0);
+    const renderLength = Math.max(9, maxPurgas);
+
+    return Array.from({ length: renderLength }, (_, i) => {
       const tituloPurga = i === 0 ? "Purga Inicial" : `Purga ${i}`;
       const items = purgas
         .filter((p) => {
+          const rawDate = i === 0 ? p.fechaLlenado : p.purgas?.[i]?.fechaHora;
+          if (!rawDate) return false;
           const entry = p.purgas?.[i];
-          if (!entry?.fechaHora) return false;
-          if (entry.tiempo && entry.realiza) return false;
+          if (entry?.tiempo && entry?.realiza) return false;
           return true;
         })
         .map((p) => {
           const entry = p.purgas[i];
-          const date = parseMexicanDate(entry.fechaHora!);
+          const rawDate = i === 0 ? p.fechaLlenado : entry?.fechaHora;
+          const date = parseMexicanDate(rawDate!);
           return {
             id: `${p.id}-p${i}`,
             realId: p.id,

@@ -25,7 +25,7 @@ export type MarcaCerveza =
   | "Busch"
   | "Budweiser";
 
-export type EventType = "Turno1" | "Turno2" | "Turno3";
+export type EventType = "Turno1" | "Turno2" | "Turno3" | "Turno" | "Purga";
 
 export interface AgendaEvent {
   id: string;
@@ -64,6 +64,7 @@ export interface ExtractoRow {
   estado136h?: "Pendiente" | "Completado";
   estado144h?: "Pendiente" | "Completado";
   estado: ExtractoEstado;
+  [key: string]: any;
 }
 
 export interface FermentPoint {
@@ -89,8 +90,13 @@ export interface PurgaRow {
   fechaLlenado: string;
   horas: string;
   historicas: string;
-  purgas: PurgaEntry[]; // length 9
+  purgas: PurgaEntry[]; // Variable length: index 0 is Purga Inicial
 }
+
+export type PurgasConfig = Record<
+  string, // using string because MarcaCerveza is a union and Record<MarcaCerveza, ...> forces all keys
+  { cantidad: number; cadaHrs: number }
+>;
 
 export interface Plato72Row {
   id: string;

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { ExtractoRow, PurgaRow, AgendaEvent, PurgaEntry } from "../types/proceso";
+import { ExtractoRow, PurgaRow, AgendaEvent, PurgaEntry, PurgasConfig } from "../types/proceso";
 
 import { addHours } from "date-fns";
 import { obtenerTurnoPorHora } from "@/data/turno";
@@ -10,6 +10,7 @@ interface OperacionesState {
   periodosStats: { periodo: string; totalRegistros: number }[];
   extractos: ExtractoRow[];
   purgas: PurgaRow[];
+  purgasConfig: PurgasConfig;
   eventosAgenda: AgendaEvent[];
   isLoading: boolean;
   error: string | null;
@@ -42,6 +43,12 @@ interface OperacionesState {
     tiempo: number,
     realiza: string,
   ) => Promise<void>;
+  addCustomChequeo: (hora: number, extractoId?: string) => Promise<void>;
+  removeCustomChequeo: (hora: number, extractoId?: string) => Promise<void>;
+  
+  loadPurgasConfig: () => Promise<void>;
+  updatePurgasConfig: (config: PurgasConfig) => Promise<void>;
+  aplicarConfiguracionActivos: (config: PurgasConfig) => Promise<void>;
 }
 
 const getCurrentPeriod = () => {
@@ -57,13 +64,16 @@ export const useOperacionesStore = create<OperacionesState>((set) => ({
   periodosStats: [],
   extractos: [],
   purgas: [],
+  purgasConfig: {} as PurgasConfig,
   eventosAgenda: [],
-  isLoading: false,
+  isLoading: true,
   error: null,
 
   fetchData: async (periodoSeleccionado?: string) => {
     set({ isLoading: true, error: null });
     try {
+      // First try loading purgas config
+      await useOperacionesStore.getState().loadPurgasConfig();
       // Importamos las funciones dinámicamente para evitar dependencias circulares si las hubiera
       const { obtenerExtractosPorPeriodo, listarPeriodosExtractos, obtenerTodosLosExtractos } =
         await import("@/lib/api/extractosFirebaseService");
@@ -123,24 +133,24 @@ export const useOperacionesStore = create<OperacionesState>((set) => ({
 
       const extractos = extractosFb.map((e) => {
         const ret = { ...e, marca: fixMarca(e.marca) as any };
-        if (!ret.h128 && ret.fechaLlenado) {
+        
+        if (ret.fechaLlenado) {
           const d = new Date(ret.fechaLlenado);
-          const esViejo = !isNaN(d.getTime()) && d.getTime() < new Date("2026-07-01T00:00:00").getTime();
-          const debeEstarCompletado = esViejo || ret.estado144h === "Completado";
-
           if (!isNaN(d.getTime())) {
-            ret.h128 = new Date(d.getTime() + 128 * 60 * 60 * 1000).toISOString();
-            if (!ret.estado128h) ret.estado128h = debeEstarCompletado ? "Completado" : "Pendiente";
-          }
-        }
-        if (!ret.h136 && ret.fechaLlenado) {
-          const d = new Date(ret.fechaLlenado);
-          const esViejo = !isNaN(d.getTime()) && d.getTime() < new Date("2026-07-01T00:00:00").getTime();
-          const debeEstarCompletado = esViejo || ret.estado144h === "Completado";
-
-          if (!isNaN(d.getTime())) {
-            ret.h136 = new Date(d.getTime() + 136 * 60 * 60 * 1000).toISOString();
-            if (!ret.estado136h) ret.estado136h = debeEstarCompletado ? "Completado" : "Pendiente";
+            const esViejo = d.getTime() < new Date("2026-07-01T00:00:00").getTime();
+            const horasBase = [24, 48, 72, 96, 120, 128, 136, 144];
+            
+            horasBase.forEach((h) => {
+              const hKey = `h${h}`;
+              const estadoKey = `estado${h}h`;
+              
+              if (!ret[hKey]) {
+                ret[hKey] = new Date(d.getTime() + h * 60 * 60 * 1000).toISOString();
+                if (!ret[estadoKey]) {
+                  ret[estadoKey] = (esViejo || ret.estado144h === "Completado") ? "Completado" : "Pendiente";
+                }
+              }
+            });
           }
         }
         return ret;
@@ -439,4 +449,201 @@ export const useOperacionesStore = create<OperacionesState>((set) => ({
     set((state) => ({
       eventosAgenda: [...state.eventosAgenda, evento],
     })),
+
+  addCustomChequeo: async (hora: number, extractoId?: string) => {
+    const state = useOperacionesStore.getState();
+    const periodo = state.periodoActual;
+    const { actualizarExtractoEnFirestore } = await import("@/lib/api/extractosFirebaseService");
+
+    let updatedIds: string[] = [];
+    
+    set((s) => {
+      const newExtractos = s.extractos.map((e) => {
+        if (extractoId && e.id !== extractoId) return e;
+        
+        updatedIds.push(e.id);
+        const fechaBase = e.fechaLlenado ? new Date(e.fechaLlenado) : null;
+        if (!fechaBase || isNaN(fechaBase.getTime())) return e;
+
+        const newFecha = new Date(fechaBase.getTime() + hora * 60 * 60 * 1000).toISOString();
+        return {
+          ...e,
+          [`h${hora}`]: newFecha,
+          [`estado${hora}h`]: "Pendiente"
+        };
+      });
+      return { extractos: newExtractos };
+    });
+
+    // Save all modified to Firebase
+    const updatedState = useOperacionesStore.getState();
+    for (const id of updatedIds) {
+      const e = updatedState.extractos.find(x => x.id === id);
+      if (e) {
+        try {
+          await actualizarExtractoEnFirestore(periodo, id, {
+            [`h${hora}`]: e[`h${hora}`],
+            [`estado${hora}h`]: e[`estado${hora}h`]
+          });
+        } catch (error) {
+          console.error(`Error guardando chequeo ${hora}h para ${id}:`, error);
+        }
+      }
+    }
+  },
+
+  removeCustomChequeo: async (hora: number, extractoId?: string) => {
+    const state = useOperacionesStore.getState();
+    const periodo = state.periodoActual;
+    const { actualizarExtractoEnFirestore } = await import("@/lib/api/extractosFirebaseService");
+
+    let updatedIds: string[] = [];
+    
+    set((s) => {
+      const newExtractos = s.extractos.map((e) => {
+        if (extractoId && e.id !== extractoId) return e;
+        
+        updatedIds.push(e.id);
+        const copy = { ...e };
+        // Delete properties locally to prevent rendering
+        delete copy[`h${hora}`];
+        delete copy[`estado${hora}h`];
+        return copy;
+      });
+      return { extractos: newExtractos };
+    });
+
+    // Save all modified to Firebase
+    for (const id of updatedIds) {
+      try {
+        // Enviar null o string vacio dependiendo de como esté implementado
+        // Firebase `update` with FieldValue.delete() is ideal, but here we can send null
+        // so the frontend ignores it.
+        const updatePayload: Record<string, any> = {};
+        const { deleteField } = await import("firebase/firestore");
+        updatePayload[`h${hora}`] = deleteField();
+        updatePayload[`estado${hora}h`] = deleteField();
+        
+        await actualizarExtractoEnFirestore(periodo, id, updatePayload);
+      } catch (error) {
+        console.error(`Error eliminando chequeo ${hora}h para ${id}:`, error);
+      }
+    }
+  },
+
+  loadPurgasConfig: async () => {
+    try {
+      const { getPurgasConfig } = await import("@/lib/api/purgasFirebaseService");
+      const config = await getPurgasConfig();
+      set({ purgasConfig: config });
+    } catch (err) {
+      console.error("Error loading purgas config:", err);
+    }
+  },
+
+  updatePurgasConfig: async (config: PurgasConfig) => {
+    try {
+      const { savePurgasConfig } = await import("@/lib/api/purgasFirebaseService");
+      await savePurgasConfig(config);
+      set({ purgasConfig: config });
+    } catch (err) {
+      console.error("Error saving purgas config:", err);
+      throw err;
+    }
+  },
+
+  aplicarConfiguracionActivos: async (config: PurgasConfig) => {
+    try {
+      const state = useOperacionesStore.getState();
+      const periodo = state.periodoActual;
+      const { firestore } = await import("@/lib/firebase");
+      const { doc, writeBatch } = await import("firebase/firestore");
+
+      let batchEscritura = writeBatch(firestore);
+      let updates = 0;
+      let batchesCommitted = 0;
+
+      const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      const normalizedConfig = Object.entries(config).reduce((acc, [k, v]) => {
+        acc[normalize(k)] = v;
+        return acc;
+      }, {} as Record<string, { cantidad: number; cadaHrs: number }>);
+
+      const newPurgas = state.purgas.map((row) => {
+        const marcaConfig = normalizedConfig[normalize(row.marca)];
+        if (!marcaConfig) return row; // No config, no change
+
+        // Only apply if the tank has pending purgas (or is completely new). 
+        // We consider active if at least one purga is pending.
+        const isCompleted = row.purgas.slice(1).every((p) => p.tiempo && p.realiza);
+        if (isCompleted && row.purgas.length > 1) return row; 
+
+        // Let's rebuild the purgas array.
+        // Keep the ones that already exist, recalculate dates based on new `cadaHrs`
+        // and adjust length to `cantidad` + 1 (initial)
+        const fechaInicio = row.purgas[0]?.fechaHora ? new Date(row.purgas[0].fechaHora) : (row.fechaInicioLlenado ? new Date(row.fechaInicioLlenado) : null);
+        if (!fechaInicio) return row;
+        
+        const fechaBase = row.fechaLlenado ? new Date(row.fechaLlenado) : fechaInicio;
+
+        const maxPurgas = marcaConfig.cantidad || 8;
+        const cadaHrs = marcaConfig.cadaHrs || 8;
+
+        const newPurgasArray = [];
+        
+        // Push initial purga
+        newPurgasArray.push(row.purgas[0]);
+
+        for (let i = 1; i <= maxPurgas; i++) {
+          const expectedDate = new Date(fechaBase.getTime() + i * cadaHrs * 3600000).toISOString();
+          if (row.purgas[i]) {
+            // keep existing times/realiza but update date
+            newPurgasArray.push({
+              ...row.purgas[i],
+              fechaHora: expectedDate,
+            });
+          } else {
+            // create new
+            newPurgasArray.push({
+              fechaHora: expectedDate,
+              tiempo: null,
+              realiza: null,
+            });
+          }
+        }
+
+        const newRow = { ...row, purgas: newPurgasArray };
+
+        // Schedule for firebase update
+        const docRef = doc(firestore, "purgas_historico", periodo, "registros", row.id);
+        batchEscritura.update(docRef, { purgas: newPurgasArray });
+        updates++;
+
+        if (updates >= 500) {
+          batchEscritura.commit();
+          batchEscritura = writeBatch(firestore);
+          updates = 0;
+          batchesCommitted++;
+        }
+
+        return newRow;
+      });
+
+      if (updates > 0) {
+        await batchEscritura.commit();
+      }
+
+      set({ purgas: newPurgas });
+      
+      // Need to re-fetch to rebuild agenda correctly or we can just rely on the store state changing.
+      // The agenda derives from purgas list indirectly through extractos. Wait!
+      // In this app, Agenda derives purgas from extractos, wait, Agenda uses extractos!
+      // I should trigger fetchData.
+      await state.fetchData(periodo);
+
+    } catch (err) {
+      console.error("Error al aplicar config a activos:", err);
+      throw err;
+    }
+  },
 }));

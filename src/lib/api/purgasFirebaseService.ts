@@ -11,7 +11,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { firestore } from "../firebase";
-import type { PurgaRow } from "@/types/proceso";
+import type { PurgaRow, PurgasConfig } from "@/types/proceso";
 
 /** Firestore tiene un límite de 500 operaciones por batch */
 const BATCH_SIZE = 500;
@@ -23,6 +23,21 @@ export function obtenerPeriodo(fecha: Date = new Date()): string {
   const y = fecha.getFullYear();
   const m = String(fecha.getMonth() + 1).padStart(2, "0");
   return `${y}-${m}`;
+}
+
+export async function getPurgasConfig(): Promise<PurgasConfig> {
+  const { getDoc } = await import("firebase/firestore");
+  const docRef = doc(firestore, "settings", "purgasConfig");
+  const snapshot = await getDoc(docRef);
+  if (snapshot.exists()) {
+    return snapshot.data() as PurgasConfig;
+  }
+  return {};
+}
+
+export async function savePurgasConfig(config: PurgasConfig): Promise<void> {
+  const docRef = doc(firestore, "settings", "purgasConfig");
+  await setDoc(docRef, config, { merge: true });
 }
 
 export interface UploadProgress {

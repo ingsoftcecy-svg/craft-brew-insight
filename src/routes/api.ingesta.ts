@@ -102,9 +102,14 @@ export const Route = createFileRoute("/api/ingesta")({
             );
           }
 
-          const { doc, setDoc, Timestamp, getDocs, collection, writeBatch } =
+          const { doc, setDoc, Timestamp, getDocs, getDoc, collection, writeBatch } =
             await import("firebase/firestore");
           const { firestore } = await import("@/lib/firebase");
+
+          // Fetch purgas config
+          const configDocRef = doc(firestore, "settings", "purgasConfig");
+          const configSnapshot = await getDoc(configDocRef);
+          const purgasConfig = configSnapshot.exists() ? configSnapshot.data() : {};
 
           // Helper de parsing robusto de fecha
           const parseFecha = (rawFecha: any) => {
@@ -282,8 +287,13 @@ export const Route = createFileRoute("/api/ingesta")({
               turno: obtenerTurnoPorHora(toMexicoISOString(fechaInicioObj)),
             });
 
-            for (let i = 1; i <= 8; i++) {
-              const purgaDate = new Date(fechaBase.getTime() + i * 8 * 3600000);
+            // Leer config de purgas para esta marca
+            const marcaConfig = purgasConfig[marca] || { cantidad: 8, cadaHrs: 8 };
+            const cantidadPurgas = marcaConfig.cantidad || 8;
+            const cadaHrs = marcaConfig.cadaHrs || 8;
+
+            for (let i = 1; i <= cantidadPurgas; i++) {
+              const purgaDate = new Date(fechaBase.getTime() + i * cadaHrs * 3600000);
               purgasMapeadas.push({
                 fechaHora: toMexicoISOString(purgaDate),
                 tiempo: null,
@@ -344,42 +354,34 @@ export const Route = createFileRoute("/api/ingesta")({
           // Procesar e insertar en Firestore por periodo para optimizar consultas de existencia
           for (const periodo of Object.keys(filasPorPeriodo)) {
             const items = filasPorPeriodo[periodo];
-
-            // Obtener todos los IDs existentes de este periodo para omitir duplicados
-            const extColRef = collection(firestore, "extractos_historico", periodo, "registros");
-            const snapExt = await getDocs(extColRef);
-            const idsExistentes = new Set(snapExt.docs.map((d) => d.id));
+            // Obtener todos los datos existentes de este periodo para omitir duplicados o restaurar datos corruptos
+            const purgasRef = collection(firestore, "purgas_historico", periodo, "registros");
+            const snapPurgas = await getDocs(purgasRef);
+            const datosExistentes = new Map(snapPurgas.docs.map((d) => [d.id, d.data()]));
 
             let batch = writeBatch(firestore);
             let registrosEnBatch = 0;
 
             for (const item of items) {
-              if (!idsExistentes.has(item.extracto.id)) {
-                // Guardar extracto
-                const docExtRef = doc(
-                  firestore,
-                  "extractos_historico",
-                  periodo,
-                  "registros",
-                  item.extracto.id,
-                );
-                batch.set(docExtRef, {
-                  ...item.extracto,
-                  creadoEn: Timestamp.now(),
-                });
-
-                // Guardar purga
-                const docPurgaRef = doc(
+              const existente = datosExistentes.get(item.extracto.id);
+              if (!existente) {
+                // Guardar todo combinado en purgas_historico para mantener compatibilidad con fetchData
+                const docRef = doc(
                   firestore,
                   "purgas_historico",
                   periodo,
                   "registros",
-                  item.purga.id,
+                  item.extracto.id,
                 );
-                batch.set(docPurgaRef, {
-                  ...item.purga,
-                  creadoEn: Timestamp.now(),
-                });
+                batch.set(
+                  docRef,
+                  {
+                    ...item.extracto,
+                    ...item.purga,
+                    creadoEn: Timestamp.now(),
+                  },
+                  { merge: true },
+                );
 
                 totalNuevosGuardados++;
                 registrosEnBatch += 2;

@@ -36,7 +36,13 @@ function AgendaPage() {
       const fechaBase = e.fechaLlenado ? new Date(e.fechaLlenado) : null;
       if (!fechaBase) return [];
 
-      const fechaPurga = new Date(fechaBase.getTime() + purgaSeleccionada * 8 * 60 * 60 * 1000);
+      const marcaConfig = useOperacionesStore.getState().purgasConfig?.[e.marca] || { cantidad: 8, cadaHrs: 8 };
+      const cadaHrs = marcaConfig.cadaHrs || 8;
+      const maxPurgas = marcaConfig.cantidad || 8;
+      
+      if (purgaSeleccionada > maxPurgas) return []; // No event if purga num exceeds configured for this brand
+
+      const fechaPurga = new Date(fechaBase.getTime() + purgaSeleccionada * cadaHrs * 60 * 60 * 1000);
       return [
         {
           id: `purga-${e.id}-${purgaSeleccionada}`,
@@ -45,7 +51,7 @@ function AgendaPage() {
           fin: fechaPurga.toISOString(),
           tipo: "Purga" as const,
           descripcion: `Marca: ${e.marca}`,
-          turno: obtenerTurnoPorHora(fechaPurga.toISOString()),
+          turno: obtenerTurnoPorHora(fechaPurga.toISOString()) || undefined,
           completado: false,
         },
       ];
@@ -70,7 +76,7 @@ function AgendaPage() {
             fin: dateObj.toISOString(),
             tipo: "Turno" as const,
             descripcion: `Marca: ${e.marca}`,
-            turno: obtenerTurnoPorHora(dateObj.toISOString()),
+            turno: obtenerTurnoPorHora(dateObj.toISOString()) || undefined,
             completado: e[estadoKey] === "Completado",
             extractoId: e.id,
           },
@@ -129,11 +135,14 @@ function AgendaPage() {
               onChange={(e) => set_purgaSeleccionada(Number(e.target.value))}
               className="bg-background border rounded-md px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
-                <option key={num} value={num}>
-                  {num === 0 ? "Purga Inicial" : `Purga ${num}`}
-                </option>
-              ))}
+              {Array.from(
+                { length: Math.max(9, ...useOperacionesStore.getState().purgas.map((p) => p.purgas.length)) },
+                (_, num) => (
+                  <option key={num} value={num}>
+                    {num === 0 ? "Purga Inicial" : `Purga ${num}`}
+                  </option>
+                )
+              )}
             </select>
           </div>
         </div>

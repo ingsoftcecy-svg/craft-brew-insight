@@ -30,7 +30,7 @@ function formatDate(isoString?: string | null) {
   }
 }
 
-const PurgaRow = memo(({ r, hiddenColumns }: { r: PurgaRowType; hiddenColumns: string[] }) => {
+const PurgaRow = memo(({ r, hiddenColumns, maxExtraPurgas }: { r: PurgaRowType; hiddenColumns: string[]; maxExtraPurgas: number }) => {
   const updatePurgaField = useOperacionesStore((s) => s.updatePurgaField);
   const deletePurga = useOperacionesStore((s) => s.deletePurga);
   const isSuperUser = useAuthStore((s) => s.isSuperUser);
@@ -123,10 +123,21 @@ const PurgaRow = memo(({ r, hiddenColumns }: { r: PurgaRowType; hiddenColumns: s
       {/* Purga Inicial */}
       {!hiddenColumns.includes("p0") && r.purgas.length > 0 && renderPurga(r.purgas[0], 0, true)}
 
-      {/* 8 Purgas */}
-      {r.purgas.slice(1).map((p, index) => {
-        if (hiddenColumns.includes(`p${index + 1}`)) return null;
-        return renderPurga(p, index + 1, false);
+      {/* Purgas Dinámicas */}
+      {Array.from({ length: maxExtraPurgas }, (_, i) => {
+        const index = i + 1;
+        if (hiddenColumns.includes(`p${index}`)) return null;
+        const p = r.purgas[index];
+        if (!p) {
+          return (
+            <Fragment key={index}>
+              <CustomTableCell className="text-center text-slate-300">—</CustomTableCell>
+              <CustomTableCell className="text-center text-slate-300 border-b border-slate-100">—</CustomTableCell>
+              <CustomTableCell className="text-center text-slate-300">—</CustomTableCell>
+            </Fragment>
+          );
+        }
+        return renderPurga(p, index, false);
       })}
 
       {isSuperUser && (
@@ -157,6 +168,8 @@ export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
   const isSuperUser = useAuthStore((s) => s.isSuperUser);
 
   const paginatedRows = rows.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+  const maxPurgas = rows.reduce((max, r) => Math.max(max, r.purgas.length), 0);
+  const maxExtraPurgas = Math.max(0, maxPurgas - 1); // Exclude Purga Inicial
 
   const toggleColumn = (colId: string) => {
     setHiddenColumns((prev) =>
@@ -213,14 +226,14 @@ export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
                   )}
                 </CustomTableHead>
               )}
-              {Array.from({ length: 8 }, (_, i) => {
+              {Array.from({ length: maxExtraPurgas }, (_, i) => {
                 const colId = `p${i + 1}`;
                 if (hiddenColumns.includes(colId)) return null;
                 return (
                   <CustomTableHead
                     key={i}
                     colSpan={3}
-                    className={`text-center group relative ${i === 7 && !isSuperUser ? "border-r-0" : ""}`}
+                    className={`text-center group relative ${i === maxExtraPurgas - 1 && !isSuperUser ? "border-r-0" : ""}`}
                   >
                     {`Purga ${i + 1}`}
                     {isSuperUser && (
@@ -237,7 +250,7 @@ export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
               {isSuperUser && <CustomTableHead className="border-r-0 w-10"></CustomTableHead>}
             </TableRow>
             <TableRow className="border-b-0 hover:bg-transparent">
-              {Array.from({ length: 9 }, (_, i) => {
+              {Array.from({ length: maxExtraPurgas + 1 }, (_, i) => {
                 const colId = `p${i}`;
                 if (hiddenColumns.includes(colId)) return null;
                 return (
@@ -248,18 +261,19 @@ export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
                     <TableHead className="text-sm font-bold tracking-wider text-slate-500 text-center min-w-[60px]">
                       Tiempo
                     </TableHead>
-                    <CustomTableHead className="py-2 text-slate-500 min-w-[70px]">
+                    <TableHead className="text-sm font-bold tracking-wider text-slate-500 text-center min-w-[70px]">
                       Realiza
-                    </CustomTableHead>
+                    </TableHead>
                   </Fragment>
                 );
               })}
+              {isSuperUser && <TableHead className="border-r-0 w-10"></TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedRows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={27} className="text-center text-slate-500 py-16">
+                <TableCell colSpan={3 + (maxExtraPurgas + 1) * 3 + (isSuperUser ? 1 : 0)} className="text-center text-slate-500 py-16">
                   <div className="flex flex-col items-center gap-3">
                     <div className="p-4 bg-slate-100 rounded-full">
                       <Circle className="h-6 w-6 text-slate-400" />
@@ -269,7 +283,7 @@ export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedRows.map((r) => <PurgaRow key={r.id} r={r} hiddenColumns={hiddenColumns} />)
+              paginatedRows.map((r) => <PurgaRow key={r.id} r={r} hiddenColumns={hiddenColumns} maxExtraPurgas={maxExtraPurgas} />)
             )}
           </TableBody>
         </Table>

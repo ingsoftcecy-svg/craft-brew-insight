@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { CustomTableHead, CustomTableCell } from "@/components/tables/custom_table_cells";
 import { format } from "date-fns";
-import { Circle, CheckCircle2, Trash2, EyeOff, Eye } from "lucide-react";
+import { Circle, CheckCircle2, Trash2, EyeOff, Eye, Plus } from "lucide-react";
 import { parseDateToMexico } from "@/lib/utils";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -25,10 +25,26 @@ function formatDate(isoString: string | null | undefined) {
 export function ExtractoTable({ rows }: ExtractoTableProps) {
   const toggleEstadoChequeo = useOperacionesStore((s) => s.toggleEstadoChequeo);
   const deleteExtracto = useOperacionesStore((s) => s.deleteExtracto);
+  const addCustomChequeo = useOperacionesStore((s) => s.addCustomChequeo);
+  const removeCustomChequeo = useOperacionesStore((s) => s.removeCustomChequeo);
   const isSuperUser = useAuthStore((s) => s.isSuperUser);
   const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
 
-  const HORAS = [24, 48, 72, 96, 120, 128, 136, 144] as const;
+  const baseHours = [24, 48, 72, 96, 120, 128, 136, 144];
+
+  const HORAS = (() => {
+    const dynamic = new Set<number>();
+    rows.forEach(r => {
+      Object.keys(r).forEach(k => {
+        const match = k.match(/^h(\d+)$/);
+        if (match) {
+          const h = parseInt(match[1]);
+          if (!baseHours.includes(h)) dynamic.add(h);
+        }
+      });
+    });
+    return Array.from(new Set([...baseHours, ...dynamic])).sort((a,b) => a - b);
+  })();
 
   const toggleColumn = (colId: string) => {
     setHiddenColumns((prev) =>
@@ -38,9 +54,26 @@ export function ExtractoTable({ rows }: ExtractoTableProps) {
 
   const renderHeader = (label: string, colId: string, className = "") => {
     if (hiddenColumns.includes(colId)) return null;
+    const isDynamic = colId.endsWith('h') && !baseHours.includes(parseInt(colId.replace('h', '')));
+    
     return (
-      <CustomTableHead className={`group relative ${className}`}>
-        {label}
+      <CustomTableHead className={`group relative pr-8 ${className}`}>
+        <div className="flex items-center justify-center gap-2">
+          {label}
+          {isSuperUser && isDynamic && (
+            <button
+              onClick={() => {
+                if (window.confirm(`¿Estás seguro de eliminar el chequeo de ${label} de toda la tabla?`)) {
+                  removeCustomChequeo(parseInt(colId.replace('h', '')));
+                }
+              }}
+              className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+              title={`Eliminar columna ${label}`}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
         {isSuperUser && (
           <button
             onClick={() => toggleColumn(colId)}
@@ -52,6 +85,17 @@ export function ExtractoTable({ rows }: ExtractoTableProps) {
         )}
       </CustomTableHead>
     );
+  };
+
+  const handleAddCustomChequeo = (tanqueId?: string) => {
+    const input = window.prompt("Ingresa el número de horas para el nuevo chequeo (ej. 155):");
+    if (!input) return;
+    const hora = parseInt(input.trim());
+    if (isNaN(hora) || hora <= 0) {
+      alert("Por favor, ingresa un número de horas válido.");
+      return;
+    }
+    addCustomChequeo(hora, tanqueId);
   };
 
   return (
@@ -78,10 +122,20 @@ export function ExtractoTable({ rows }: ExtractoTableProps) {
               renderHeader(
                 `${h} Hrs`,
                 `${h}h`,
-                `text-center ${h === 144 && !isSuperUser ? "border-r-0" : ""}`,
+                `text-center`,
               ),
             )}
-            {isSuperUser && <CustomTableHead className="border-r-0 w-10"></CustomTableHead>}
+            {isSuperUser && (
+              <CustomTableHead className="border-r-0 w-24 text-center">
+                <button
+                  onClick={() => handleAddCustomChequeo()}
+                  className="flex items-center gap-1 mx-auto text-xs text-blue-600 hover:text-blue-800 font-bold bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded"
+                  title="Añadir chequeo a todos los tanques"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Hrs
+                </button>
+              </CustomTableHead>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -139,16 +193,26 @@ export function ExtractoTable({ rows }: ExtractoTableProps) {
               })}
               {isSuperUser && (
                 <CustomTableCell className="border-r-0 text-center">
-                  <button
-                    onClick={() => {
-                      if (window.confirm("¿Estás seguro de eliminar este registro completo?")) {
-                        deleteExtracto(r.id);
-                      }
-                    }}
-                    className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex justify-center items-center gap-2">
+                    <button
+                      onClick={() => handleAddCustomChequeo(r.id)}
+                      className="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                      title={`Añadir chequeo extra para ${r.tanque}`}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm("¿Estás seguro de eliminar este registro completo?")) {
+                          deleteExtracto(r.id);
+                        }
+                      }}
+                      className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                      title="Eliminar tanque"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </CustomTableCell>
               )}
             </TableRow>

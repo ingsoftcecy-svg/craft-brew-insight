@@ -10,6 +10,9 @@ import { useOperacionesStore } from "@/store/useOperacionesStore";
 import { obtenerTurnoPorHora, getLimitesParaTurnoString } from "@/data/turno";
 import { parseMexicanDate } from "@/lib/utils";
 import { TableFilters } from "@/components/tables/table_filters";
+import { useAuthStore } from "@/store/useAuthStore";
+import { ConfiguracionPurgasModal } from "@/components/modals/ConfiguracionPurgasModal";
+import { Settings } from "lucide-react";
 
 export const Route = createFileRoute("/_app/purgas")({
   head: () => ({
@@ -33,6 +36,8 @@ function PurgasPage() {
     () => obtenerTurnoPorHora(new Date().toISOString()) || "all",
   );
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+  const [showConfig, setShowConfig] = useState(false);
+  const isSuperUser = useAuthStore((s) => s.isSuperUser);
 
   useEffect(() => {
     fetchData();
@@ -90,7 +95,20 @@ function PurgasPage() {
       sortOrder={sortOrder}
       onSortToggle={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
     >
+      <div className="mb-4 flex justify-end print:hidden">
+        {isSuperUser && (
+          <Button
+            onClick={() => setShowConfig(true)}
+            variant="outline"
+            className="gap-2 bg-slate-800 text-white hover:bg-slate-700"
+          >
+            <Settings className="w-4 h-4" />
+            Configurar Purgas
+          </Button>
+        )}
+      </div>
       <PurgasTable rows={filtered} />
+      {showConfig && <ConfiguracionPurgasModal onClose={() => setShowConfig(false)} />}
     </TablePageLayout>
   );
 }
