@@ -100,9 +100,9 @@ function PurgasPage() {
           <Button
             onClick={() => setShowConfig(true)}
             variant="outline"
-            className="gap-2 bg-slate-800 text-white hover:bg-slate-700"
+            className="gap-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 rounded-lg h-9 px-4 text-sm font-medium transition-all"
           >
-            <Settings className="w-4 h-4" />
+            <Settings className="w-4 h-4 text-slate-400" />
             Configurar Purgas
           </Button>
         )}

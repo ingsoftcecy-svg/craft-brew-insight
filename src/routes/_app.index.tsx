@@ -66,51 +66,49 @@ function Dashboard() {
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
       {/* Page title */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white/50 p-6 rounded-2xl border border-slate-100 shadow-sm backdrop-blur-sm print:hidden">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/50 p-6 rounded-2xl border border-slate-100 shadow-sm backdrop-blur-sm print:hidden">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-800">Tablero General</h1>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-1">
-            <p className="text-sm text-slate-500 font-medium">
-              Monitor de Chequeos de Plato y Purgas de Trub · {turnoActual}
-            </p>
-            {isSuperUser && (
-              <div className="flex flex-col sm:flex-row gap-2 mt-2 sm:mt-0">
-                <input 
-                  type="date"
-                  value={selectedDateStr}
-                  onChange={(e) => setSelectedDateStr(e.target.value)}
-                  className="text-xs px-2 py-1 rounded-md border border-slate-200 text-slate-700 bg-white"
-                />
-                <div className="flex gap-2">
-                  <button
-                  onClick={() => setSelectedTurnoId(null)}
-                  className={`text-xs px-2.5 py-1 font-semibold rounded-md transition-colors ${!selectedTurnoId ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                >
-                  Actual
-                </button>
-                <button
-                  onClick={() => setSelectedTurnoId("Turno 1")}
-                  className={`text-xs px-2.5 py-1 font-semibold rounded-md transition-colors ${selectedTurnoId === "Turno 1" ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                >
-                  T1
-                </button>
-                <button
-                  onClick={() => setSelectedTurnoId("Turno 2")}
-                  className={`text-xs px-2.5 py-1 font-semibold rounded-md transition-colors ${selectedTurnoId === "Turno 2" ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                >
-                  T2
-                </button>
-                <button
-                  onClick={() => setSelectedTurnoId("Turno 3")}
-                  className={`text-xs px-2.5 py-1 font-semibold rounded-md transition-colors ${selectedTurnoId === "Turno 3" ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                >
-                  T3
-                </button>
-              </div>
-            </div>
-            )}
-          </div>
+          <p className="text-sm text-slate-500 font-medium mt-1">
+            Monitor de Chequeos de Plato y Purgas de Trub · {turnoActual}
+          </p>
         </div>
+        {isSuperUser && (
+          <div className="flex items-center gap-3 shrink-0">
+            <input
+              type="date"
+              value={selectedDateStr}
+              onChange={(e) => setSelectedDateStr(e.target.value)}
+              className="text-xs px-3 py-2 rounded-lg border border-slate-200 text-slate-600 bg-white h-9"
+            />
+            <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+              <button
+                onClick={() => setSelectedTurnoId(null)}
+                className={`text-xs px-3 py-1.5 font-semibold rounded-md transition-all duration-150 ${
+                  !selectedTurnoId
+                    ? 'bg-white text-slate-800 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Actual
+              </button>
+              {["Turno 1", "Turno 2", "Turno 3"].map((t, i) => (
+                <button
+                  key={t}
+                  onClick={() => setSelectedTurnoId(t)}
+                  className={`text-xs px-3 py-1.5 font-semibold rounded-md transition-all duration-150 ${
+                    selectedTurnoId === t
+                      ? 'bg-white text-slate-800 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  T{i + 1}
+                </button>
+              ))}
+            </div>
+            
+          </div>
+        )}
       </div>
 
       {/* KPIs */}

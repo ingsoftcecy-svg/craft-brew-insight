@@ -37,16 +37,16 @@ export function TablePageLayout({
           {filters}
           <Button
             variant="outline"
-            className="gap-2 bg-slate-50 border-slate-200 rounded-xl h-10 font-medium w-full md:w-auto md:ml-auto"
+            className="gap-2 bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800 hover:border-slate-300 rounded-lg h-9 px-3 text-sm font-medium w-full md:w-auto md:ml-auto transition-all"
             onClick={onSortToggle}
           >
             {sortOrder === "desc" ? (
               <>
-                <ArrowDownAZ className="h-4 w-4" /> Más recientes
+                <ArrowDownAZ className="h-4 w-4 text-slate-400" /> Más recientes
               </>
             ) : (
               <>
-                <ArrowUpZA className="h-4 w-4" /> Más antiguos
+                <ArrowUpZA className="h-4 w-4 text-slate-400" /> Más antiguos
               </>
             )}
           </Button>

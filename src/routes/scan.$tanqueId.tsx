@@ -6,8 +6,8 @@ import { Card, CardContent, CardTitle, CardDescription } from "@/components/ui/c
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, CheckCircle2, Clock } from "lucide-react";
-import { parseMexicanDate } from "@/lib/utils";
+import { AlertCircle, CheckCircle2, Clock, ChevronDown } from "lucide-react";
+import { parseMexicanDate, parseDateToMexico } from "@/lib/utils";
 import { auth } from "@/lib/firebase";
 import { signInAnonymously } from "firebase/auth";
 
@@ -65,21 +65,37 @@ function ScanPage() {
   }, [purgas, tanqueId]);
 
   // Encontrar la primera purga pendiente
+  // El array tiene: index 0 = Purga Inicial, index 1 = Purga 1, etc.
   const indicePurgaPendiente = useMemo(() => {
     if (!loteActivo) return -1;
 
-    const index = loteActivo.purgas.findIndex((p) => {
-      const estaIncompleta =
-        p.tiempo === null ||
-        p.tiempo === undefined ||
-        p.realiza === null ||
-        p.realiza === "" ||
-        p.realiza === undefined;
+    const estaIncompleta = (p: { tiempo?: number | null; realiza?: string | null }) => {
+      const sinTiempo = p.tiempo === null || p.tiempo === undefined;
+      const sinRealiza = p.realiza === null || p.realiza === undefined || p.realiza === "";
+      return sinTiempo || sinRealiza;
+    };
 
-      return estaIncompleta;
-    });
+    // Verificar si la Purga Inicial (index 0) está incompleta
+    const inicialIncompleta = estaIncompleta(loteActivo.purgas[0]);
 
-    return index;
+    if (inicialIncompleta) {
+      // Excepción: si ya se completó al menos una purga numerada (index >= 1),
+      // saltar la Inicial y buscar la siguiente pendiente desde index 1
+      const hayPurgasNumeradasCompletadas = loteActivo.purgas
+        .slice(1)
+        .some((p) => !estaIncompleta(p));
+
+      if (hayPurgasNumeradasCompletadas) {
+        // Buscar la primera pendiente desde index 1 en adelante
+        const indexDesde1 = loteActivo.purgas.findIndex(
+          (p, i) => i >= 1 && estaIncompleta(p)
+        );
+        return indexDesde1;
+      }
+    }
+
+    // Caso normal: buscar la primera incompleta desde el inicio
+    return loteActivo.purgas.findIndex((p) => estaIncompleta(p));
   }, [loteActivo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -161,7 +177,30 @@ function ScanPage() {
               : `Registro de Purga ${indicePurgaPendiente}`}
           </CardTitle>
           <CardDescription className="text-slate-300 mt-1">
-            Programada para: {loteActivo.purgas[indicePurgaPendiente]?.fechaHora || "Sin asignar"}
+            Programada para:{" "}
+            {(() => {
+              // Purga Inicial: mostrar fecha FIN de llenado
+              const rawFecha =
+                indicePurgaPendiente === 0
+                  ? loteActivo.fechaLlenado
+                  : loteActivo.purgas[indicePurgaPendiente]?.fechaHora;
+
+              if (!rawFecha) return "Sin asignar";
+              try {
+                const d = new Date(rawFecha);
+                return d.toLocaleString("es-MX", {
+                  timeZone: "America/Mexico_City",
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                });
+              } catch {
+                return rawFecha;
+              }
+            })()}
           </CardDescription>
         </div>
 
@@ -195,7 +234,7 @@ function ScanPage() {
                   pattern="[0-9]*"
                   value={tiempo}
                   onChange={(e) => setTiempo(e.target.value)}
-                  placeholder="Ej. 15"
+                  placeholder="Máximo 7 minutos"
                   className="h-14 text-xl px-4 bg-slate-50"
                   required
                   min="1"
@@ -206,15 +245,21 @@ function ScanPage() {
                 <Label htmlFor="realiza" className="text-base text-slate-700 font-semibold">
                   Operador (Realiza)
                 </Label>
-                <Input
-                  id="realiza"
-                  type="text"
-                  value={realiza}
-                  onChange={(e) => setRealiza(e.target.value)}
-                  placeholder="Nombre o ID del operador"
-                  className="h-14 text-xl px-4 bg-slate-50"
-                  required
-                />
+                <div className="relative">
+                  <select
+                    id="realiza"
+                    value={realiza}
+                    onChange={(e) => setRealiza(e.target.value)}
+                    required
+                    className="w-full h-14 text-xl px-4 bg-slate-50 border border-input rounded-md appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent text-slate-800"
+                  >
+                    <option value="" disabled>Selecciona operador...</option>
+                    {["LAMD", "MJFA", "VHAL", "OEVM", "ORC", "PLRG"].map((op) => (
+                      <option key={op} value={op}>{op}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                </div>
               </div>
 
               <Button
