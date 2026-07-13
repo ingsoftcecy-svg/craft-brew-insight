@@ -21,6 +21,16 @@ const API_KEY_SECRETA =
 export const Route = createFileRoute("/api/ingesta")({
   server: {
     handlers: {
+      OPTIONS: async () => {
+        return new Response(null, {
+          status: 204,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, x-api-key",
+          },
+        });
+      },
       POST: async ({ request }) => {
         try {
           // 1. Validar la API Key de seguridad en los Headers
@@ -28,7 +38,7 @@ export const Route = createFileRoute("/api/ingesta")({
           if (apiKey !== API_KEY_SECRETA) {
             return new Response(JSON.stringify({ error: "No autorizado" }), {
               status: 401,
-              headers: { "Content-Type": "application/json" },
+              headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
             });
           }
 
@@ -49,7 +59,7 @@ export const Route = createFileRoute("/api/ingesta")({
                 }),
                 {
                   status: 500,
-                  headers: { "Content-Type": "application/json" },
+                  headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
                 },
               );
             }
@@ -74,7 +84,7 @@ export const Route = createFileRoute("/api/ingesta")({
               }),
               {
                 status: 400,
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
               },
             );
           }
@@ -97,7 +107,7 @@ export const Route = createFileRoute("/api/ingesta")({
               JSON.stringify({ error: "Cuerpo de solicitud vacío o no es un array válido" }),
               {
                 status: 400,
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
               },
             );
           }
@@ -349,53 +359,72 @@ export const Route = createFileRoute("/api/ingesta")({
             });
           }
 
+          const removeUndefined = (obj: any): any => {
+            if (Array.isArray(obj)) return obj.map(removeUndefined);
+            if (obj === null || typeof obj !== "object") return obj;
+            const cleanObj: any = {};
+            for (const key of Object.keys(obj)) {
+              if (obj[key] !== undefined) {
+                cleanObj[key] = removeUndefined(obj[key]);
+              }
+            }
+            return cleanObj;
+          };
+
           let totalNuevosGuardados = 0;
 
           // Procesar e insertar en Firestore por periodo para optimizar consultas de existencia
           for (const periodo of Object.keys(filasPorPeriodo)) {
             const items = filasPorPeriodo[periodo];
-            // Obtener todos los datos existentes de este periodo para omitir duplicados o restaurar datos corruptos
+            // Obtener todos los datos existentes de este periodo para omitir duplicados
+            const extRef = collection(firestore, "extractos_historico", periodo, "registros");
+            const snapExt = await getDocs(extRef);
+            const idsExistentesExt = new Set(snapExt.docs.map((d) => d.id));
+
             const purgasRef = collection(firestore, "purgas_historico", periodo, "registros");
             const snapPurgas = await getDocs(purgasRef);
-            const datosExistentes = new Map(snapPurgas.docs.map((d) => [d.id, d.data()]));
+            const idsExistentesPurga = new Set(snapPurgas.docs.map((d) => d.id));
 
             let batch = writeBatch(firestore);
             let registrosEnBatch = 0;
 
             for (const item of items) {
-              const existente = datosExistentes.get(item.extracto.id);
-              if (!existente) {
-                // Guardar todo combinado en purgas_historico para mantener compatibilidad con fetchData
-                const docRef = doc(
-                  firestore,
-                  "purgas_historico",
-                  periodo,
-                  "registros",
-                  item.extracto.id,
-                );
+              let algunNuevo = false;
+
+              // Guardar extracto si no existe
+              if (!idsExistentesExt.has(item.extracto.id)) {
+                const docExtRef = doc(firestore, "extractos_historico", periodo, "registros", item.extracto.id);
                 batch.set(
-                  docRef,
-                  {
-                    ...item.extracto,
-                    ...item.purga,
-                    creadoEn: Timestamp.now(),
-                  },
+                  docExtRef,
+                  { ...removeUndefined(item.extracto), creadoEn: Timestamp.now() },
                   { merge: true },
                 );
+                registrosEnBatch++;
+                algunNuevo = true;
+              }
 
+              // Guardar purga si no existe
+              if (!idsExistentesPurga.has(item.purga.id)) {
+                const docPurgaRef = doc(firestore, "purgas_historico", periodo, "registros", item.purga.id);
+                batch.set(
+                  docPurgaRef,
+                  { ...removeUndefined(item.purga), creadoEn: Timestamp.now() },
+                  { merge: true },
+                );
+                registrosEnBatch++;
+                algunNuevo = true;
+              }
+
+              if (algunNuevo) {
                 totalNuevosGuardados++;
-                registrosEnBatch += 2;
-
-                // Guardar eventos de agenda
+                
+                // Guardar eventos de agenda solo si insertamos algo nuevo
                 if (item.eventosAgenda) {
                   for (const evento of item.eventosAgenda) {
                     const docEventoRef = doc(firestore, "agenda_eventos", evento.id);
                     batch.set(
                       docEventoRef,
-                      {
-                        ...evento,
-                        creadoEn: Timestamp.now(),
-                      },
+                      { ...removeUndefined(evento), creadoEn: Timestamp.now() },
                       { merge: true },
                     );
                     registrosEnBatch++;
@@ -417,6 +446,7 @@ export const Route = createFileRoute("/api/ingesta")({
 
             // Actualizar metadatos y conteo del periodo
             if (totalNuevosGuardados > 0) {
+              const extColRef = collection(firestore, "extractos_historico", periodo, "registros");
               const snapExtActualizado = await getDocs(extColRef);
               const totalExt = snapExtActualizado.size;
 
@@ -461,7 +491,7 @@ export const Route = createFileRoute("/api/ingesta")({
             }),
             {
               status: 200,
-              headers: { "Content-Type": "application/json" },
+              headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
             },
           );
         } catch (error: any) {
@@ -470,7 +500,7 @@ export const Route = createFileRoute("/api/ingesta")({
             JSON.stringify({ error: error.message || "Error interno del servidor" }),
             {
               status: 500,
-              headers: { "Content-Type": "application/json" },
+              headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
             },
           );
         }
