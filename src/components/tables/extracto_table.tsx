@@ -2,10 +2,11 @@ import { useState } from "react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { CustomTableHead, CustomTableCell } from "@/components/tables/custom_table_cells";
 import { format } from "date-fns";
-import { Circle, CheckCircle2, Trash2, EyeOff, Eye, Plus } from "lucide-react";
+import { Circle, CheckCircle2, Trash2, EyeOff, Eye, Plus, AlertCircle } from "lucide-react";
 import { parseDateToMexico } from "@/lib/utils";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
 import { useAuthStore } from "@/store/useAuthStore";
+import { obtenerTurnoPorHora, getLimitesParaTurnoString } from "@/data/turno";
 
 interface ExtractoTableProps {
   rows: any[];
@@ -174,18 +175,42 @@ export function ExtractoTable({ rows }: ExtractoTableProps) {
                 const estado = r[`estado${h}h`];
                 if (hiddenColumns.includes(key)) return null;
 
+                let isOverdue = false;
+                if (val && estado !== "Completado") {
+                  const taskDate = new Date(val);
+                  if (!isNaN(taskDate.getTime())) {
+                    const turnoStr = obtenerTurnoPorHora(taskDate);
+                    if (turnoStr) {
+                      const { end } = getLimitesParaTurnoString(turnoStr, taskDate);
+                      if (new Date() > end) {
+                        isOverdue = true;
+                      }
+                    }
+                  }
+                }
+
+                let statusClass = "text-muted-foreground font-medium";
+                if (!val) {
+                  statusClass = "text-muted-foreground/30";
+                } else if (estado === "Completado") {
+                  statusClass = "text-green-600 dark:text-green-500 font-bold bg-green-500/10";
+                } else if (isOverdue) {
+                  statusClass = "text-red-600 dark:text-red-500 font-bold bg-red-500/10";
+                }
+
                 return (
                   <CustomTableCell
                     key={h}
                     onClick={() =>
                       isSuperUser && val && toggleEstadoChequeo(r.id, key, isSuperUser)
                     }
-                    className={`text-sm tabular-nums text-center ${h === 144 && !isSuperUser ? "border-r-0" : ""} ${!val ? "text-muted-foreground/30" : estado === "Completado" ? "text-green-600 dark:text-green-500 font-bold bg-green-500/10" : "text-muted-foreground font-medium"} ${isSuperUser && val ? "cursor-pointer hover:bg-green-500/20" : ""}`}
+                    className={`text-sm tabular-nums text-center transition-colors ${h === 144 && !isSuperUser ? "border-r-0" : ""} ${statusClass} ${isSuperUser && val ? "cursor-pointer hover:bg-green-500/20" : ""}`}
                   >
                     <div className="flex items-center justify-center gap-1.5">
                       {estado === "Completado" && (
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                       )}
+                      {isOverdue && <AlertCircle className="w-3.5 h-3.5 text-red-500 animate-pulse" />}
                       {formatDate(val)}
                     </div>
                   </CustomTableCell>

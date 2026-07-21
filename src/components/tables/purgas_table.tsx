@@ -12,8 +12,9 @@ import { CustomTableHead, CustomTableCell } from "@/components/tables/custom_tab
 import { type PurgaRow as PurgaRowType } from "@/types/proceso";
 import { useOperacionesStore } from "@/store/useOperacionesStore";
 import { useAuthStore } from "@/store/useAuthStore";
-import { Circle, CheckCircle2, Trash2, Eye, EyeOff } from "lucide-react";
+import { Circle, CheckCircle2, Trash2, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { TablePagination } from "@/components/ui/table_pagination";
+import { obtenerTurnoPorHora, getLimitesParaTurnoString } from "@/data/turno";
 
 const EMPLEADOS = ["LAMD", "MJFA", "VHAL", "OEVM", "ORC", "PLRG"];
 const TIEMPOS = ["1", "2", "3", "4", "5", "6", "7"];
@@ -38,14 +39,35 @@ const PurgaRow = memo(({ r, hiddenColumns, maxExtraPurgas }: { r: PurgaRowType; 
   const renderPurga = (p: any, i: number, isInitial: boolean = false) => {
     const completada = Boolean(p.tiempo && p.realiza);
     const dateToShow = isInitial ? r.fechaLlenado : p.fechaHora;
+    
+    let statusClass = "text-muted-foreground";
+    let isOverdue = false;
+
+    if (completada) {
+      statusClass = "text-green-600 dark:text-green-500 bg-green-500/10";
+    } else if (dateToShow) {
+      const taskDate = new Date(dateToShow);
+      if (!isNaN(taskDate.getTime())) {
+        const turnoStr = obtenerTurnoPorHora(taskDate);
+        if (turnoStr) {
+          const { end } = getLimitesParaTurnoString(turnoStr, taskDate);
+          if (new Date() > end) {
+            isOverdue = true;
+            statusClass = "text-red-600 dark:text-red-500 bg-red-500/10";
+          }
+        }
+      }
+    }
+
     return (
       <Fragment key={i}>
         <CustomTableCell
-          className={`text-sm font-bold tabular-nums text-center ${completada ? "text-green-600 dark:text-green-500 bg-green-500/10" : "text-muted-foreground"}`}
+          className={`text-sm font-bold tabular-nums text-center transition-colors ${statusClass}`}
         >
           <div className="flex flex-col items-center justify-center">
             <div className="flex items-center justify-center gap-1.5">
               {completada && <CheckCircle2 className="w-4 h-4 text-green-500" />}
+              {isOverdue && <AlertCircle className="w-4 h-4 text-red-500 animate-pulse" />}
               {formatDate(dateToShow)}
             </div>
             {isInitial && r.tiempoLlenadoHoras !== undefined && (

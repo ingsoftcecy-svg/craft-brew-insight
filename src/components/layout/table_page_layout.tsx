@@ -23,7 +23,7 @@ export function TablePageLayout({
   pagination,
 }: TablePageLayoutProps) {
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
+    <div className="space-y-6 w-full max-w-[1600px] mx-auto pb-10 min-w-0">
       <div className="flex flex-col gap-4 bg-card p-6 rounded-2xl border border-border shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -53,9 +53,9 @@ export function TablePageLayout({
         </div>
       </div>
 
-      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden mt-4">
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden mt-4 w-full min-w-0">
         <div className="p-0">
-          <div className="pt-0">{children}</div>
+          <div className="pt-0 min-w-0">{children}</div>
           {pagination}
         </div>
       </div>

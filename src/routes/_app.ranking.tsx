@@ -10,11 +10,11 @@ import { parseMexicanDate } from "@/lib/utils";
 
 const FULL_NAMES: Record<string, string> = {
   "LAMD": "Luis Adolfo Maldonado",
-  "MJFA": "Manuel de Jesus Falcon",
-  "VHAL": "Victor Hugo Asencio",
-  "OEVM": "Oscar Eduardo Valdez",
-  "ORC": "Oscar Rodriguez",
-  "PLRG": "Pedro Luis Rodriguez"
+  "MJFA": "Manuel de Jesus Falcon Arroyo",
+  "VHAL": "Victor Hugo Asencio Leyva",
+  "OEVM": "Oscar Eduardo Valdez Muñoz",
+  "ORC": "Oscar Rodriguez Codallos",
+  "PLRG": "Pedro Luis Rodriguez Gomez"
 };
 
 function OperatorPodium({ op, rank }: { op: any; rank: 1 | 2 | 3 }) {
