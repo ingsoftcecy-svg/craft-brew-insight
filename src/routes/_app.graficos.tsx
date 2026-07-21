@@ -22,12 +22,12 @@ function GraficosPage() {
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white/50 p-6 rounded-2xl border border-slate-100 shadow-sm backdrop-blur-sm">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-card p-6 rounded-2xl border border-border shadow-sm print:hidden">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-800">
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
             Gráficos y Estadísticas
           </h1>
-          <p className="text-sm text-slate-500 mt-1 font-medium">
+          <p className="text-sm text-muted-foreground mt-1 font-medium">
             Análisis visual de Purgas y Chequeos de Plato
           </p>
         </div>

@@ -141,6 +141,7 @@ export async function obtenerExtractosPorPeriodo(periodo: string): Promise<Extra
   return snapshot.docs.map((d) => {
     const data = d.data();
     return {
+      ...data, // Mantener campos dinámicos (h155, estado155h, etc.)
       id: d.id,
       tanque: data.tanque ?? "",
       marca: data.marca ?? "",

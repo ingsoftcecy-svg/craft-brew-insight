@@ -13,7 +13,9 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as ScanTanqueIdRouteImport } from './routes/scan.$tanqueId'
+import { Route as AuthActionRouteImport } from './routes/auth.action'
 import { Route as ApiIngestaRouteImport } from './routes/api.ingesta'
+import { Route as AppRankingRouteImport } from './routes/_app.ranking'
 import { Route as AppPurgasRouteImport } from './routes/_app.purgas'
 import { Route as AppGraficosRouteImport } from './routes/_app.graficos'
 import { Route as AppExtractoRouteImport } from './routes/_app.extracto'
@@ -40,10 +42,20 @@ const ScanTanqueIdRoute = ScanTanqueIdRouteImport.update({
   path: '/scan/$tanqueId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthActionRoute = AuthActionRouteImport.update({
+  id: '/auth/action',
+  path: '/auth/action',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiIngestaRoute = ApiIngestaRouteImport.update({
   id: '/api/ingesta',
   path: '/api/ingesta',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppRankingRoute = AppRankingRouteImport.update({
+  id: '/ranking',
+  path: '/ranking',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppPurgasRoute = AppPurgasRouteImport.update({
   id: '/purgas',
@@ -84,7 +96,9 @@ export interface FileRoutesByFullPath {
   '/extracto': typeof AppExtractoRoute
   '/graficos': typeof AppGraficosRoute
   '/purgas': typeof AppPurgasRoute
+  '/ranking': typeof AppRankingRoute
   '/api/ingesta': typeof ApiIngestaRoute
+  '/auth/action': typeof AuthActionRoute
   '/scan/$tanqueId': typeof ScanTanqueIdRoute
   '/admin/qr-print': typeof AppAdminQrPrintRoute
 }
@@ -95,7 +109,9 @@ export interface FileRoutesByTo {
   '/extracto': typeof AppExtractoRoute
   '/graficos': typeof AppGraficosRoute
   '/purgas': typeof AppPurgasRoute
+  '/ranking': typeof AppRankingRoute
   '/api/ingesta': typeof ApiIngestaRoute
+  '/auth/action': typeof AuthActionRoute
   '/scan/$tanqueId': typeof ScanTanqueIdRoute
   '/': typeof AppIndexRoute
   '/admin/qr-print': typeof AppAdminQrPrintRoute
@@ -109,7 +125,9 @@ export interface FileRoutesById {
   '/_app/extracto': typeof AppExtractoRoute
   '/_app/graficos': typeof AppGraficosRoute
   '/_app/purgas': typeof AppPurgasRoute
+  '/_app/ranking': typeof AppRankingRoute
   '/api/ingesta': typeof ApiIngestaRoute
+  '/auth/action': typeof AuthActionRoute
   '/scan/$tanqueId': typeof ScanTanqueIdRoute
   '/_app/': typeof AppIndexRoute
   '/_app/admin/qr-print': typeof AppAdminQrPrintRoute
@@ -124,7 +142,9 @@ export interface FileRouteTypes {
     | '/extracto'
     | '/graficos'
     | '/purgas'
+    | '/ranking'
     | '/api/ingesta'
+    | '/auth/action'
     | '/scan/$tanqueId'
     | '/admin/qr-print'
   fileRoutesByTo: FileRoutesByTo
@@ -135,7 +155,9 @@ export interface FileRouteTypes {
     | '/extracto'
     | '/graficos'
     | '/purgas'
+    | '/ranking'
     | '/api/ingesta'
+    | '/auth/action'
     | '/scan/$tanqueId'
     | '/'
     | '/admin/qr-print'
@@ -148,7 +170,9 @@ export interface FileRouteTypes {
     | '/_app/extracto'
     | '/_app/graficos'
     | '/_app/purgas'
+    | '/_app/ranking'
     | '/api/ingesta'
+    | '/auth/action'
     | '/scan/$tanqueId'
     | '/_app/'
     | '/_app/admin/qr-print'
@@ -158,6 +182,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
   ApiIngestaRoute: typeof ApiIngestaRoute
+  AuthActionRoute: typeof AuthActionRoute
   ScanTanqueIdRoute: typeof ScanTanqueIdRoute
 }
 
@@ -191,12 +216,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScanTanqueIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/action': {
+      id: '/auth/action'
+      path: '/auth/action'
+      fullPath: '/auth/action'
+      preLoaderRoute: typeof AuthActionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ingesta': {
       id: '/api/ingesta'
       path: '/api/ingesta'
       fullPath: '/api/ingesta'
       preLoaderRoute: typeof ApiIngestaRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/ranking': {
+      id: '/_app/ranking'
+      path: '/ranking'
+      fullPath: '/ranking'
+      preLoaderRoute: typeof AppRankingRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/purgas': {
       id: '/_app/purgas'
@@ -249,6 +288,7 @@ interface AppRouteChildren {
   AppExtractoRoute: typeof AppExtractoRoute
   AppGraficosRoute: typeof AppGraficosRoute
   AppPurgasRoute: typeof AppPurgasRoute
+  AppRankingRoute: typeof AppRankingRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAdminQrPrintRoute: typeof AppAdminQrPrintRoute
 }
@@ -259,6 +299,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppExtractoRoute: AppExtractoRoute,
   AppGraficosRoute: AppGraficosRoute,
   AppPurgasRoute: AppPurgasRoute,
+  AppRankingRoute: AppRankingRoute,
   AppIndexRoute: AppIndexRoute,
   AppAdminQrPrintRoute: AppAdminQrPrintRoute,
 }
@@ -269,6 +310,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
   ApiIngestaRoute: ApiIngestaRoute,
+  AuthActionRoute: AuthActionRoute,
   ScanTanqueIdRoute: ScanTanqueIdRoute,
 }
 export const routeTree = rootRouteImport

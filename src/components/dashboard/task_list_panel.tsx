@@ -31,22 +31,22 @@ const colorClasses: Record<
   { icon: string; bgGradient: string; itemIcon: string; badge: string }
 > = {
   sky: {
-    icon: "text-sky-500",
-    bgGradient: "from-sky-100 to-sky-50 border-sky-100",
-    itemIcon: "text-sky-600",
-    badge: "bg-sky-100/80 text-sky-700 border-sky-200/50",
+    icon: "text-blue-500",
+    bgGradient: "from-blue-500/10 to-blue-500/5 border-blue-500/20",
+    itemIcon: "text-blue-500",
+    badge: "bg-blue-500/10 text-blue-500 border-blue-500/20",
   },
   indigo: {
-    icon: "text-indigo-500",
-    bgGradient: "from-indigo-100 to-indigo-50 border-indigo-100",
-    itemIcon: "text-indigo-600",
-    badge: "bg-indigo-100/80 text-indigo-700 border-indigo-200/50",
+    icon: "text-primary",
+    bgGradient: "from-primary/10 to-primary/5 border-primary/20",
+    itemIcon: "text-primary",
+    badge: "bg-primary/10 text-primary border-primary/20",
   },
   rose: {
-    icon: "text-rose-500",
-    bgGradient: "from-rose-100 to-rose-50 border-rose-100",
-    itemIcon: "text-rose-600",
-    badge: "bg-rose-100/80 text-rose-700 border-rose-200/50",
+    icon: "text-destructive",
+    bgGradient: "from-destructive/10 to-destructive/5 border-destructive/20",
+    itemIcon: "text-destructive",
+    badge: "bg-destructive/10 text-destructive border-destructive/20",
   },
 };
 

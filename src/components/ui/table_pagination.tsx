@@ -32,8 +32,8 @@ export function TablePagination({
   if (pages <= 1) return null;
 
   return (
-    <div className="mt-4 flex flex-col sm:flex-row items-center justify-between text-sm p-4 bg-slate-50/50 border-t border-slate-100 gap-4">
-      <span className="text-slate-500 font-medium">
+    <div className="mt-4 flex flex-col sm:flex-row items-center justify-between text-sm p-4 bg-muted/50 border-t border-border gap-4">
+      <span className="text-muted-foreground font-medium">
         Mostrando registros {(displayPage - 1) * itemsPerPage + 1}–
         {Math.min(displayPage * itemsPerPage, totalItems)} de {totalItems} · Página {displayPage} de{" "}
         {pages}
@@ -44,7 +44,7 @@ export function TablePagination({
           size="sm"
           disabled={!canGoPrev}
           onClick={handlePrev}
-          className="font-semibold text-slate-600 hover:text-slate-800 shadow-sm"
+          className="font-semibold text-muted-foreground hover:text-foreground shadow-sm bg-background border-border"
         >
           Anterior
         </Button>
@@ -53,7 +53,7 @@ export function TablePagination({
           size="sm"
           disabled={!canGoNext}
           onClick={handleNext}
-          className="font-semibold text-slate-600 hover:text-slate-800 shadow-sm"
+          className="font-semibold text-muted-foreground hover:text-foreground shadow-sm bg-background border-border"
         >
           Siguiente
         </Button>

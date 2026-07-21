@@ -128,8 +128,8 @@ function QRPrintPage() {
     <div className="max-w-7xl mx-auto p-4 md:p-8">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">Generador de Códigos QR</h1>
-          <p className="text-slate-500">
+          <h1 className="text-3xl font-bold text-foreground">Generador de Códigos QR</h1>
+          <p className="text-muted-foreground">
             Imprime estas etiquetas para pegarlas en los tanques físicos.
           </p>
         </div>
@@ -139,14 +139,14 @@ function QRPrintPage() {
         </Button>
       </div>
 
-      <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+      <div className="mb-8 p-4 bg-primary/5 border border-primary/20 rounded-xl">
         <div className="max-w-md space-y-2">
-          <Label htmlFor="baseurl">Enlace Base de los QR</Label>
+          <Label htmlFor="baseurl" className="text-foreground">Enlace Base de los QR</Label>
           <Input
             id="baseurl"
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
-            className="bg-white"
+            className="bg-background text-foreground"
           />
         </div>
       </div>
@@ -177,7 +177,7 @@ function QRPrintPage() {
               </div>
               {/* Footer */}
               <div className="w-full py-2 bg-slate-50 border-t border-slate-100 text-center">
-                <span className="text-[10px] text-slate-400 font-medium tracking-wide uppercase">
+                <span className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">
                   Escanear para purgas
                 </span>
               </div>

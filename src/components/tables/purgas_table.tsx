@@ -41,7 +41,7 @@ const PurgaRow = memo(({ r, hiddenColumns, maxExtraPurgas }: { r: PurgaRowType; 
     return (
       <Fragment key={i}>
         <CustomTableCell
-          className={`text-sm font-bold tabular-nums text-center ${completada ? "text-green-600 bg-green-50/30" : "text-slate-500"}`}
+          className={`text-sm font-bold tabular-nums text-center ${completada ? "text-green-600 dark:text-green-500 bg-green-500/10" : "text-muted-foreground"}`}
         >
           <div className="flex flex-col items-center justify-center">
             <div className="flex items-center justify-center gap-1.5">
@@ -55,21 +55,21 @@ const PurgaRow = memo(({ r, hiddenColumns, maxExtraPurgas }: { r: PurgaRowType; 
             )}
           </div>
         </CustomTableCell>
-        <TableCell className="text-center p-1 border-b border-slate-100">
+        <TableCell className="text-center p-1 border-b border-border">
           <select
             value={p.tiempo ? String(p.tiempo) : ""}
             onChange={(e) => updatePurgaField(r.id, i + 1, "tiempo", e.target.value)}
-            className={`h-7 w-[55px] mx-auto bg-transparent border hover:border-amber-300 hover:bg-white rounded text-sm font-bold px-1 text-center cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-500 appearance-none transition-colors ${
+            className={`h-7 w-[55px] mx-auto bg-transparent border hover:border-primary hover:bg-muted rounded text-sm font-bold px-1 text-center cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary appearance-none transition-colors ${
               p.tiempo
-                ? "border-amber-200 text-amber-900 bg-amber-50"
-                : "border-transparent text-slate-400"
+                ? "border-primary/50 text-foreground bg-primary/10"
+                : "border-transparent text-muted-foreground"
             }`}
           >
-            <option value="" disabled={!isSuperUser} className="text-slate-300 font-medium">
+            <option value="" disabled={!isSuperUser} className="text-muted-foreground font-medium">
               —
             </option>
             {TIEMPOS.map((t) => (
-              <option key={t} value={t} className="text-slate-800">
+              <option key={t} value={t} className="text-foreground bg-popover">
                 {t} min
               </option>
             ))}
@@ -79,17 +79,17 @@ const PurgaRow = memo(({ r, hiddenColumns, maxExtraPurgas }: { r: PurgaRowType; 
           <select
             value={p.realiza || ""}
             onChange={(e) => updatePurgaField(r.id, i + 1, "realiza", e.target.value)}
-            className={`h-7 w-[65px] mx-auto bg-transparent border hover:border-amber-300 hover:bg-white rounded text-sm font-bold px-1 text-center cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-500 appearance-none transition-colors ${
+            className={`h-7 w-[65px] mx-auto bg-transparent border hover:border-primary hover:bg-muted rounded text-sm font-bold px-1 text-center cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary appearance-none transition-colors ${
               p.realiza
-                ? "border-amber-200 text-amber-900 bg-amber-50"
-                : "border-transparent text-slate-400"
+                ? "border-primary/50 text-foreground bg-primary/10"
+                : "border-transparent text-muted-foreground"
             }`}
           >
-            <option value="" disabled={!isSuperUser} className="text-slate-300 font-medium">
+            <option value="" disabled={!isSuperUser} className="text-muted-foreground font-medium">
               —
             </option>
             {EMPLEADOS.map((emp) => (
-              <option key={emp} value={emp} className="text-slate-800">
+              <option key={emp} value={emp} className="text-foreground bg-popover">
                 {emp}
               </option>
             ))}
@@ -100,20 +100,20 @@ const PurgaRow = memo(({ r, hiddenColumns, maxExtraPurgas }: { r: PurgaRowType; 
   };
 
   return (
-    <TableRow className="hover:bg-amber-50/60 transition-colors border-b border-slate-100 group">
+    <TableRow className="hover:bg-muted/50 transition-colors border-b border-border group">
       {/* Marca */}
       <CustomTableCell className="py-3">
-        <span className="inline-flex items-center rounded-lg bg-blue-100 px-3 py-1 text-sm font-black text-blue-800 border border-blue-200 shadow-sm">
+        <span className="inline-flex items-center rounded-lg bg-primary/10 px-3 py-1 text-sm font-black text-primary border border-primary/20 shadow-sm">
           {r.marca}
         </span>
       </CustomTableCell>
 
       {/* Tanque */}
-      <CustomTableCell className="font-black text-sm text-slate-900">{r.tanque}</CustomTableCell>
+      <CustomTableCell className="font-black text-sm text-foreground">{r.tanque}</CustomTableCell>
 
       {/* Fecha Inicio Llenado */}
       {!hiddenColumns.includes("fecha") && (
-        <CustomTableCell className="text-sm font-bold tracking-tight text-slate-700 tabular-nums">
+        <CustomTableCell className="text-sm font-bold tracking-tight text-muted-foreground tabular-nums">
           <div className="flex flex-col">
             <span>{formatDate(r.fechaInicioLlenado)}</span>
           </div>
@@ -131,9 +131,9 @@ const PurgaRow = memo(({ r, hiddenColumns, maxExtraPurgas }: { r: PurgaRowType; 
         if (!p) {
           return (
             <Fragment key={index}>
-              <CustomTableCell className="text-center text-slate-300">—</CustomTableCell>
-              <CustomTableCell className="text-center text-slate-300 border-b border-slate-100">—</CustomTableCell>
-              <CustomTableCell className="text-center text-slate-300">—</CustomTableCell>
+              <CustomTableCell className="text-center text-muted-foreground/30">—</CustomTableCell>
+              <CustomTableCell className="text-center text-muted-foreground/30 border-b border-border">—</CustomTableCell>
+              <CustomTableCell className="text-center text-muted-foreground/30">—</CustomTableCell>
             </Fragment>
           );
         }
@@ -192,8 +192,8 @@ export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
           </div>
         )}
         <Table className="w-max min-w-full text-sm">
-          <TableHeader className="bg-slate-100/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-20 shadow-sm">
-            <TableRow className="border-b border-slate-200 hover:bg-transparent">
+          <TableHeader className="bg-muted/80 backdrop-blur-md border-b border-border sticky top-0 z-20 shadow-sm">
+            <TableRow className="border-b border-border hover:bg-transparent">
               <CustomTableHead rowSpan={2} className="align-middle min-w-[130px]">
                 Marca
               </CustomTableHead>
@@ -206,9 +206,9 @@ export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
                   {isSuperUser && (
                     <button
                       onClick={() => toggleColumn("fecha")}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-200 rounded"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-muted rounded"
                     >
-                      <EyeOff className="w-3 h-3 text-slate-500" />
+                      <EyeOff className="w-3 h-3 text-muted-foreground" />
                     </button>
                   )}
                 </CustomTableHead>
@@ -255,13 +255,13 @@ export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
                 if (hiddenColumns.includes(colId)) return null;
                 return (
                   <Fragment key={i}>
-                    <TableHead className="text-sm font-bold tracking-wider text-slate-500 text-center border-l border-slate-200 min-w-[130px]">
+                    <TableHead className="text-sm font-bold tracking-wider text-muted-foreground text-center border-l border-border min-w-[130px]">
                       {i === 0 ? "Fecha Fin Llenado" : "Fecha / Hora"}
                     </TableHead>
-                    <TableHead className="text-sm font-bold tracking-wider text-slate-500 text-center min-w-[60px]">
+                    <TableHead className="text-sm font-bold tracking-wider text-muted-foreground text-center min-w-[60px]">
                       Tiempo
                     </TableHead>
-                    <TableHead className="text-sm font-bold tracking-wider text-slate-500 text-center min-w-[70px]">
+                    <TableHead className="text-sm font-bold tracking-wider text-muted-foreground text-center min-w-[70px]">
                       Realiza
                     </TableHead>
                   </Fragment>
@@ -273,10 +273,10 @@ export function PurgasTable({ rows }: { rows: PurgaRowType[] }) {
           <TableBody>
             {paginatedRows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3 + (maxExtraPurgas + 1) * 3 + (isSuperUser ? 1 : 0)} className="text-center text-slate-500 py-16">
+                <TableCell colSpan={3 + (maxExtraPurgas + 1) * 3 + (isSuperUser ? 1 : 0)} className="text-center text-muted-foreground py-16">
                   <div className="flex flex-col items-center gap-3">
-                    <div className="p-4 bg-slate-100 rounded-full">
-                      <Circle className="h-6 w-6 text-slate-400" />
+                    <div className="p-4 bg-muted rounded-full">
+                      <Circle className="h-6 w-6 text-muted-foreground" />
                     </div>
                     <p className="font-bold text-sm">Sin resultados</p>
                   </div>

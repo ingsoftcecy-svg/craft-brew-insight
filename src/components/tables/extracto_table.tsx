@@ -112,7 +112,7 @@ export function ExtractoTable({ rows }: ExtractoTableProps) {
         </div>
       )}
       <Table>
-        <TableHeader className="bg-slate-100/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+        <TableHeader className="bg-muted/80 backdrop-blur-md border-b border-border sticky top-0 z-10 shadow-sm">
           <TableRow className="border-b-0 hover:bg-transparent">
             {renderHeader("Marca", "marca")}
             {renderHeader("Tanque", "tanque")}
@@ -142,29 +142,29 @@ export function ExtractoTable({ rows }: ExtractoTableProps) {
           {rows.map((r) => (
             <TableRow
               key={r.id}
-              className="hover:bg-amber-50/60 transition-colors border-b border-slate-100 group"
+              className="hover:bg-muted/50 transition-colors border-b border-border group"
             >
               {!hiddenColumns.includes("marca") && (
                 <CustomTableCell className="py-3">
-                  <span className="inline-flex items-center rounded-lg bg-blue-100 px-3 py-1 text-sm font-black text-blue-800 border border-blue-200 shadow-sm">
+                  <span className="inline-flex items-center rounded-lg bg-primary/10 px-3 py-1 text-sm font-black text-primary border border-primary/20 shadow-sm">
                     {r.marca}
                   </span>
                 </CustomTableCell>
               )}
               {!hiddenColumns.includes("tanque") && (
-                <CustomTableCell className="font-black text-sm text-slate-900">
+                <CustomTableCell className="font-black text-sm text-foreground">
                   {r.tanque}
                 </CustomTableCell>
               )}
               {!hiddenColumns.includes("fechaInicio") && (
-                <CustomTableCell className="text-sm font-bold tracking-tight text-slate-700 tabular-nums">
+                <CustomTableCell className="text-sm font-bold tracking-tight text-muted-foreground tabular-nums">
                   <div className="flex flex-col">
                     <span>{formatDate(r.fechaInicioLlenado)}</span>
                   </div>
                 </CustomTableCell>
               )}
               {!hiddenColumns.includes("fecha") && (
-                <CustomTableCell className="text-sm font-bold tracking-tight text-slate-700 tabular-nums">
+                <CustomTableCell className="text-sm font-bold tracking-tight text-muted-foreground tabular-nums">
                   {formatDate(r.fechaLlenado)}
                 </CustomTableCell>
               )}
@@ -180,7 +180,7 @@ export function ExtractoTable({ rows }: ExtractoTableProps) {
                     onClick={() =>
                       isSuperUser && val && toggleEstadoChequeo(r.id, key, isSuperUser)
                     }
-                    className={`text-sm tabular-nums text-center ${h === 144 && !isSuperUser ? "border-r-0" : ""} ${!val ? "text-slate-300" : estado === "Completado" ? "text-emerald-600 font-bold bg-emerald-50/50" : "text-slate-500 font-medium"} ${isSuperUser && val ? "cursor-pointer hover:bg-emerald-50" : ""}`}
+                    className={`text-sm tabular-nums text-center ${h === 144 && !isSuperUser ? "border-r-0" : ""} ${!val ? "text-muted-foreground/30" : estado === "Completado" ? "text-green-600 dark:text-green-500 font-bold bg-green-500/10" : "text-muted-foreground font-medium"} ${isSuperUser && val ? "cursor-pointer hover:bg-green-500/20" : ""}`}
                   >
                     <div className="flex items-center justify-center gap-1.5">
                       {estado === "Completado" && (
@@ -219,10 +219,10 @@ export function ExtractoTable({ rows }: ExtractoTableProps) {
           ))}
           {rows.length === 0 && (
             <TableRow>
-              <TableCell colSpan={9} className="text-center text-slate-500 py-16">
+              <TableCell colSpan={9} className="text-center text-muted-foreground py-16">
                 <div className="flex flex-col items-center gap-3">
-                  <div className="p-4 bg-slate-100 rounded-full">
-                    <Circle className="h-6 w-6 text-slate-400" />
+                  <div className="p-4 bg-muted rounded-full">
+                    <Circle className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <p className="font-bold text-sm">Sin resultados</p>
                 </div>

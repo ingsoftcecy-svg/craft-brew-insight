@@ -9,6 +9,7 @@ import {
   MultiFactorResolver,
   setPersistence,
   browserLocalPersistence,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,6 +46,7 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { redirect: redirectUrl } = Route.useSearch();
@@ -59,6 +61,7 @@ function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccessMsg("");
     setIsLoading(true);
 
     try {
@@ -91,6 +94,29 @@ function LoginPage() {
       } else {
         setError("Credenciales incorrectas. Verifica tu correo y contraseña.");
       }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError("Por favor, ingresa tu correo electrónico primero.");
+      return;
+    }
+    setError("");
+    setSuccessMsg("");
+    setIsLoading(true);
+    try {
+      const actionCodeSettings = {
+        url: window.location.origin + "/login",
+        handleCodeInApp: false
+      };
+      await sendPasswordResetEmail(auth, email, actionCodeSettings);
+      setSuccessMsg("Te hemos enviado un enlace para restablecer tu contraseña.");
+    } catch (err: any) {
+      console.error("Password reset error:", err);
+      setError("Error al enviar el correo. Verifica que tu dirección sea correcta.");
     } finally {
       setIsLoading(false);
     }
@@ -164,17 +190,17 @@ function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-slate-50 p-4 selection:bg-amber-100 selection:text-amber-900">
-      {/* Premium Background Effects (Light Mode) - Optimized for performance */}
+    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-background text-foreground p-4 selection:bg-primary/30 selection:text-primary-foreground">
+      {/* Premium Background Effects */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[20%] -left-[10%] h-[50%] w-[50%] rounded-full bg-amber-300/30 blur-3xl opacity-70" />
-        <div className="absolute top-[40%] -right-[10%] h-[60%] w-[40%] rounded-full bg-amber-100/40 blur-3xl opacity-70" />
-        <div className="absolute -bottom-[20%] left-[20%] h-[50%] w-[60%] rounded-full bg-orange-200/30 blur-3xl opacity-70" />
+        <div className="absolute -top-[20%] -left-[10%] h-[50%] w-[50%] rounded-full bg-primary/20 blur-3xl opacity-70" />
+        <div className="absolute top-[40%] -right-[10%] h-[60%] w-[40%] rounded-full bg-sidebar/20 blur-3xl opacity-70" />
+        <div className="absolute -bottom-[20%] left-[20%] h-[50%] w-[60%] rounded-full bg-primary/10 blur-3xl opacity-70" />
       </div>
 
-      <Card className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-white/80 bg-white/70 p-2 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-500">
+      <Card className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-border bg-card/70 p-2 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-500">
         {/* Shimmer Effect Border */}
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-amber-50/50 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/10 via-transparent to-transparent pointer-events-none" />
 
         <CardHeader className="space-y-4 pb-8 text-center pt-8">
           <div className="mx-auto flex h-32 w-32 items-center justify-center rounded-2xl shadow-lg shadow-black/20 transition-transform duration-500 hover:scale-105 group overflow-hidden">
@@ -185,10 +211,10 @@ function LoginPage() {
             />
           </div>
           <div className="space-y-1 animate-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-backwards">
-            <CardTitle className="text-3xl font-black tracking-tight text-slate-900 drop-shadow-sm">
+            <CardTitle className="text-3xl font-black tracking-tight text-foreground drop-shadow-sm">
               Agenda de Control
             </CardTitle>
-            <CardDescription className="text-slate-500 font-medium">
+            <CardDescription className="text-muted-foreground font-medium">
               Purgas y Chequeo de Platos
             </CardDescription>
           </div>
@@ -204,8 +230,13 @@ function LoginPage() {
                   {error}
                 </div>
               )}
+              {successMsg && (
+                <div className="rounded-xl bg-green-50 p-3 text-sm font-medium text-green-600 border border-green-100 text-center animate-in slide-in-from-top-2">
+                  {successMsg}
+                </div>
+              )}
               <div className="space-y-2.5 relative">
-                <label className="text-sm font-bold tracking-wide text-slate-700" htmlFor="email">
+                <label className="text-sm font-bold tracking-wide text-foreground" htmlFor="email">
                   Correo Corporativo
                 </label>
                 <Input
@@ -215,12 +246,12 @@ function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="h-12 rounded-xl border-slate-200 bg-white/50 pl-4 pr-12 text-slate-900 placeholder:text-slate-400 focus-visible:border-amber-500 focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-amber-500 transition-all duration-300 shadow-sm"
+                  className="h-12 rounded-xl border-border bg-background/50 pl-4 pr-12 text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:bg-background focus-visible:ring-1 focus-visible:ring-primary transition-all duration-300 shadow-sm"
                 />
               </div>
               <div className="space-y-2.5 relative">
                 <label
-                  className="text-sm font-bold tracking-wide text-slate-700"
+                  className="text-sm font-bold tracking-wide text-foreground"
                   htmlFor="password"
                 >
                   Contraseña
@@ -233,21 +264,31 @@ function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="h-12 rounded-xl border-slate-200 bg-white/50 pl-4 pr-12 text-slate-900 placeholder:text-slate-400 focus-visible:border-amber-500 focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-amber-500 transition-all duration-300 shadow-sm"
+                    className="h-12 rounded-xl border-border bg-background/50 pl-4 pr-12 text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:bg-background focus-visible:ring-1 focus-visible:ring-primary transition-all duration-300 shadow-sm"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+                <div className="flex justify-end mt-1">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={isLoading}
+                    className="text-xs font-semibold text-primary hover:underline focus:outline-none"
+                  >
+                    ¿Olvidaste tu contraseña?
                   </button>
                 </div>
               </div>
               <div className="pt-4">
                 <Button
                   type="submit"
-                  className="group relative h-12 w-full overflow-hidden rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-base font-bold text-white shadow-lg shadow-amber-500/25 transition-all duration-300 hover:scale-[1.02] hover:shadow-amber-500/40"
+                  className="group relative h-12 w-full overflow-hidden rounded-xl bg-gradient-to-r from-primary to-yellow-500 text-base font-bold text-primary-foreground shadow-lg shadow-primary/25 transition-all duration-300 hover:scale-[1.02] hover:shadow-primary/40"
                   disabled={isLoading}
                 >
                   <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-1000 ease-in-out group-hover:translate-x-full" />

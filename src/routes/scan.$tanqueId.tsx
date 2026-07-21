@@ -157,15 +157,27 @@ function ScanPage() {
   return (
     <div className="max-w-md mx-auto p-4 md:p-6 pb-20">
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-black text-slate-800 mb-2 tracking-tight">
+        <h1 className="text-4xl font-black text-foreground mb-2 tracking-tight">
           Tanque {tanqueId}
         </h1>
         <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-900 px-4 py-1.5 rounded-full text-sm font-semibold">
           <Clock className="w-4 h-4" />
           <span>Lote: {loteActivo.marca}</span>
         </div>
-        <p className="text-slate-500 text-sm mt-3 font-medium">
-          Llenado: {loteActivo.fechaLlenado}
+        <p className="text-muted-foreground text-sm mt-3 font-medium">
+          Llenado: {(() => {
+            if (!loteActivo.fechaLlenado) return "—";
+            try {
+              const d = new Date(loteActivo.fechaLlenado);
+              return d.toLocaleString("es-MX", {
+                timeZone: "America/Mexico_City",
+                day: "2-digit", month: "2-digit", year: "numeric",
+                hour: "2-digit", minute: "2-digit", hour12: false
+              });
+            } catch {
+              return loteActivo.fechaLlenado;
+            }
+          })()}
         </p>
       </div>
 
@@ -235,7 +247,7 @@ function ScanPage() {
                   value={tiempo}
                   onChange={(e) => setTiempo(e.target.value)}
                   placeholder="Máximo 7 minutos"
-                  className="h-14 text-xl px-4 bg-slate-50"
+                  className="h-14 text-xl px-4 bg-slate-50 text-slate-900"
                   required
                   min="1"
                 />

@@ -32,16 +32,16 @@ function AppLayout() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-slate-50 print:bg-white selection:bg-amber-100 selection:text-amber-900">
+      <div className="flex min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-background print:bg-transparent selection:bg-primary/30 selection:text-primary-foreground">
         <AppSidebar />
         <SidebarInset className="flex flex-1 flex-col bg-transparent">
           <AppHeader />
           <main className="flex-1 p-4 md:p-6 lg:p-8 print:p-0 overflow-x-hidden min-w-0">
             {user && !user.emailVerified && (
-              <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm flex items-center justify-between animate-in fade-in print:hidden">
+              <div className="mb-6 rounded-xl border border-primary/30 bg-primary/10 p-4 shadow-sm flex items-center justify-between animate-in fade-in print:hidden">
                 <div>
-                  <h3 className="font-bold text-amber-800">Verificación de Correo Requerida</h3>
-                  <p className="text-sm text-amber-700">
+                  <h3 className="font-bold text-foreground">Verificación de Correo Requerida</h3>
+                  <p className="text-sm text-muted-foreground">
                     Firebase requiere que verifiques tu correo electrónico antes de poder activar la
                     Autenticación en 2 Pasos (MFA).
                   </p>
@@ -61,7 +61,7 @@ function AppLayout() {
                       );
                     }
                   }}
-                  className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-bold text-white hover:bg-amber-600 transition-colors"
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:opacity-90 transition-opacity"
                 >
                   Enviar correo de verificación
                 </button>

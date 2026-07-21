@@ -50,12 +50,12 @@ export function TableFilters({
             if (resetPage) resetPage();
           }}
           placeholder="Buscar por tanque..."
-          className="pl-9 bg-slate-50 border-slate-200 rounded-xl h-10 font-medium"
+          className="pl-9 bg-background border-border rounded-xl h-10 font-medium"
         />
       </div>
 
       <Select value={periodoActual} onValueChange={handleChange(setPeriodo)}>
-        <SelectTrigger className="w-full md:w-36 bg-slate-50 border-slate-200 rounded-xl h-10 font-medium">
+        <SelectTrigger className="w-full md:w-36 bg-background border-border rounded-xl h-10 font-medium">
           <SelectValue placeholder="Mes" />
         </SelectTrigger>
         <SelectContent>
@@ -73,7 +73,7 @@ export function TableFilters({
       </Select>
 
       <Select value={marca} onValueChange={handleChange(setMarca)}>
-        <SelectTrigger className="w-full md:w-40 bg-slate-50 border-slate-200 rounded-xl h-10 font-medium">
+        <SelectTrigger className="w-full md:w-40 bg-background border-border rounded-xl h-10 font-medium">
           <SelectValue placeholder="Marca" />
         </SelectTrigger>
         <SelectContent>
@@ -87,7 +87,7 @@ export function TableFilters({
       </Select>
 
       <Select value={turno} onValueChange={handleChange(setTurno)}>
-        <SelectTrigger className="w-full md:w-40 bg-slate-50 border-slate-200 rounded-xl h-10 font-medium">
+        <SelectTrigger className="w-full md:w-40 bg-background border-border rounded-xl h-10 font-medium">
           <SelectValue placeholder="Turno" />
         </SelectTrigger>
         <SelectContent>

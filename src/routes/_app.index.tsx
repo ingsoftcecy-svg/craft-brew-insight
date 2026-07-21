@@ -66,10 +66,10 @@ function Dashboard() {
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
       {/* Page title */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/50 p-6 rounded-2xl border border-slate-100 shadow-sm backdrop-blur-sm print:hidden">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card p-6 rounded-2xl border border-border shadow-sm print:hidden">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-800">Tablero General</h1>
-          <p className="text-sm text-slate-500 font-medium mt-1">
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Tablero General</h1>
+          <p className="text-sm text-muted-foreground font-medium mt-1">
             Monitor de Chequeos de Plato y Purgas de Trub · {turnoActual}
           </p>
         </div>
@@ -79,15 +79,15 @@ function Dashboard() {
               type="date"
               value={selectedDateStr}
               onChange={(e) => setSelectedDateStr(e.target.value)}
-              className="text-xs px-3 py-2 rounded-lg border border-slate-200 text-slate-600 bg-white h-9"
+              className="text-xs px-3 py-2 rounded-lg border border-border text-foreground bg-background h-9"
             />
-            <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+            <div className="flex items-center gap-1 bg-secondary rounded-lg p-1">
               <button
                 onClick={() => setSelectedTurnoId(null)}
                 className={`text-xs px-3 py-1.5 font-semibold rounded-md transition-all duration-150 ${
                   !selectedTurnoId
-                    ? 'bg-white text-slate-800 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 Actual
@@ -98,8 +98,8 @@ function Dashboard() {
                   onClick={() => setSelectedTurnoId(t)}
                   className={`text-xs px-3 py-1.5 font-semibold rounded-md transition-all duration-150 ${
                     selectedTurnoId === t
-                      ? 'bg-white text-slate-800 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700'
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   T{i + 1}
@@ -125,24 +125,24 @@ function Dashboard() {
             value={fermentando}
             icon={FlaskConical}
             sub="Ciclos sin finalizar (0 a 144h)"
-            color="text-amber-600"
-            bg="bg-gradient-to-br from-amber-100 to-amber-50 border-amber-200"
+            color="text-primary"
+            bg="bg-card border-border"
           />
           <KpiCard
             label="Chequeos de Platos Pendientes"
             value={totalChequeosPendientes}
             icon={Clock}
             sub="Por realizar"
-            color="text-sky-600"
-            bg="bg-gradient-to-br from-sky-100 to-sky-50 border-sky-200"
+            color="text-blue-500"
+            bg="bg-card border-border"
           />
           <KpiCard
             label="Purgas Pendientes Turno"
             value={totalPurgasPendientes}
             icon={Droplets}
             sub="Purgas de trub este turno"
-            color="text-rose-600"
-            bg="bg-gradient-to-br from-rose-100 to-rose-50 border-rose-200"
+            color="text-destructive"
+            bg="bg-card border-border"
           />
         </div>
       )}
@@ -151,17 +151,17 @@ function Dashboard() {
       <div className="print:hidden">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-indigo-500 flex items-center justify-center shadow-sm">
-              <Beaker className="h-4 w-4 text-white" />
+            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shadow-sm">
+              <Beaker className="h-4 w-4 text-primary-foreground" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-800 tracking-tight">Chequeos de Plato</h2>
-              <p className="text-xs text-slate-500 font-medium">De 24 a 144 hrs · Turno actual</p>
+              <h2 className="text-lg font-bold text-foreground tracking-tight">Chequeos de Plato</h2>
+              <p className="text-xs text-muted-foreground font-medium">De 24 a 144 hrs · Turno actual</p>
             </div>
           </div>
           <button
             onClick={handlePrint}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm font-bold bg-blue-600 border border-transparent text-white rounded-lg hover:bg-blue-700 hover:shadow-md transition-all shadow-sm"
+            className="flex items-center gap-2 px-3 py-1.5 text-sm font-bold bg-primary border border-transparent text-primary-foreground rounded-lg hover:bg-primary/90 hover:shadow-md transition-all shadow-sm"
           >
             <Printer className="h-4 w-4" />
             Imprimir Lista
@@ -189,12 +189,12 @@ function Dashboard() {
       <div>
         <div className="print:hidden">
           <div className="flex items-center gap-2 mb-4">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center shadow-sm">
-              <Droplets className="h-4 w-4 text-white" />
+            <div className="h-8 w-8 rounded-lg bg-destructive flex items-center justify-center shadow-sm">
+              <Droplets className="h-4 w-4 text-destructive-foreground" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-800 tracking-tight">Purgas de Trub</h2>
-              <p className="text-xs text-slate-500 font-medium">
+              <h2 className="text-lg font-bold text-foreground tracking-tight">Purgas de Trub</h2>
+              <p className="text-xs text-muted-foreground font-medium">
                 8 purgas por lote · Turno actual · Ligadas a QR
               </p>
             </div>

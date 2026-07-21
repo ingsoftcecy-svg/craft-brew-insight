@@ -215,30 +215,30 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white p-3 border border-slate-200 shadow-xl rounded-xl text-sm z-50 relative">
-          <p className="font-bold text-slate-800 border-b pb-1 mb-1">Tanque: {data.tanque}</p>
-          <p className="text-slate-600">
-            Fecha Llenado: <span className="font-semibold text-slate-900">{data.fecha || "-"}</span>
+        <div className="bg-popover p-3 border border-border shadow-xl rounded-xl text-sm z-50 relative">
+          <p className="font-bold text-foreground border-b border-border pb-1 mb-1">Tanque: {data.tanque}</p>
+          <p className="text-muted-foreground">
+            Fecha Llenado: <span className="font-semibold text-foreground">{data.fecha || "-"}</span>
           </p>
-          <p className="text-slate-600">
-            Marca: <span className="font-semibold text-slate-900">{data.marca}</span>
+          <p className="text-muted-foreground">
+            Marca: <span className="font-semibold text-foreground">{data.marca}</span>
           </p>
           {data.purgaIndex !== undefined && (
-            <p className="text-slate-600">
+            <p className="text-muted-foreground">
               Purga:{" "}
-              <span className="font-semibold text-slate-900">
+              <span className="font-semibold text-foreground">
                 {data.purgaIndex === 0 ? "Inicial" : data.purgaIndex}
               </span>
               {data.horaPurga && (
-                <span className="ml-2 text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-500">
+                <span className="ml-2 text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">
                   a las {data.horaPurga}
                 </span>
               )}
             </p>
           )}
-          <p className="text-slate-600">
+          <p className="text-muted-foreground">
             Valor:{" "}
-            <span className="font-bold text-blue-600">
+            <span className="font-bold text-primary">
               {data.valor.toFixed(1)} {variable === "tiempoPurga" ? "min" : "hrs"}
             </span>
           </p>
@@ -427,18 +427,18 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
                   <CartesianGrid
                     strokeDasharray="3 3"
                     vertical={false}
-                    stroke="hsl(var(--border))"
+                    stroke="var(--border)"
                   />
                   <XAxis
                     dataKey="id"
-                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
+                    tick={{ fontSize: 10, fill: "var(--muted-foreground)", fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
                     dy={10}
                   />
                   <YAxis
                     domain={[yDomainMin, yDomainMax]}
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)", fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
                     tickFormatter={(val: any) => parseFloat(Number(val).toFixed(1)).toString()}
@@ -449,24 +449,24 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
                   <ReferenceArea
                     y1={lsl}
                     y2={usl}
-                    fill="#bbf7d0"
-                    fillOpacity={0.6}
+                    fill="#22c55e"
+                    fillOpacity={0.15}
                     strokeOpacity={0}
                   />
 
-                  {/* Zonas Amarillas (Fuera de especificación) */}
+                  {/* Zonas Rojas (Fuera de especificación) */}
                   <ReferenceArea
                     y1={yDomainMin}
                     y2={lsl}
-                    fill="#eab308"
-                    fillOpacity={0.2}
+                    fill="#ef4444"
+                    fillOpacity={0.1}
                     strokeOpacity={0}
                   />
                   <ReferenceArea
                     y1={usl}
                     y2={yDomainMax}
-                    fill="#eab308"
-                    fillOpacity={0.2}
+                    fill="#ef4444"
+                    fillOpacity={0.1}
                     strokeOpacity={0}
                   />
 
@@ -529,17 +529,17 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
                   <CartesianGrid
                     strokeDasharray="3 3"
                     vertical={false}
-                    stroke="hsl(var(--border))"
+                    stroke="var(--border)"
                   />
                   <XAxis
                     dataKey="label"
-                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
+                    tick={{ fontSize: 10, fill: "var(--muted-foreground)", fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
                     dy={10}
                   />
                   <YAxis
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)", fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
                   />
@@ -576,17 +576,17 @@ export function CpCpkChart({ purgas }: CpCpkChartProps) {
                   <CartesianGrid
                     strokeDasharray="3 3"
                     vertical={false}
-                    stroke="hsl(var(--border))"
+                    stroke="var(--border)"
                   />
                   <XAxis
                     dataKey="label"
-                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
+                    tick={{ fontSize: 10, fill: "var(--muted-foreground)", fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
                     dy={10}
                   />
                   <YAxis
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)", fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
                   />

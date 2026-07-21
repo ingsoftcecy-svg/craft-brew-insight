@@ -51,67 +51,116 @@
 }
 
 /*
- * Paleta unificada: Slate Azul Acero
- * ─────────────────────────────────
- * Misma familia de color en toda la interfaz.
- * Sidebar  = slate-800  (oscuro, misma familia)
- * Fondo    = slate-100  (claro, misma familia)
- * Cards    = blanco con borde slate
- * Acento   = ámbar (UN solo color de acento)
+ * Paleta de Colores Industrial:
+ * Negro, Azul Marino, Blanco y Amarillo
  */
 :root {
   --radius: 0.5rem;
 
-  /* Fondo general — slate claro */
-  --background: oklch(0.955 0.008 240);
-  --foreground: oklch(0.2 0.025 240);
+  /* Fondo general — Blanco / Gris muy claro */
+  --background: #f8fafc;
+  --foreground: #0f172a;
 
-  /* Cards — blanco limpio */
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.025 240);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.025 240);
+  /* Cards — Blanco puro */
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
 
-  /* Acento primario — ámbar (un solo tono vibrante) */
-  --primary: oklch(0.7 0.18 55);
-  --primary-foreground: oklch(0.99 0 0);
+  /* Acento primario — Amarillo Brillante */
+  --primary: #eab308;
+  --primary-foreground: #000000;
 
-  /* Secundarios — de la misma familia slate */
-  --secondary: oklch(0.92 0.01 240);
-  --secondary-foreground: oklch(0.28 0.025 240);
-  --muted: oklch(0.92 0.01 240);
-  --muted-foreground: oklch(0.5 0.022 240);
-  --accent: oklch(0.94 0.02 55);
-  --accent-foreground: oklch(0.4 0.12 55);
+  /* Secundarios — Azul Marino Claro / Gris */
+  --secondary: #e2e8f0;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #eab308;
+  --accent-foreground: #000000;
 
-  --destructive: oklch(0.58 0.22 27);
-  --destructive-foreground: oklch(0.99 0 0);
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
 
-  /* Bordes — slate suave */
-  --border: oklch(0.878 0.012 240);
-  --input: oklch(0.878 0.012 240);
-  --ring: oklch(0.7 0.18 55);
+  /* Bordes */
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #eab308;
 
-  --status-ok: oklch(0.58 0.18 145);
-  --status-warn: oklch(0.7 0.18 55);
-  --status-bad: oklch(0.58 0.22 27);
+  --status-ok: #22c55e;
+  --status-warn: #eab308;
+  --status-bad: #ef4444;
 
-  /* Charts — ámbar + derivados de la misma familia */
-  --chart-1: oklch(0.7 0.18 55);
-  --chart-2: oklch(0.58 0.16 35);
-  --chart-3: oklch(0.55 0.15 200);
-  --chart-4: oklch(0.55 0.16 145);
-  --chart-5: oklch(0.55 0.16 280);
+  /* Charts */
+  --chart-1: #eab308;
+  --chart-2: #1e3a8a;
+  --chart-3: #3b82f6;
+  --chart-4: #64748b;
+  --chart-5: #0f172a;
 
-  /* Sidebar - Light Theme */
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.2 0.025 240);
-  --sidebar-primary: oklch(0.7 0.18 55);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.96 0.05 55);
-  --sidebar-accent-foreground: oklch(0.4 0.12 55);
-  --sidebar-border: oklch(0.878 0.012 240);
-  --sidebar-ring: oklch(0.7 0.18 55);
+  /* Sidebar - Light Theme (Azul Marino) */
+  --sidebar: #1e3a8a;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #eab308;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #1e40af;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #1e3a8a;
+  --sidebar-ring: #eab308;
+}
+
+.dark {
+  color-scheme: dark;
+  /* Fondo general — Azul Marino Oscuro / Negro */
+  --background: #020617;
+  --foreground: #f8fafc;
+
+  /* Cards — Negro o Azul muy oscuro */
+  --card: #0f172a;
+  --card-foreground: #f8fafc;
+  --popover: #0f172a;
+  --popover-foreground: #f8fafc;
+
+  /* Acento primario — Amarillo Brillante */
+  --primary: #eab308;
+  --primary-foreground: #000000;
+
+  /* Secundarios */
+  --secondary: #1e293b;
+  --secondary-foreground: #f8fafc;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #eab308;
+  --accent-foreground: #000000;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  /* Bordes */
+  --border: #1e293b;
+  --input: #1e293b;
+  --ring: #eab308;
+
+  --status-ok: #22c55e;
+  --status-warn: #eab308;
+  --status-bad: #ef4444;
+
+  /* Charts */
+  --chart-1: #eab308;
+  --chart-2: #3b82f6;
+  --chart-3: #60a5fa;
+  --chart-4: #94a3b8;
+  --chart-5: #f8fafc;
+
+  /* Sidebar - Dark Theme (Negro / Azul Marino Profundo) */
+  --sidebar: #020817;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #eab308;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #0f172a;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: #1e293b;
+  --sidebar-ring: #eab308;
 }
 
 @layer base {

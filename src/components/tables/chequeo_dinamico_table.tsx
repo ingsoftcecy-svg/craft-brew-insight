@@ -71,7 +71,7 @@ export function ChequeoDinamicoTable({ rows, horaLabel }: ChequeoDinamicoTablePr
         </div>
       )}
       <Table>
-        <TableHeader className="bg-slate-100/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+        <TableHeader className="bg-muted/80 backdrop-blur-md border-b border-border sticky top-0 z-10 shadow-sm">
           <TableRow className="border-b-0 hover:bg-transparent">
             {renderHeader("Marca", "marca")}
             {renderHeader("Tanque", "tanque", "text-center")}
@@ -92,29 +92,29 @@ export function ChequeoDinamicoTable({ rows, horaLabel }: ChequeoDinamicoTablePr
             return (
               <TableRow
                 key={r.id}
-                className={`hover:bg-amber-50/60 transition-colors border-b border-slate-100 group ${isCompletado ? "opacity-75 bg-slate-50/40 hover:bg-slate-50/60" : ""}`}
+                className={`hover:bg-muted/50 transition-colors border-b border-border group ${isCompletado ? "opacity-75 bg-background/40 hover:bg-background/60" : ""}`}
               >
                 {!hiddenColumns.includes("marca") && (
                   <CustomTableCell className="py-3">
-                    <span className="inline-flex items-center rounded-lg bg-blue-100 px-3 py-1 text-sm font-black text-blue-800 border border-blue-200 shadow-sm">
+                    <span className="inline-flex items-center rounded-lg bg-primary/10 px-3 py-1 text-sm font-black text-primary border border-primary/20 shadow-sm">
                       {r.marca}
                     </span>
                   </CustomTableCell>
                 )}
                 {!hiddenColumns.includes("tanque") && (
                   <CustomTableCell
-                    className={`font-black text-sm text-slate-900 text-center ${isCompletado ? "line-through opacity-50" : ""}`}
+                    className={`font-black text-sm text-foreground text-center ${isCompletado ? "line-through opacity-50" : ""}`}
                   >
                     {r.tanque}
                   </CustomTableCell>
                 )}
                 {!hiddenColumns.includes("fecha") && (
-                  <CustomTableCell className="text-sm font-bold tracking-tight text-slate-700 tabular-nums text-center">
+                  <CustomTableCell className="text-sm font-bold tracking-tight text-muted-foreground tabular-nums text-center">
                     {formatDate(r.fechaLlenado)}
                   </CustomTableCell>
                 )}
                 {!hiddenColumns.includes("chequeo") && (
-                  <CustomTableCell className="text-sm font-medium tracking-tight text-slate-500 tabular-nums text-center">
+                  <CustomTableCell className="text-sm font-medium tracking-tight text-muted-foreground tabular-nums text-center">
                     {formatDate(fechaChequeo)}
                   </CustomTableCell>
                 )}
@@ -170,7 +170,7 @@ export function ChequeoDinamicoTable({ rows, horaLabel }: ChequeoDinamicoTablePr
           })}
           {rows.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-12 text-slate-500 font-medium">
+              <TableCell colSpan={5} className="text-center py-12 text-muted-foreground font-medium">
                 No hay chequeos de {horaLabel} para mostrar con los filtros actuales.
               </TableCell>
             </TableRow>

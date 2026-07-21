@@ -18,12 +18,12 @@ const getEventColorClass = (e: any, isDot = false) => {
   if (e.titulo && e.titulo.includes("Purga")) {
     return isDot
       ? "bg-rose-500"
-      : "bg-rose-50/80 text-rose-700 border-l-[3px] border-rose-500 hover:bg-rose-100/80 transition-colors";
+      : "bg-rose-50/80 text-rose-700 border-l-[3px] border-rose-500 hover:bg-rose-100/80 dark:bg-rose-500/10 dark:text-rose-400 dark:hover:bg-rose-500/20 transition-colors";
   }
   if (e.titulo && e.titulo.includes("Chequeo Plato")) {
     return isDot
       ? "bg-indigo-500"
-      : "bg-indigo-50/80 text-indigo-700 border-l-[3px] border-indigo-500 hover:bg-indigo-100/80 transition-colors";
+      : "bg-indigo-50/80 text-indigo-700 border-l-[3px] border-indigo-500 hover:bg-indigo-100/80 dark:bg-indigo-500/10 dark:text-indigo-400 dark:hover:bg-indigo-500/20 transition-colors";
   }
 };
 
@@ -42,31 +42,31 @@ export function AgendaCalendar({ cursor, set_cursor, days, events }: AgendaCalen
     });
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-xl">
+    <div className="flex flex-col h-full bg-card rounded-xl">
       {/* Header del Calendario */}
-      <div className="flex flex-col sm:flex-row items-center justify-between p-6 border-b border-slate-100">
+      <div className="flex flex-col sm:flex-row items-center justify-between p-6 border-b border-border">
         <div className="flex items-center gap-3 mb-4 sm:mb-0">
-          <div className="h-10 w-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shadow-sm">
-            <CalendarIcon className="h-5 w-5 text-slate-500" />
+          <div className="h-10 w-10 rounded-full bg-muted border border-border flex items-center justify-center shadow-sm">
+            <CalendarIcon className="h-5 w-5 text-muted-foreground" />
           </div>
-          <h2 className="text-xl font-bold capitalize tracking-tight text-slate-800">
+          <h2 className="text-xl font-bold capitalize tracking-tight text-foreground">
             {format(cursor, "MMMM yyyy", { locale: es })}
           </h2>
         </div>
-        <div className="flex items-center gap-2 bg-slate-50/80 p-1 rounded-xl border border-slate-100">
+        <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-xl border border-border">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => set_cursor(subMonths(cursor, 1))}
-            className="h-8 w-8 hover:bg-white hover:shadow-sm rounded-lg transition-all"
+            className="h-8 w-8 hover:bg-background hover:shadow-sm rounded-lg transition-all"
           >
-            <ChevronLeft className="h-4 w-4 text-slate-600" />
+            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => set_cursor(new Date())}
-            className="h-8 px-3 font-semibold text-slate-600 hover:bg-white hover:shadow-sm rounded-lg transition-all"
+            className="h-8 px-3 font-semibold text-muted-foreground hover:bg-background hover:text-foreground hover:shadow-sm rounded-lg transition-all"
           >
             Hoy
           </Button>
@@ -74,9 +74,9 @@ export function AgendaCalendar({ cursor, set_cursor, days, events }: AgendaCalen
             variant="ghost"
             size="icon"
             onClick={() => set_cursor(addMonths(cursor, 1))}
-            className="h-8 w-8 hover:bg-white hover:shadow-sm rounded-lg transition-all"
+            className="h-8 w-8 hover:bg-background hover:shadow-sm rounded-lg transition-all"
           >
-            <ChevronRight className="h-4 w-4 text-slate-600" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Button>
         </div>
       </div>
@@ -90,12 +90,12 @@ export function AgendaCalendar({ cursor, set_cursor, days, events }: AgendaCalen
           ].map((item) => (
             <div
               key={item.label}
-              className="flex items-center gap-2 bg-slate-50 px-2.5 py-1.5 rounded-md border border-slate-100"
+              className="flex items-center gap-2 bg-muted px-2.5 py-1.5 rounded-md border border-border"
             >
               <span
                 className={cn("h-2.5 w-2.5 rounded-full shadow-sm", getEventColorClass(item, true))}
               />
-              <span className="text-slate-600">{item.label}</span>
+              <span className="text-muted-foreground">{item.label}</span>
             </div>
           ))}
         </div>
@@ -105,7 +105,7 @@ export function AgendaCalendar({ cursor, set_cursor, days, events }: AgendaCalen
           {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((d) => (
             <div
               key={d}
-              className="py-2 text-center text-xs font-black uppercase tracking-wider text-slate-500"
+              className="py-2 text-center text-xs font-black uppercase tracking-wider text-muted-foreground"
             >
               {d}
             </div>
@@ -120,8 +120,8 @@ export function AgendaCalendar({ cursor, set_cursor, days, events }: AgendaCalen
                 className={cn(
                   "min-h-[160px] md:min-h-[180px] rounded-2xl p-3 transition-all duration-300 flex flex-col group",
                   in_month
-                    ? "bg-white border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200"
-                    : "bg-slate-50/50 border border-transparent opacity-60",
+                    ? "bg-card border border-border shadow-sm hover:shadow-md hover:border-primary/30"
+                    : "bg-muted/30 border border-transparent opacity-60",
                 )}
               >
                 <div className="flex items-start justify-between mb-3">
@@ -129,8 +129,8 @@ export function AgendaCalendar({ cursor, set_cursor, days, events }: AgendaCalen
                     className={cn(
                       "inline-flex h-8 w-8 items-center justify-center rounded-full text-sm md:text-base font-black transition-colors",
                       is_today
-                        ? "bg-sky-500 text-white shadow-md shadow-sky-200"
-                        : "text-slate-700 group-hover:bg-slate-100",
+                        ? "bg-sky-500 text-white shadow-md shadow-sky-200 dark:shadow-none"
+                        : "text-foreground group-hover:bg-muted",
                     )}
                   >
                     {format(day, "d")}
@@ -156,7 +156,7 @@ export function AgendaCalendar({ cursor, set_cursor, days, events }: AgendaCalen
                   {day_events.length > 3 && (
                     <Dialog>
                       <DialogTrigger asChild>
-                        <button className="text-[10px] font-bold text-slate-400 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 px-2 py-1 rounded-md transition-colors w-full text-center mt-1">
+                        <button className="text-[10px] font-bold text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted px-2 py-1 rounded-md transition-colors w-full text-center mt-1">
                           +{day_events.length - 3} eventos
                         </button>
                       </DialogTrigger>

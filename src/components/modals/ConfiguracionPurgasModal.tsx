@@ -82,12 +82,12 @@ export function ConfiguracionPurgasModal({ onClose }: ConfiguracionPurgasModalPr
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-        <div className="flex justify-between items-center bg-slate-900 p-4 border-b border-slate-800">
-          <h2 className="text-xl font-bold text-white tracking-tight">Configuración de Purgas</h2>
+      <div className="bg-background rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-border">
+        <div className="flex justify-between items-center bg-card p-4 border-b border-border">
+          <h2 className="text-xl font-bold text-foreground tracking-tight">Configuración de Purgas</h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white hover:bg-slate-800 p-1 rounded-md transition-colors"
+            className="text-muted-foreground hover:text-foreground hover:bg-muted p-1 rounded-md transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
@@ -114,22 +114,22 @@ export function ConfiguracionPurgasModal({ onClose }: ConfiguracionPurgasModalPr
 
           <table className="w-full text-left text-sm border-collapse">
             <thead>
-              <tr className="border-b-2 border-slate-200">
-                <th className="pb-2 font-bold text-slate-700">Marca de Cerveza</th>
-                <th className="pb-2 font-bold text-slate-700 text-center w-32">Cada (Hrs)</th>
-                <th className="pb-2 font-bold text-slate-700 text-center w-32">Cantidad</th>
+              <tr className="border-b-2 border-border">
+                <th className="pb-2 font-bold text-foreground">Marca de Cerveza</th>
+                <th className="pb-2 font-bold text-foreground text-center w-32">Cada (Hrs)</th>
+                <th className="pb-2 font-bold text-foreground text-center w-32">Cantidad</th>
               </tr>
             </thead>
             <tbody>
               {MARCAS.map((marca) => (
-                <tr key={marca} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                  <td className="py-3 font-semibold text-slate-800">{marca}</td>
+                <tr key={marca} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
+                  <td className="py-3 font-semibold text-foreground">{marca}</td>
                   <td className="py-3 px-2 text-center">
                     <input
                       type="number"
                       min={1}
                       max={48}
-                      className="w-full border border-slate-300 rounded px-2 py-1.5 text-center focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className="w-full border border-border bg-background text-foreground rounded px-2 py-1.5 text-center focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       value={config[marca]?.cadaHrs || ""}
                       onChange={(e) => handleChange(marca, "cadaHrs", e.target.value)}
                     />
@@ -139,7 +139,7 @@ export function ConfiguracionPurgasModal({ onClose }: ConfiguracionPurgasModalPr
                       type="number"
                       min={1}
                       max={20}
-                      className="w-full border border-slate-300 rounded px-2 py-1.5 text-center focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className="w-full border border-border bg-background text-foreground rounded px-2 py-1.5 text-center focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       value={config[marca]?.cantidad || ""}
                       onChange={(e) => handleChange(marca, "cantidad", e.target.value)}
                     />
@@ -150,10 +150,10 @@ export function ConfiguracionPurgasModal({ onClose }: ConfiguracionPurgasModalPr
           </table>
         </div>
 
-        <div className="bg-slate-50 p-4 border-t border-slate-200 flex justify-end gap-3">
+        <div className="bg-muted p-4 border-t border-border flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 font-semibold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+            className="px-4 py-2 font-semibold text-foreground bg-background border border-border rounded-lg hover:bg-muted/80 transition-colors"
             disabled={isSaving}
           >
             Cancelar

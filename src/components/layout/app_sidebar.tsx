@@ -9,6 +9,7 @@ import {
   LogOut,
   Printer,
   TrendingUp,
+  Trophy,
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
@@ -32,6 +33,7 @@ const items = [
   { title: "Purgas de Trub", url: "/purgas", icon: ClipboardList },
   { title: "QR de Unitanques", url: "/admin/qr-print", icon: Printer },
   { title: "Agenda", url: "/agenda", icon: Calendar },
+  { title: "Ranking", url: "/ranking", icon: Trophy },
 ];
 
 export function AppSidebar() {
@@ -49,24 +51,24 @@ export function AppSidebar() {
   return (
     <Sidebar
       collapsible="icon"
-      className="print:hidden border-r border-slate-200/50 shadow-sm overflow-hidden bg-white/70 backdrop-blur-xl"
+      className="print:hidden border-r border-sidebar-border shadow-sm overflow-hidden bg-sidebar/90 backdrop-blur-xl"
     >
       {/* Brand */}
-      <SidebarHeader className="border-b border-slate-100 bg-transparent pt-6 pb-5 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:pt-6 group-data-[collapsible=icon]:pb-5">
+      <SidebarHeader className="border-b border-sidebar-border bg-transparent pt-6 pb-5 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:pt-6 group-data-[collapsible=icon]:pb-5">
         <div className="flex items-center justify-center md:justify-start gap-3 px-3 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center">
-          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 shadow-md shadow-amber-500/20 transition-transform duration-300 hover:scale-105 group group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
-            <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <CalendarDays className="h-5 w-5 text-white drop-shadow-sm" />
+          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-md shadow-primary/20 transition-transform duration-300 hover:scale-105 group group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 overflow-hidden">
+            <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity z-10" />
+            <img src="/BREWMAN.jpeg" alt="Brewman Logo" className="w-full h-full object-cover" />
           </div>
           {!collapsed && (
             <div className="flex flex-col leading-tight overflow-hidden animate-fade-in group-data-[collapsible=icon]:hidden">
-              <span className="text-[15px] font-black text-slate-800 tracking-tight whitespace-nowrap">
+              <span className="text-[15px] font-black text-sidebar-foreground tracking-tight whitespace-nowrap">
                 Cold Block
               </span>
-              <span className="text-xs font-medium text-slate-500 mt-0.5 whitespace-nowrap">
+              <span className="text-xs font-medium text-sidebar-foreground/70 mt-0.5 whitespace-nowrap">
                 Control De Purgas
               </span>
-              <span className="text-xs font-medium text-slate-500 mt-0.5 whitespace-nowrap">
+              <span className="text-xs font-medium text-sidebar-foreground/70 mt-0.5 whitespace-nowrap">
                 En Fermentación
               </span>
             </div>
@@ -90,8 +92,8 @@ export function AppSidebar() {
                         group relative h-11 w-full rounded-xl transition-all duration-300 ease-out overflow-hidden group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:mx-auto
                         ${
                           active
-                            ? "bg-amber-50 shadow-sm ring-1 ring-amber-100/50"
-                            : "hover:bg-slate-50 hover:shadow-sm"
+                            ? "bg-primary/10 shadow-sm ring-1 ring-primary/30"
+                            : "hover:bg-sidebar-accent hover:shadow-sm"
                         }
                       `}
                     >
@@ -101,13 +103,13 @@ export function AppSidebar() {
                       >
                         {/* Indicador de activo */}
                         {active && (
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-amber-500 rounded-r-full shadow-sm group-data-[collapsible=icon]:hidden" />
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full shadow-sm group-data-[collapsible=icon]:hidden" />
                         )}
 
                         <div
                           className={`
                           flex items-center justify-center transition-all duration-300 shrink-0
-                          ${active ? "text-amber-600 scale-110" : "text-slate-400 group-hover:text-slate-700 group-hover:scale-110"}
+                          ${active ? "text-primary scale-110" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground group-hover:scale-110"}
                         `}
                         >
                           <item.icon className="h-[18px] w-[18px]" strokeWidth={active ? 2.5 : 2} />
@@ -116,7 +118,7 @@ export function AppSidebar() {
                         <span
                           className={`
                           text-sm transition-colors duration-300 font-medium whitespace-nowrap group-data-[collapsible=icon]:hidden
-                          ${active ? "text-amber-900 font-bold" : "text-slate-600 group-hover:text-slate-900"}
+                          ${active ? "text-primary font-bold" : "text-sidebar-foreground/80 group-hover:text-sidebar-foreground"}
                         `}
                         >
                           {item.title}
@@ -131,24 +133,24 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="bg-transparent border-t border-slate-100 p-4 relative overflow-hidden group-data-[collapsible=icon]:hidden">
+      <SidebarFooter className="bg-transparent border-t border-sidebar-border p-4 relative overflow-hidden group-data-[collapsible=icon]:hidden">
         {!collapsed && (
           <div className="flex flex-col gap-4">
             <button
               onClick={handleSignOut}
-              className="flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 rounded-lg transition-colors"
+              className="flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium text-sidebar-foreground/80 bg-sidebar-accent/50 hover:bg-sidebar-accent hover:text-sidebar-foreground rounded-lg transition-colors"
             >
               <LogOut className="h-4 w-4" />
               Cerrar Sesión
             </button>
             <div className="flex flex-col items-center justify-center gap-1">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] whitespace-nowrap">
+              <p className="text-[10px] font-bold text-sidebar-foreground/50 uppercase tracking-[0.25em] whitespace-nowrap">
                 Cerveceria Zacatecas
               </p>
-              <p className="text-[8px] font-bold text-slate-400 tracking-[0.25em] whitespace-nowrap">
+              <p className="text-[8px] font-bold text-sidebar-foreground/50 tracking-[0.25em] whitespace-nowrap">
                 Creado: Ing. en Soft. Cecilia Solis
               </p>
-              <div className="h-0.5 w-8 rounded-full bg-slate-200" />
+              <div className="h-0.5 w-8 rounded-full bg-sidebar-border" />
             </div>
           </div>
         )}

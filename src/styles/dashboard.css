@@ -2,11 +2,11 @@
 @reference "./global.css";
 
 .dashboard-card {
-  @apply bg-white border border-slate-200 shadow-sm rounded-xl;
+  @apply bg-card border border-border shadow-sm rounded-xl;
 }
 
 .dashboard-card-header {
-  @apply flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 mb-4 gap-4;
+  @apply flex flex-col sm:flex-row sm:items-center justify-between border-b border-border pb-4 mb-4 gap-4;
 }
 
 .dashboard-title-container {
@@ -14,15 +14,15 @@
 }
 
 .dashboard-title {
-  @apply text-xl font-bold text-slate-800;
+  @apply text-xl font-bold text-foreground;
 }
 
 .dashboard-subtitle {
-  @apply text-sm text-slate-500 font-medium;
+  @apply text-sm text-muted-foreground font-medium;
 }
 
 .dashboard-controls {
-  @apply flex flex-wrap items-center gap-2 md:gap-4 bg-slate-50 p-2 rounded-lg border border-slate-100;
+  @apply flex flex-wrap items-center gap-2 md:gap-4 bg-muted/50 p-2 rounded-lg border border-border;
 }
 
 .dashboard-control-group {
@@ -30,15 +30,15 @@
 }
 
 .dashboard-label {
-  @apply text-sm font-semibold text-slate-700 whitespace-nowrap;
+  @apply text-sm font-semibold text-foreground whitespace-nowrap;
 }
 
 .dashboard-input {
-  @apply w-20 h-8 text-center font-mono bg-white;
+  @apply w-20 h-8 text-center font-mono bg-background text-foreground border-border;
 }
 
 .dashboard-select-trigger {
-  @apply w-[140px] h-8 bg-white;
+  @apply w-[140px] h-8 bg-background border-border text-foreground;
 }
 
 .dashboard-stats-grid {
@@ -46,23 +46,23 @@
 }
 
 .dashboard-stat-box {
-  @apply p-4 rounded-xl border border-slate-100 flex flex-col items-center justify-center;
+  @apply p-4 rounded-xl border border-border flex flex-col items-center justify-center;
 }
 
 .dashboard-stat-box-blue {
-  @apply p-4 rounded-xl border bg-blue-50 border-blue-100 flex flex-col items-center justify-center;
+  @apply p-4 rounded-xl border bg-blue-500/10 border-blue-500/20 flex flex-col items-center justify-center;
 }
 
 .dashboard-stat-label {
-  @apply text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1;
+  @apply text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1;
 }
 
 .dashboard-stat-value {
-  @apply text-2xl font-black text-slate-800;
+  @apply text-2xl font-black text-foreground;
 }
 
 .dashboard-stat-value-blue {
-  @apply text-2xl font-black text-blue-700;
+  @apply text-2xl font-black text-blue-500;
 }
 
 .dashboard-stat-ok {
@@ -82,29 +82,29 @@
 }
 
 .dashboard-chart-title {
-  @apply text-xl font-bold text-slate-800 flex items-center gap-2;
+  @apply text-xl font-bold text-foreground flex items-center gap-2;
 }
 
 .dashboard-chart-icon {
-  @apply h-5 w-5 text-slate-500;
+  @apply h-5 w-5 text-muted-foreground;
 }
 
 .dashboard-tooltip {
-  @apply bg-white p-3 border border-slate-200 shadow-xl rounded-xl text-sm z-50 relative;
+  @apply bg-popover p-3 border border-border shadow-xl rounded-xl text-sm z-50 relative;
 }
 
 .dashboard-tooltip-header {
-  @apply font-bold text-slate-800 border-b pb-1 mb-1;
+  @apply font-bold text-foreground border-b border-border pb-1 mb-1;
 }
 
 .dashboard-tooltip-row {
-  @apply text-slate-600;
+  @apply text-muted-foreground;
 }
 
 .dashboard-tooltip-value {
-  @apply font-semibold text-slate-900;
+  @apply font-semibold text-foreground;
 }
 
 .dashboard-tooltip-highlight {
-  @apply font-bold text-blue-600;
+  @apply font-bold text-primary;
 }

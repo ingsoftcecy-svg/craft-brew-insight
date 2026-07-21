@@ -188,7 +188,7 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
           y1={pxMax}
           x2={centerX}
           y2={pxQ3}
-          stroke="#334155"
+          stroke="var(--muted-foreground)"
           strokeWidth={2}
           strokeDasharray="3 3"
         />
@@ -197,7 +197,7 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
           y1={pxMax}
           x2={centerX + 10}
           y2={pxMax}
-          stroke="#334155"
+          stroke="var(--muted-foreground)"
           strokeWidth={2}
         />
 
@@ -207,7 +207,7 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
           y1={pxMin}
           x2={centerX}
           y2={pxQ1}
-          stroke="#334155"
+          stroke="var(--muted-foreground)"
           strokeWidth={2}
           strokeDasharray="3 3"
         />
@@ -216,7 +216,7 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
           y1={pxMin}
           x2={centerX + 10}
           y2={pxMin}
-          stroke="#334155"
+          stroke="var(--muted-foreground)"
           strokeWidth={2}
         />
 
@@ -226,8 +226,9 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
           y={pxQ3}
           width={boxWidth}
           height={Math.abs(pxQ1 - pxQ3)}
-          fill="#bfdbfe"
-          stroke="#1e40af"
+          fill="var(--primary)"
+          fillOpacity={0.2}
+          stroke="var(--primary)"
           strokeWidth={2}
           rx={4}
         />
@@ -249,9 +250,6 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
           fontSize="11"
           fill="#ef4444"
           fontWeight="bold"
-          stroke="white"
-          strokeWidth="3"
-          paintOrder="stroke"
         >
           {payload.median}h
         </text>
@@ -263,19 +261,19 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white p-3 border border-slate-200 shadow-xl rounded-xl text-sm z-50">
-          <p className="font-bold text-slate-800 border-b pb-1 mb-1">Marca: {data.marca}</p>
-          <p className="text-slate-600">
-            Llenados: <span className="font-semibold text-slate-900">{data.count} tanques</span>
+        <div className="bg-popover p-3 border border-border shadow-xl rounded-xl text-sm z-50">
+          <p className="font-bold text-foreground border-b border-border pb-1 mb-1">Marca: {data.marca}</p>
+          <p className="text-muted-foreground">
+            Llenados: <span className="font-semibold text-foreground">{data.count} tanques</span>
           </p>
           <div className="mt-2 space-y-1 text-xs">
             <p className="flex justify-between w-44">
-              <span className="text-slate-500">Máx:</span>{" "}
-              <span className="font-semibold">{data.max} hrs</span>
+              <span className="text-muted-foreground">Máx:</span>{" "}
+              <span className="font-semibold text-foreground">{data.max} hrs</span>
             </p>
             <p className="flex justify-between w-44">
-              <span className="text-slate-500">Percentil 75:</span>{" "}
-              <span className="font-semibold">{data.q3} hrs</span>
+              <span className="text-muted-foreground">Percentil 75:</span>{" "}
+              <span className="font-semibold text-foreground">{data.q3} hrs</span>
             </p>
             <p className="flex justify-between w-44">
               <span className="text-red-500 font-bold">Percentil 50 (Mediana):</span>{" "}
@@ -286,12 +284,12 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
               <span className="text-blue-600 font-bold">{data.mean} hrs</span>
             </p>
             <p className="flex justify-between w-44">
-              <span className="text-slate-500">Percentil 25:</span>{" "}
-              <span className="font-semibold">{data.q1} hrs</span>
+              <span className="text-muted-foreground">Percentil 25:</span>{" "}
+              <span className="font-semibold text-foreground">{data.q1} hrs</span>
             </p>
             <p className="flex justify-between w-44">
-              <span className="text-slate-500">Mín:</span>{" "}
-              <span className="font-semibold">{data.min} hrs</span>
+              <span className="text-muted-foreground">Mín:</span>{" "}
+              <span className="font-semibold text-foreground">{data.min} hrs</span>
             </p>
           </div>
         </div>
@@ -406,7 +404,7 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
         </div>
 
         {chartData.length === 0 ? (
-          <div className="flex items-center justify-center h-[400px] text-slate-500 font-medium bg-slate-50 rounded-xl border border-dashed border-slate-200">
+          <div className="flex items-center justify-center h-[400px] text-muted-foreground font-medium bg-muted/50 rounded-xl border border-dashed border-border">
             No hay datos suficientes de tiempo de llenado con hora de inicio
           </div>
         ) : (
@@ -420,11 +418,11 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
                   <CartesianGrid
                     strokeDasharray="3 3"
                     vertical={false}
-                    stroke="hsl(var(--border))"
+                    stroke="var(--border)"
                   />
                   <XAxis
                     dataKey="marca"
-                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
+                    tick={{ fontSize: 10, fill: "var(--muted-foreground)", fontWeight: 600 }}
                     angle={-45}
                     textAnchor="end"
                     axisLine={false}
@@ -435,7 +433,7 @@ export function LlenadoBoxplotChart({ purgas }: BoxPlotChartProps) {
                   />
                   <YAxis
                     domain={[0, "dataMax + 20"]}
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)", fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
                     tickFormatter={(val: any) => parseFloat(Number(val).toFixed(1)).toString()}

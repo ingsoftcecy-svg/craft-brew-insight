@@ -149,14 +149,14 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
     return (
       <div className="flex flex-col h-[320px] w-full relative">
         <div className="mb-4 pl-2">
-          <h3 className="text-sm font-bold text-slate-700 capitalize">{title.toLowerCase()}</h3>
-          <p className="text-xs text-slate-500">Promedio en minutos</p>
+          <h3 className="text-sm font-bold text-foreground capitalize">{title.toLowerCase()}</h3>
+          <p className="text-xs text-muted-foreground">Promedio en minutos</p>
         </div>
 
         {/* Gráfica */}
         <div className="flex-1 w-full relative">
           {data.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-slate-400 text-sm">
+            <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
               Sin datos
             </div>
           ) : (
@@ -165,27 +165,29 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis
                   dataKey="etiqueta"
-                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
-                  axisLine={{ stroke: "#e2e8f0" }}
+                  tick={{ fontSize: 10, fill: "var(--muted-foreground)", fontWeight: 600 }}
+                  axisLine={{ stroke: "var(--border)" }}
                   tickLine={false}
                   dy={10}
                 />
                 <YAxis
                   domain={[0, 15]}
-                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
-                  axisLine={{ stroke: "#e2e8f0" }}
+                  tick={{ fontSize: 11, fill: "var(--muted-foreground)", fontWeight: 600 }}
+                  axisLine={{ stroke: "var(--border)" }}
                   tickLine={false}
                 />
 
                 {/* Zonas de control */}
-                <ReferenceArea y1={1} y2={7} fill="#bbf7d0" fillOpacity={0.6} />
-                <ReferenceArea y1={7} y2={15} fill="#fecaca" fillOpacity={0.6} />
-                <ReferenceArea y1={0} y2={1} fill="#fecaca" fillOpacity={0.6} />
+                <ReferenceArea y1={1} y2={7} fill="#22c55e" fillOpacity={0.15} />
+                <ReferenceArea y1={7} y2={15} fill="#ef4444" fillOpacity={0.1} />
+                <ReferenceArea y1={0} y2={1} fill="#ef4444" fillOpacity={0.1} />
 
                 <Tooltip
                   contentStyle={{
                     borderRadius: "8px",
-                    border: "none",
+                    border: "1px solid var(--border)",
+                    backgroundColor: "var(--popover)",
+                    color: "var(--foreground)",
                     boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                   }}
                   formatter={(value: number) => [`${value} min`, "Promedio"]}
@@ -194,10 +196,10 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
                 <Line
                   type="monotone"
                   dataKey="promedio"
-                  stroke="#334155"
+                  stroke="var(--foreground)"
                   strokeWidth={2}
                   isAnimationActive={false}
-                  dot={{ r: 4, fill: "#7b98d5", strokeWidth: 2, stroke: "#ffffff" }}
+                  dot={{ r: 4, fill: "var(--background)", strokeWidth: 2, stroke: "var(--primary)" }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -212,11 +214,11 @@ export function TiempoPurgaCharts({ purgas }: TiempoPurgaChartsProps) {
       <CardHeader className="pb-0 pt-5 px-5">
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
           <div>
-            <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
-              <Clock className="h-5 w-5 text-slate-500" />
+            <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+              <Clock className="h-5 w-5 text-muted-foreground" />
               Tiempos de Purga de Trub
             </CardTitle>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Análisis de tendencia por día, semana y mes
             </p>
           </div>

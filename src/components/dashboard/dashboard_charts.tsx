@@ -122,10 +122,10 @@ export function DashboardCharts({ extractos, periodosStats }: DashboardChartsPro
         <div className="flex items-center justify-between gap-3">
           <div>
             <CardTitle
-              className="text-xl font-bold text-slate-800 flex items-center gap-2 cursor-pointer"
+              className="text-xl font-bold text-foreground flex items-center gap-2 cursor-pointer"
               onClick={() => setTipoGrafica(tipoGrafica === "marca" ? "mes" : "marca")}
             >
-              <TrendingUp className="h-5 w-5 text-slate-500" />
+              <TrendingUp className="h-5 w-5 text-muted-foreground" />
               {tipoGrafica === "marca" ? "Distribución por Marca" : "Distribución por Meses"}
             </CardTitle>
           </div>
@@ -149,12 +149,12 @@ export function DashboardCharts({ extractos, periodosStats }: DashboardChartsPro
         <div className="h-[340px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 10, right: 50, left: -20, bottom: 60 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
               <XAxis
                 dataKey="name"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
+                tick={{ fontSize: 10, fill: "var(--muted-foreground)", fontWeight: 600 }}
                 dy={10}
                 interval={0}
                 angle={-45}
@@ -164,7 +164,7 @@ export function DashboardCharts({ extractos, periodosStats }: DashboardChartsPro
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
+                tick={{ fontSize: 11, fill: "var(--muted-foreground)", fontWeight: 600 }}
               />
               <Tooltip cursor={{ fill: "rgba(0,0,0,0.03)" }} content={<CustomTooltip />} />
               <Bar

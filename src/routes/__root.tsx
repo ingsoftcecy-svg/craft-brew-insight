@@ -7,6 +7,7 @@ import { NotFoundComponent } from "../components/core/not_found";
 import { ErrorComponent } from "../components/core/error_boundary";
 import { useEffect } from "react";
 import { useAuthStore } from "../store/useAuthStore";
+import { useThemeStore } from "../store/useThemeStore";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -42,7 +43,7 @@ function RootShell({ children }: { children: ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="font-outfit antialiased">
+      <body className="font-outfit antialiased bg-background text-foreground">
         {children}
         <Scripts />
       </body>
@@ -53,11 +54,24 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const { init, isLoading, user } = useAuthStore();
+  const { theme } = useThemeStore();
 
   useEffect(() => {
     const unsubscribe = init();
     return () => unsubscribe && unsubscribe();
   }, [init]);
+
+  // Theme injector
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove("light", "dark");
+    if (theme === "system") {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      root.classList.add(systemTheme);
+      return;
+    }
+    root.classList.add(theme);
+  }, [theme]);
 
   // Prevención de Fuga de Datos (DLP)
   useEffect(() => {
